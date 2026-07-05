@@ -3,7 +3,7 @@
  * Tests the auth context provider logic
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 
 // Mock the db module
 vi.mock('@/lib/db', () => ({
@@ -19,9 +19,26 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+// Save original fetch and provide localStorage since bun test runs without jsdom
+const originalFetch = globalThis.fetch;
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value.toString(); },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
+
 // Mock fetch for API calls
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('AuthContext - Login Flow', () => {
   beforeEach(() => {

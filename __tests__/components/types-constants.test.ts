@@ -7,7 +7,13 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const PROJECT_ROOT = '/home/z/my-project';
+// Resolve project root dynamically so tests work regardless of install location
+let PROJECT_ROOT = process.cwd();
+while (!fs.existsSync(path.join(PROJECT_ROOT, 'package.json'))) {
+  const parent = path.dirname(PROJECT_ROOT);
+  if (parent === PROJECT_ROOT) break;
+  PROJECT_ROOT = parent;
+}
 
 describe('Type Definitions - Spec Compliance', () => {
   it('should define all 7 target roles from spec (including Senior PPC Assistant)', () => {
