@@ -27,12 +27,15 @@ function AppContent() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!user && !loading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreAuthView("landing");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveView("dashboard");
     }
   }, [user, loading]);

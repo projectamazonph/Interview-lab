@@ -3,9 +3,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface GlassInputProps extends React.ComponentProps<"input"> {
+type GlassInputProps = React.ComponentProps<"input"> & {
   icon?: React.ReactNode;
-}
+};
 
 const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
   ({ className, icon, ...props }, ref) => {
