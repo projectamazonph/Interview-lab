@@ -26,7 +26,7 @@ interface ManageGetResponse {
 
 export async function GET(request: Request) {
   try {
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -101,7 +101,7 @@ interface ManagePostBody {
 
 export async function POST(request: Request) {
   try {
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

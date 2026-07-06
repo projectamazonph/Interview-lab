@@ -28,8 +28,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await verifyAdmin(userId);
-    if (!admin) {
+    const user = await getUserFromRequest(request);
+    if (!user || !user.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
