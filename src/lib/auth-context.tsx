@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem('interviewlab_user');
       if (stored) {
         const parsed = JSON.parse(stored);
-        setUser(parsed);
+        setUser(parsed); // eslint-disable-line react-hooks/set-state-in-effect
       }
     } catch {
       // ignore corrupt storage

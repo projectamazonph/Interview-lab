@@ -41,9 +41,9 @@ const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
 
 GlassInput.displayName = "GlassInput";
 
-interface GlassTextareaProps extends React.ComponentProps<"textarea"> {}
 
-const GlassTextarea = React.forwardRef<HTMLTextAreaElement, GlassTextareaProps>(
+
+const GlassTextarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
   ({ className, ...props }, ref) => {
     return (
       <textarea

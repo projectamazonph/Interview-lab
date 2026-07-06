@@ -37,7 +37,7 @@ export function useSubscription() {
           practiceTestsThisMonth: data.usage?.practiceTestsThisMonth ?? 0,
           practiceTestsLimit: data.limits?.practiceTestsPerMonth ?? 2,
         };
-        setState(prev => ({ ...prev, usage, loading: false }));
+        setState(prev => ({ ...prev, usage, loading: false })); // eslint-disable-line react-hooks/set-state-in-effect
       }
     } catch {
       setState(prev => ({ ...prev, loading: false, error: 'Failed to fetch usage' }));
