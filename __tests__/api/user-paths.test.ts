@@ -9,6 +9,9 @@
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
+// Skip integration tests in CI (no live server available)
+const testIfServer = process.env.CI ? it.skip : it;
+
 async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
   const opts: RequestInit = {
     method,
@@ -24,7 +27,7 @@ describe('User Path: New User Registration to First Interview', () => {
   const testEmail = `e2e_new_${Date.now()}@test.com`;
   let userId: string;
 
-  it('Step 1: Register a new account', async () => {
+  testIfServer('Step 1: Register a new account', async () => {
     const { status, body } = await api('POST', '/api/auth/register', {
       email: testEmail,
       name: 'E2E Test User',
@@ -35,7 +38,7 @@ describe('User Path: New User Registration to First Interview', () => {
     expect(userId).toBeTruthy();
   });
 
-  it('Step 2: Login with new credentials', async () => {
+  testIfServer('Step 2: Login with new credentials', async () => {
     const { status, body } = await api('POST', '/api/auth/login', {
       email: testEmail,
       password: 'TestPass123!',
@@ -44,7 +47,7 @@ describe('User Path: New User Registration to First Interview', () => {
     expect(body.email).toBe(testEmail);
   });
 
-  it('Step 3: Get profile (should have onboardingDone: false)', async () => {
+  testIfServer('Step 3: Get profile (should have onboardingDone: false)', async () => {
     const { status, body } = await api('GET', '/api/profile', undefined, {
       'x-user-id': userId,
     });
@@ -52,7 +55,7 @@ describe('User Path: New User Registration to First Interview', () => {
     // New user should not have completed onboarding
   });
 
-  it('Step 4: Complete onboarding (update profile)', async () => {
+  testIfServer('Step 4: Complete onboarding (update profile)', async () => {
     const { status } = await api('PUT', '/api/profile', {
       targetRole: 'Amazon PPC VA',
       experienceLevel: 'beginner',
@@ -67,7 +70,7 @@ describe('User Path: New User Registration to First Interview', () => {
     expect(status).toBe(200);
   });
 
-  it('Step 5: View dashboard', async () => {
+  testIfServer('Step 5: View dashboard', async () => {
     const { status, body } = await api('GET', '/api/dashboard', undefined, {
       'x-user-id': userId,
     });
@@ -76,13 +79,13 @@ describe('User Path: New User Registration to First Interview', () => {
     expect((body.stats as Record<string, number>).totalSessions).toBe(0);
   });
 
-  it('Step 6: Browse questions', async () => {
+  testIfServer('Step 6: Browse questions', async () => {
     const { status, body } = await api('GET', '/api/questions?role=Amazon+PPC+VA');
     expect(status).toBe(200);
     expect((body.questions as unknown[]).length).toBeGreaterThan(0);
   });
 
-  it('Step 7: Start a quick drill interview', async () => {
+  testIfServer('Step 7: Start a quick drill interview', async () => {
     const { status, body } = await api('POST', '/api/interview', {
       mode: 'quick_drill',
       targetRole: 'Amazon PPC VA',
@@ -93,13 +96,13 @@ describe('User Path: New User Registration to First Interview', () => {
     expect((body.questions as unknown[]).length).toBe(5);
   });
 
-  it('Step 8: View downloads', async () => {
+  testIfServer('Step 8: View downloads', async () => {
     const { status, body } = await api('GET', '/api/downloads');
     expect(status).toBe(200);
     expect((body.downloads as unknown[]).length).toBeGreaterThan(0);
   });
 
-  it('Step 9: View learning paths', async () => {
+  testIfServer('Step 9: View learning paths', async () => {
     const { status, body } = await api('GET', '/api/guides');
     expect(status).toBe(200);
     expect((body.guides as unknown[]).length).toBeGreaterThan(0);
@@ -118,7 +121,7 @@ describe('User Path: Resume Review Flow', () => {
     userId = body.id;
   });
 
-  it('Step 1: Create a resume', async () => {
+  testIfServer('Step 1: Create a resume', async () => {
     const { status, body } = await api('POST', '/api/resume', {
       originalText: 'Jane Smith\nAmazon PPC Virtual Assistant\n- Managed PPC campaigns\n- Used Helium10 for keyword research\n- Created weekly reports for clients\n- Familiar with Seller Central',
       targetRole: 'Amazon PPC VA',
@@ -127,7 +130,7 @@ describe('User Path: Resume Review Flow', () => {
     resumeId = body.id;
   });
 
-  it('Step 2: Get AI resume review', async () => {
+  testIfServer('Step 2: Get AI resume review', async () => {
     const { status, body } = await api('POST', '/api/ai/resume-review', {
       resumeText: 'Jane Smith - Amazon PPC VA - Managed campaigns with Helium10',
       targetRole: 'Amazon PPC VA',
@@ -138,7 +141,7 @@ describe('User Path: Resume Review Flow', () => {
     expect(body).toHaveProperty('improvedVersion');
   });
 
-  it('Step 3: Update resume with AI feedback', async () => {
+  testIfServer('Step 3: Update resume with AI feedback', async () => {
     const { status, body } = await api('PUT', `/api/resume/${resumeId}`, {
       score: 72,
       improvedVersion: 'Improved resume text',
@@ -147,7 +150,7 @@ describe('User Path: Resume Review Flow', () => {
     expect(status).toBe(200);
   });
 
-  it('Step 4: List resumes and verify', async () => {
+  testIfServer('Step 4: List resumes and verify', async () => {
     const { status, body } = await api('GET', '/api/resume', undefined, {
       'x-user-id': userId,
     });
@@ -169,7 +172,7 @@ describe('User Path: Full Interview Session', () => {
     userId = body.id;
   });
 
-  it('Step 1: Create role interview session', async () => {
+  testIfServer('Step 1: Create role interview session', async () => {
     const { status, body } = await api('POST', '/api/interview', {
       mode: 'role_interview',
       targetRole: 'Amazon PPC VA',
@@ -179,7 +182,7 @@ describe('User Path: Full Interview Session', () => {
     questionId = ((body.questions as Record<string, unknown>[])[0]?.id) as string;
   });
 
-  it('Step 2: Submit answer to first question', async () => {
+  testIfServer('Step 2: Submit answer to first question', async () => {
     const { status, body } = await api('POST', `/api/interview/${sessionId}`, {
       questionId,
       userAnswer: 'ACoS stands for Advertising Cost of Sales. It measures the ratio of ad spend to sales. A lower ACoS means better efficiency. I would aim for a target ACoS based on the product profit margin.',
@@ -187,7 +190,7 @@ describe('User Path: Full Interview Session', () => {
     expect(status).toBe(201);
   });
 
-  it('Step 3: Get session with attempts', async () => {
+  testIfServer('Step 3: Get session with attempts', async () => {
     const { status, body } = await api('GET', `/api/interview/${sessionId}`, undefined, {
       'x-user-id': userId,
     });
@@ -195,7 +198,7 @@ describe('User Path: Full Interview Session', () => {
     expect((body.attempts as unknown[]).length).toBeGreaterThan(0);
   });
 
-  it('Step 4: Complete the session', async () => {
+  testIfServer('Step 4: Complete the session', async () => {
     const { status, body } = await api('POST', `/api/interview/${sessionId}/complete`, {
       transcript: { notes: 'Test session' },
     }, { 'x-user-id': userId });
@@ -203,7 +206,7 @@ describe('User Path: Full Interview Session', () => {
     expect(body).toHaveProperty('sessionId');
   });
 
-  it('Step 5: Verify dashboard shows updated stats', async () => {
+  testIfServer('Step 5: Verify dashboard shows updated stats', async () => {
     const { status, body } = await api('GET', '/api/dashboard', undefined, {
       'x-user-id': userId,
     });
@@ -223,7 +226,7 @@ describe('User Path: Cover Letter Generation', () => {
     userId = body.id;
   });
 
-  it('Step 1: Generate cover letter with AI', async () => {
+  testIfServer('Step 1: Generate cover letter with AI', async () => {
     const { status, body } = await api('POST', '/api/ai/cover-letter', {
       jobDescription: 'We are looking for an Amazon PPC VA to manage campaigns, perform keyword research, and create weekly reports. Must be familiar with Seller Central and advertising console.',
       tone: 'professional',
@@ -234,7 +237,7 @@ describe('User Path: Cover Letter Generation', () => {
     expect(body).toHaveProperty('draftLetter');
   });
 
-  it('Step 2: Save cover letter', async () => {
+  testIfServer('Step 2: Save cover letter', async () => {
     const { status, body } = await api('POST', '/api/cover-letter', {
       jobDescription: 'Amazon PPC VA position',
       tone: 'professional',
@@ -262,7 +265,7 @@ describe('User Path: Learning Path Progress', () => {
     guideId = ((guideRes.body.guides as Record<string, unknown>[])[0]?.id) as string;
   });
 
-  it('Step 1: View guide details', async () => {
+  testIfServer('Step 1: View guide details', async () => {
     if (!guideId) return;
     const { status, body } = await api('GET', `/api/guides/${guideId}`);
     expect(status).toBe(200);
@@ -270,7 +273,7 @@ describe('User Path: Learning Path Progress', () => {
     expect(body).toHaveProperty('content');
   });
 
-  it('Step 2: Save progress with checkboxes', async () => {
+  testIfServer('Step 2: Save progress with checkboxes', async () => {
     if (!guideId) return;
     const { status } = await api('POST', '/api/guides/progress', {
       guideId,
@@ -280,7 +283,7 @@ describe('User Path: Learning Path Progress', () => {
     expect(status).toBe(200);
   });
 
-  it('Step 3: Mark guide as complete', async () => {
+  testIfServer('Step 3: Mark guide as complete', async () => {
     if (!guideId) return;
     const { status } = await api('POST', '/api/guides/progress', {
       guideId,
@@ -290,7 +293,7 @@ describe('User Path: Learning Path Progress', () => {
     expect(status).toBe(200);
   });
 
-  it('Step 4: Verify progress is persisted', async () => {
+  testIfServer('Step 4: Verify progress is persisted', async () => {
     const { status, body } = await api('GET', '/api/guides/progress', undefined, {
       'x-user-id': userId,
     });
@@ -313,7 +316,7 @@ describe('User Path: Admin Operations', () => {
     adminId = body.id;
   });
 
-  it('Step 1: List all questions as admin', async () => {
+  testIfServer('Step 1: List all questions as admin', async () => {
     const { status, body } = await api('GET', '/api/admin/questions?limit=10', undefined, {
       'x-user-id': adminId,
     });
@@ -321,7 +324,7 @@ describe('User Path: Admin Operations', () => {
     expect((body.questions as unknown[]).length).toBeGreaterThan(0);
   });
 
-  it('Step 2: Create a new question', async () => {
+  testIfServer('Step 2: Create a new question', async () => {
     const { status, body } = await api('POST', '/api/admin/questions', {
       role: 'Amazon PPC VA',
       difficulty: 'beginner',
@@ -336,7 +339,7 @@ describe('User Path: Admin Operations', () => {
     expect(body).toHaveProperty('id');
   });
 
-  it('Step 3: Create a new guide', async () => {
+  testIfServer('Step 3: Create a new guide', async () => {
     const { status, body } = await api('POST', '/api/guides', {
       title: 'E2E Test Guide',
       slug: 'e2e-test-guide',
@@ -348,7 +351,7 @@ describe('User Path: Admin Operations', () => {
     expect(status).toBe(201);
   });
 
-  it('Step 4: Verify draft guide is NOT visible to regular users', async () => {
+  testIfServer('Step 4: Verify draft guide is NOT visible to regular users', async () => {
     const { body } = await api('GET', '/api/guides');
     const guides = body.guides as Record<string, unknown>[];
     const draftGuide = guides.find(g => g.title === 'E2E Test Guide');
