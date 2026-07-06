@@ -12,7 +12,7 @@ declare global {
       models?: {
         available(): Promise<{ name: string }[]>;
       };
-      generateText?(model: { name: string }, options: { prompt: string; max_tokens?: number; temperature?: number }): Promise<string>;
+      generateText?(model: { name: string }, options: { prompt: string; max_tokens?: number; temperature?: number }): Promise<{ text: string }>;
     };
   }
 }
@@ -104,7 +104,9 @@ class BrowserLLMIntegration {
       const availableModels = await window.ai.models.available();
       if (availableModels.length > 0) {
         const model = availableModels[0];
-        const response = await window.ai.generateText(model, {
+        const generateText = window.ai!.generateText;
+        if (!generateText) return null;
+        const response = await generateText(model, {
           prompt: `${this.getConversationContext()}\n\nUser Request: ${prompt}`,
           max_tokens: 1000,
           temperature: 0.3,
