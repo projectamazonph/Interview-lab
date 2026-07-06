@@ -37,7 +37,7 @@ export function useSubscription() {
           practiceTestsThisMonth: data.usage?.practiceTestsThisMonth ?? 0,
           practiceTestsLimit: data.limits?.practiceTestsPerMonth ?? 2,
         };
-        setState(prev => ({ ...prev, usage, loading: false })); // eslint-disable-line react-hooks/set-state-in-effect
+        setState(prev => ({ ...prev, usage, loading: false }));
       }
     } catch {
       setState(prev => ({ ...prev, loading: false, error: 'Failed to fetch usage' }));
@@ -63,6 +63,7 @@ export function useSubscription() {
     }
   }, [user]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (user) {
       Promise.all([fetchUsage(), fetchSubscription()]);
@@ -70,6 +71,7 @@ export function useSubscription() {
       setState({ usage: null, subscription: null, loading: false, error: null });
     }
   }, [user, fetchUsage, fetchSubscription]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const currentTier = (user?.subscriptionTier || 'free') as TierKey;
   const tierConfig = PRICING_TIERS[currentTier] ?? PRICING_TIERS.free;

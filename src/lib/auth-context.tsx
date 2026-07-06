@@ -36,18 +36,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Read localStorage on mount (client-only) then mark loading done
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('interviewlab_user');
       if (stored) {
         const parsed = JSON.parse(stored);
-        setUser(parsed); // eslint-disable-line react-hooks/set-state-in-effect
+        setUser(parsed);
       }
     } catch {
       // ignore corrupt storage
     }
     setLoading(false);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Fetch profile whenever user changes (after initial mount)
   useEffect(() => {
