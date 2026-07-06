@@ -52,7 +52,7 @@ export function PracticeTests() {
     try {
       const res = await fetch('/api/ai/assessment-score', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           assessmentTitle: selectedAssessment.title,
           assessmentData: selectedAssessment.datasetInfo ? (() => { try { return JSON.parse(selectedAssessment.datasetInfo); } catch { return null; } })() : null,
@@ -65,7 +65,7 @@ export function PracticeTests() {
       // Log the assessment attempt
       await fetch(`/api/assessments/${selectedAssessment.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ answers: userAnswers }),
       });
     } catch (error) {

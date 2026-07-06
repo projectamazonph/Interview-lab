@@ -32,7 +32,7 @@ export function ResumeLab() {
 
   useEffect(() => {
     if (user) {
-      fetch('/api/resume', { headers: { 'x-user-id': user.id } })
+      fetch('/api/resume')
         .then(res => res.json())
         .then(data => setResumes(data.resumes || []))
         .catch(console.error);
@@ -61,7 +61,7 @@ export function ResumeLab() {
       // Step 1: Create resume record
       const createRes = await fetch('/api/resume', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ originalText: resumeText, targetRole }),
       });
       if (!createRes.ok) {
@@ -73,7 +73,7 @@ export function ResumeLab() {
       // Step 2: AI review
       const reviewRes = await fetch('/api/ai/resume-review', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, targetRole }),
       });
       if (!reviewRes.ok) {
@@ -86,7 +86,7 @@ export function ResumeLab() {
       // Step 3: Update resume with review data
       const updateRes = await fetch(`/api/resume/${resume.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
           score: reviewData.score,
           improvedVersion: reviewData.improvedVersion,
@@ -99,7 +99,7 @@ export function ResumeLab() {
       }
 
       // Refresh resume history
-      const histRes = await fetch('/api/resume', { headers: { 'x-user-id': user.id } });
+      const histRes = await fetch('/api/resume');
       const histData = await histRes.json();
       setResumes(histData.resumes || []);
     } catch (error) {
@@ -116,7 +116,7 @@ export function ResumeLab() {
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
           type: format,
           content: (feedback as Record<string, unknown>).improvedVersion as string,

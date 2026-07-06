@@ -42,7 +42,7 @@ export function CoverLetterStudio() {
 
   useEffect(() => {
     if (user) {
-      fetch('/api/cover-letter', { headers: { 'x-user-id': user.id } })
+      fetch('/api/cover-letter')
         .then(res => res.json())
         .then(data => setCoverLetters(data.coverLetters || []))
         .catch(console.error);
@@ -69,7 +69,7 @@ export function CoverLetterStudio() {
     try {
       const res = await fetch('/api/ai/cover-letter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobDescription,
           tone,
@@ -81,14 +81,14 @@ export function CoverLetterStudio() {
 
       await fetch('/api/cover-letter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ jobDescription, tone, generatedLetter: data.draftLetter, truthFlags: data.claimsToVerify }),
       });
 
       setResult(data);
 
       // Refresh history
-      const histRes = await fetch('/api/cover-letter', { headers: { 'x-user-id': user.id } });
+      const histRes = await fetch('/api/cover-letter');
       const histData = await histRes.json();
       setCoverLetters(histData.coverLetters || []);
     } catch (error) {
@@ -104,7 +104,7 @@ export function CoverLetterStudio() {
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
           type: format,
           content: (result as Record<string, unknown>).draftLetter as string,

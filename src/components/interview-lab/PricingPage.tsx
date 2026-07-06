@@ -80,7 +80,7 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
   const fetchSubscriptionStatus = async () => {
     try {
       const res = await fetch('/api/subscription/status', {
-        headers: { 'x-user-id': user?.id || '' },
+
       });
       if (res.ok) {
         const data = await res.json();
@@ -101,9 +101,7 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
       const res = await fetch('/api/subscription/checkout', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          'Content-Type': 'application/json'        },
         body: JSON.stringify({ tier, billingPeriod }),
       });
 

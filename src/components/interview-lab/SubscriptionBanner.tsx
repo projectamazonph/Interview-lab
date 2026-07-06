@@ -59,7 +59,7 @@ export function SubscriptionBanner({ tier, onUpgrade }: SubscriptionBannerProps)
     const fetchUsage = async () => {
       try {
         const res = await fetch("/api/subscription/usage", {
-          headers: { "x-user-id": user?.id || "" },
+          headers: { "Content-Type": "application/json" },
         });
         if (res.ok) {
           const data = await res.json();

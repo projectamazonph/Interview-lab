@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

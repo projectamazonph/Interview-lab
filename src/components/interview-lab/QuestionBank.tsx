@@ -34,7 +34,6 @@ export function QuestionBank() {
 
     try {
       const headers: Record<string, string> = {};
-      if (user) headers['x-user-id'] = user.id;
       const res = await fetch(`/api/questions?${params.toString()}`, { headers });
       const data = await res.json();
       setQuestions(data.questions || []);
@@ -54,7 +53,7 @@ export function QuestionBank() {
     try {
       const res = await fetch('/api/ai/coach', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: practiceQuestion.question,
           userAnswer,

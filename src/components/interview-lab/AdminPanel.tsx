@@ -60,7 +60,7 @@ export function AdminPanel() {
       const params = new URLSearchParams();
       if (filterRole !== 'all') params.set('role', filterRole);
       if (filterStatus !== 'all') params.set('status', filterStatus);
-      const res = await fetch(`/api/admin/questions?${params.toString()}`, { headers: { 'x-user-id': user.id } });
+      const res = await fetch(`/api/admin/questions?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setQuestions(data.questions || []);
@@ -87,13 +87,13 @@ export function AdminPanel() {
       if (editingId) {
         await fetch(`/api/admin/questions`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify({ id: editingId, ...body }),
         });
       } else {
         await fetch('/api/admin/questions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify(body),
         });
       }
@@ -134,7 +134,7 @@ export function AdminPanel() {
     try {
       await fetch('/api/admin/questions', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ id, status: 'archived' }),
       });
       fetchQuestions();
@@ -165,13 +165,13 @@ export function AdminPanel() {
       if (editingGuideId) {
         await fetch(`/api/guides/${editingGuideId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify(guideForm),
         });
       } else {
         await fetch('/api/guides', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify(guideForm),
         });
       }
@@ -215,7 +215,7 @@ export function AdminPanel() {
     try {
       await fetch('/api/downloads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(downloadForm),
       });
       setShowDownloadForm(false);
@@ -230,7 +230,7 @@ export function AdminPanel() {
   const fetchAnalytics = async () => {
     if (!user?.isAdmin) return;
     try {
-      const res = await fetch('/api/admin/analytics', { headers: { 'x-user-id': user.id } });
+      const res = await fetch('/api/admin/analytics');
       if (res.ok) {
         const data = await res.json();
         setAnalytics(data);
@@ -244,7 +244,7 @@ export function AdminPanel() {
 
   const handleExportContent = async (type: string) => {
     try {
-      const res = await fetch(`/api/admin/questions?format=${type}`, { headers: { 'x-user-id': user!.id } });
+      const res = await fetch(`/api/admin/questions?format=${type}`);
       if (res.ok) {
         const data = await res.json();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

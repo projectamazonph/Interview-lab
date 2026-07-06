@@ -18,9 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const fetchUserProfile = async (userId: string, setProfile: (p: UserProfile | null) => void) => {
   try {
-    const res = await fetch('/api/profile', {
-      headers: { 'x-user-id': userId },
-    });
+    const res = await fetch('/api/profile');
     if (res.ok) {
       const data = await res.json();
       setProfile(data);
@@ -121,7 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
         },
         body: JSON.stringify(data),
       });

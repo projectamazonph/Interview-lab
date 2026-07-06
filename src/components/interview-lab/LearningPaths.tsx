@@ -54,7 +54,7 @@ export function LearningPaths() {
   // Fetch progress
   useEffect(() => {
     if (user) {
-      fetch('/api/guides/progress', { headers: { 'x-user-id': user.id } })
+      fetch('/api/guides/progress')
         .then(res => res.json())
         .then(data => {
           const map: Record<string, GuideProgressItem> = {};
@@ -72,7 +72,7 @@ export function LearningPaths() {
     try {
       await fetch('/api/guides/progress', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ guideId, completed, checklist }),
       });
       // Update local state

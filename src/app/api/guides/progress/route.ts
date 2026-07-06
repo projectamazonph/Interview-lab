@@ -1,10 +1,9 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
     const user = await verifyAuth(userId);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -32,7 +31,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
     const user = await verifyAuth(userId);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

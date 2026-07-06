@@ -1,11 +1,10 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAdmin } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const admin = await verifyAdmin(userId);
+    const admin = await getUserFromRequest(request);
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

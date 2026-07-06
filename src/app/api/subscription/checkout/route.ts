@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { PRICING_TIERS, TierKey, BillingPeriod, getTierPrice, CURRENCY } from '@/lib/pricing';
 import { TIER_HIERARCHY } from '@/lib/pricing';
 import { NextResponse } from 'next/server';
@@ -11,7 +11,6 @@ interface CheckoutRequestBody {
 
 export async function POST(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
     const user = await verifyAuth(userId);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

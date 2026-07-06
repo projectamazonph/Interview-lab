@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
 
@@ -11,8 +11,7 @@ const ALLOWED_PROFILE_FIELDS = [
 
 export async function GET(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -38,8 +37,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

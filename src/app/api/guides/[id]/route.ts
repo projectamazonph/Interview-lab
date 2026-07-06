@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAdmin } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
 
@@ -28,7 +28,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = getUserIdFromHeader(request);
     const admin = await verifyAdmin(userId);
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

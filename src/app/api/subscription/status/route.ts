@@ -1,12 +1,11 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { PRICING_TIERS, TierKey } from '@/lib/pricing';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

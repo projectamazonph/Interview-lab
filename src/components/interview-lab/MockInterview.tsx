@@ -51,7 +51,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
 
   useEffect(() => {
     if (user) {
-      fetch('/api/interview', { headers: { 'x-user-id': user.id } })
+      fetch('/api/interview')
         .then(res => res.json())
         .then(data => setSessions(data.sessions || []))
         .catch(console.error);
@@ -77,7 +77,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       const res = await fetch('/api/interview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ mode, targetRole: targetRole || undefined }),
       });
       const data = await res.json();
@@ -105,7 +105,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       const coachRes = await fetch('/api/ai/coach', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: questions[currentIndex].question,
           userAnswer,
@@ -128,7 +128,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
       // Save attempt
       await fetch(`/api/interview/${session.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
           questionId: questions[currentIndex].id,
           userAnswer,
@@ -155,7 +155,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       const coachRes = await fetch('/api/ai/coach', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: followUpQuestion,
           userAnswer: followUpAnswer,
@@ -206,7 +206,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       await fetch(`/api/interview/${session.id}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({ transcript }),
       });
       setCompleted(true);

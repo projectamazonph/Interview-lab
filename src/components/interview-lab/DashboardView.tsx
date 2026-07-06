@@ -32,7 +32,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps) {
 
   useEffect(() => {
     if (!user) return;
-    fetch("/api/dashboard", { headers: { "x-user-id": user.id } })
+    fetch("/api/dashboard")
       .then((res) => res.json())
       .then((d) => setData(d))
       .catch(console.error)

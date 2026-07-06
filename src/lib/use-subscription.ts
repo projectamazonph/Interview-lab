@@ -24,9 +24,7 @@ export function useSubscription() {
   const fetchUsage = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch('/api/subscription/usage', {
-        headers: { 'x-user-id': user.id },
-      });
+      const res = await fetch('/api/subscription/usage');
       if (res.ok) {
         const data = await res.json();
         const usage: UsageInfo = {
@@ -49,9 +47,7 @@ export function useSubscription() {
   const fetchSubscription = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch('/api/subscription/status', {
-        headers: { 'x-user-id': user.id },
-      });
+      const res = await fetch('/api/subscription/status');
       if (res.ok) {
         const data = await res.json();
         const subscription: SubscriptionInfo = {

@@ -1,12 +1,11 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAdmin } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const admin = await verifyAdmin(userId);
+    const admin = await getUserFromRequest(request);
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -38,8 +37,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const admin = await verifyAdmin(userId);
+    const admin = await getUserFromRequest(request);
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -106,8 +104,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const admin = await verifyAdmin(userId);
+    const admin = await getUserFromRequest(request);
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -100,7 +100,7 @@ export function DownloadCenter() {
     if (!canAccess(download.accessTier) || !user) return;
     try {
       const res = await fetch(`/api/downloads/${download.id}`, {
-        headers: { 'x-user-id': user.id },
+
       });
       if (!res.ok) {
         console.error('Download failed:', res.statusText);

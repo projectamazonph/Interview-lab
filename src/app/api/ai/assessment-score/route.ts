@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { BrowserLLMIntegration } from '@/lib/browser-llm-integration';
 
 export async function POST(request: Request) {
   try {
-    const userId = getUserIdFromHeader(request);
-    const user = await verifyAuth(userId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

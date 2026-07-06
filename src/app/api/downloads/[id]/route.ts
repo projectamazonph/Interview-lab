@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { getUserIdFromHeader, verifyAuth } from '@/lib/auth-helpers';
+import { getUserFromRequest } from '@/lib/auth-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TabStopPosition, TabStopType } from 'docx';
 
@@ -25,8 +25,7 @@ export async function GET(
     }
 
     // Verify the user is authenticated and has sufficient access tier
-    const headerUserId = getUserIdFromHeader(request);
-    const user = await verifyAuth(headerUserId);
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Authentication required to download files' }, { status: 401 });
     }
