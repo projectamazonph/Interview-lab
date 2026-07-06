@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const PROJECT_ROOT = '/home/z/my-project';
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 describe('Type Definitions - Spec Compliance', () => {
   it('should define all 7 target roles from spec (including Senior PPC Assistant)', () => {
