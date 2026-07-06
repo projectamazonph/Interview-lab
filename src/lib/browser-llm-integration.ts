@@ -5,8 +5,20 @@ import { toast } from '@/hooks/use-toast';
 // Browser-based LLM integration that works without API keys
 // Uses local LLM fallback and rule-based system for Amazon VA career guidance
 
+// Extend Window type to support the experimental window.ai API
+declare global {
+  interface Window {
+    ai?: {
+      models?: {
+        available(): Promise<{ name: string }[]>;
+      };
+      generateText?(model: { name: string }, options: { prompt: string; max_tokens?: number; temperature?: number }): Promise<string>;
+    };
+  }
+}
+
 interface LLMResponse {
-  score: number;
+  score?: number;
   missingKeywords?: string[];
   weakSections?: string[];
   improvedSummary?: string;
@@ -202,7 +214,7 @@ class BrowserLLMIntegration {
   }
   
   private extractWeakSections(prompt: string): string[] {
-    const sections = [];
+    const sections: string[] = [];
     if (!prompt.includes('metrics') && !prompt.includes('results')) sections.push('Metrics and outcomes');
     if (!prompt.includes('ammazon') && !prompt.includes('va')) sections.push('Professional Summary');
     if (!prompt.includes('campaigns') && !prompt.includes('structure')) sections.push('Campaign Structure');
