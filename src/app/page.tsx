@@ -33,9 +33,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!user && !loading) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreAuthView("landing");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveView("dashboard");
     }
   }, [user, loading]);
