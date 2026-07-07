@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const PROJECT_ROOT = '/home/z/my-project';
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 describe('Hydration Safety', () => {
   it('auth-context should not use typeof window in useState initializers', () => {

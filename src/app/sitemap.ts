@@ -1,19 +1,51 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://interviewlab.chatglm.site';
+  const baseUrl = 'https://interview-lab.vercel.app';
+  const now = new Date();
 
-  // Since this is a single-page app, all content is served from the root.
-  // These are the logical "sections" that users can navigate to.
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
+      lastModified: now,
+      changeFrequency: 'daily',
       priority: 1,
     },
-    // The SPA uses client-side routing, but search engines can still index
-    // the landing page which contains all the marketing content and CTAs.
-    // API routes are disallowed in robots.txt, so no need to list them.
+    {
+      url: `${baseUrl}/#interviews`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/#resume-lab`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/#cover-letter`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/#practice-tests`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/#resources`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/#pricing`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
   ];
 }

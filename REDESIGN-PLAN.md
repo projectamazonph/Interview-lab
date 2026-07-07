@@ -5,7 +5,7 @@
 ## Design System — Ethereal Glass
 
 - **Palette:** OLED black (`#050505`), radial gradient orbs, glass-morphism cards with `backdrop-blur-xl`
-- **Colors:** Indigo/violet accents (`#6366F1`/`#818CF8`), emerald success, amber warnings, rose danger
+- **Colors:** Sky Blue accents (`#007EFF`/`#0070E0`), emerald success, amber warnings, rose danger
 - **Typography:** Space Grotesk (headings), Plus Jakarta Sans (body), JetBrains Mono (code)
 - **Icons:** Phosphor Icons — `weight="light"` only
 - **Motion:** Custom cubic-bezier (`ease-premium: 0.32,0.72,0,1`), Framer Motion scroll reveals, stagger containers
