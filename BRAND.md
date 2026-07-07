@@ -19,10 +19,10 @@ Source: `/public/icons/icon-og.png`
 
 | Token | Hex | Usage |
 |---|---|---|
-| Primary | `#007EFF` | Sky Blue — Umbrella brand — CTAs, accents |
+| Primary | `#FF6B35` | Orange — Umbrella brand — CTAs, accents |
 | Background | `#050505` | OLED black — always dark |
-| Accent | `#007EFF` | Sky Blue — interactive states |
-| Secondary | `#0070E0` | Deep Sky Blue — cards, surfaces |
+| Accent | `#A855F7` | Orange — interactive states |
+| Secondary | `#E65C00` | Deep Orange — cards, surfaces |
 | Success | `#34D399` | Emerald — positive feedback |
 | Warning | `#FBBF24` | Amber — mid-score feedback |
 | Error | `#FB7185` | Rose — low-score feedback |
