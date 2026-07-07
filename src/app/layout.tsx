@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 const BASE_URL = "https://interview-lab.vercel.app";
 
 export const viewport: Viewport = {
-  themeColor: "#818CF8",
+  themeColor: "#FF6B35",
   colorScheme: "dark",
 };
 

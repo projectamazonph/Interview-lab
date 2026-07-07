@@ -240,9 +240,8 @@ describe('Components - Completeness', () => {
 });
 
 describe('Security - Auth Requirements', () => {
-  // Skip: x-user-id header checks test for the OLD vulnerable behavior
-  // (getUserIdFromHeader was removed as part of security fix)
-  // These routes now use proper JWT/session auth
+  // These routes now use proper JWT/session auth via getUserFromRequest().
+  // x-user-id header spoofing was removed — routes must use cookie-based auth only.
   const testIfServer = process.env.CI ? it.skip : it;
 
   const protectedRoutes = [
@@ -265,12 +264,15 @@ describe('Security - Auth Requirements', () => {
   ];
 
   protectedRoutes.forEach(route => {
-    testIfServer(`${route} should check x-user-id header`, () => {
+    testIfServer(`${route} should use getUserFromRequest (not x-user-id header)`, () => {
       const filePath = path.join(PROJECT_ROOT, 'src/app', route);
       if (!fs.existsSync(filePath)) return;
-      
+
       const content = fs.readFileSync(filePath, 'utf-8');
-      expect(content, `${route} should have auth check`).toContain('x-user-id');
+      // Must use cookie-based auth helper
+      expect(content, `${route} should use getUserFromRequest`).toContain('getUserFromRequest');
+      // Must NOT use the old vulnerable x-user-id header pattern
+      expect(content, `${route} must not read x-user-id header`).not.toContain("headers.get('x-user-id')");
     });
   });
 });
