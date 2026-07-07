@@ -6,25 +6,23 @@
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
-// Skip integration tests in CI (no live server available)
-const testIfServer = process.env.CI ? it.skip : it;
-
 describe('Auth API', () => {
-async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
-  const opts: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${BASE_URL}${path}`, opts);
-  const json = await res.json();
-  return { status: res.status, body: json };
-}
+  const testIfServer = process.env.CI ? it.skip : it;
 
-describe('Auth API', () => {
+  async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
+    const opts: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`${BASE_URL}${path}`, opts);
+    const json = await res.json();
+    return { status: res.status, body: json };
+  }
+
   const testEmail = `test_auth_${Date.now()}@test.com`;
 
   describe('POST /api/auth/register', () => {
