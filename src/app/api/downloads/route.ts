@@ -30,8 +30,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const admin = await getUserFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!admin || !admin.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
 
     const data = await request.json();

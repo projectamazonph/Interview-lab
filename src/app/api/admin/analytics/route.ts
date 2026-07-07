@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const admin = await getUserFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!admin || !admin.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
 
     // Platform-wide stats

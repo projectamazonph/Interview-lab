@@ -6,8 +6,8 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const admin = await getUserFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!admin || !admin.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -38,8 +38,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const admin = await getUserFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!admin || !admin.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
 
     const data = await request.json();
@@ -105,8 +105,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const admin = await getUserFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!admin || !admin.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
 
     const data = await request.json();
