@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 const BASE_URL = "https://interview-lab.vercel.app";
 
 export const viewport: Viewport = {
-  themeColor: "#050505",
+  themeColor: "#818CF8",
   colorScheme: "dark",
 };
 
@@ -70,7 +70,6 @@ export const metadata: Metadata = {
     description: "Get interview-ready for Amazon VA roles with AI mock interviews, resume coaching, cover letter writing, and practice tests.",
     site: "@ProjectAmazonPH",
     creator: "@ProjectAmazonPH",
-    images: ["/og/il-og.png"],
   },
   robots: {
     index: true,
@@ -86,9 +85,19 @@ export const metadata: Metadata = {
   alternates: {
     canonical: BASE_URL,
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Interview Lab",
+  },
   icons: {
-    icon: "/icons/icon-32.png",
-    apple: "/icons/icon-180.png",
+    icon: [
+      { url: "/icons/icon-32.png", sizes: "32x32" },
+      { url: "/icons/icon-192.png", sizes: "192x192" },
+      { url: "/icons/icon-512.png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180" }],
   },
 };
 
