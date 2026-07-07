@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GlassButton } from "@/components/ui/glass-button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -71,6 +71,9 @@ const FAQ = [
 export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => { setYear(new Date().getFullYear()); }, []);
 
   return (
     <div className="min-h-screen bg-pa-navy text-white overflow-hidden">
@@ -584,7 +587,7 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
           <div className="flex items-center gap-6 text-text-muted text-xs">
             <a href="#privacy" className="hover:text-text-secondary transition-colors duration-400">Privacy</a>
             <a href="#terms" className="hover:text-text-secondary transition-colors duration-400">Terms</a>
-            <span>&copy; {new Date().getFullYear()} Interview Lab</span>
+            <span>&copy; {year ?? new Date().getFullYear()} Interview Lab</span>
           </div>
         </div>
       </footer>
