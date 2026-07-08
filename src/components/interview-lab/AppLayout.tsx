@@ -6,9 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SubscriptionBanner } from "@/components/interview-lab/SubscriptionBanner";
+import { ProjectAmazonPHHeader } from "@/components/shared/ProjectAmazonPHHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Lightning,
   SquaresFour,
   Question,
   ChatsCircle,
@@ -112,12 +112,7 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
       {/* ─── Desktop Sidebar ─── */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-pa-deep/80 backdrop-blur-xl border-r border-glass-border/30">
         <div className="p-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-accent-violet/20 flex items-center justify-center">
-              <Lightning className="w-4.5 h-4.5 text-accent-indigo" weight="light" />
-            </div>
-            <span className="font-heading font-bold text-sm text-text-primary">Interview Lab</span>
-          </div>
+          <ProjectAmazonPHHeader projectName="Interview Lab" />
         </div>
 
         <div className="flex-1 overflow-y-auto">{renderNav()}</div>
@@ -169,12 +164,7 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
               className="fixed inset-y-0 left-0 w-72 z-50 bg-pa-deep/95 backdrop-blur-2xl border-r border-glass-border/30 flex flex-col lg:hidden"
             >
               <div className="flex items-center justify-between p-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-accent-violet/20 flex items-center justify-center">
-                    <Lightning className="w-4.5 h-4.5 text-accent-indigo" weight="light" />
-                  </div>
-                  <span className="font-heading font-bold text-sm text-text-primary">Interview Lab</span>
-                </div>
+                <ProjectAmazonPHHeader projectName="Interview Lab" />
                 <button
                   onClick={() => setSidebarOpen(false)}
                   className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-glass-border/20 transition-all duration-400 ease-premium"
@@ -229,10 +219,7 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
             <List className="w-5 h-5 text-text-secondary" weight="light" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-accent-violet/20 flex items-center justify-center shrink-0">
-              <Lightning className="w-3.5 h-3.5 text-accent-indigo" weight="light" />
-            </div>
-            <h1 className="font-heading font-bold text-text-primary truncate text-sm">Interview Lab</h1>
+            <ProjectAmazonPHHeader projectName="Interview Lab" className="gap-2" />
           </div>
         </div>
 

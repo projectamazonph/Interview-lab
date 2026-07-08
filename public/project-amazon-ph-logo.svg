@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#1A1A2E"/>
+
+  <!-- Logo mark: Bold A in navy, three ascending orange bars inside, orange smile arrow -->
+
+  <!-- Bold A shape -->
+  <path d="M200 60 L320 320 L280 320 L240 240 L160 240 L120 320 L80 320 L200 60Z" fill="#1A1A2E" stroke="#1A1A2E" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Three ascending orange bars inside the A -->
+  <rect x="155" y="195" width="22" height="55" rx="3" fill="#FF6B35"/>
+  <rect x="189" y="165" width="22" height="85" rx="3" fill="#FF6B35"/>
+  <rect x="223" y="135" width="22" height="115" rx="3" fill="#FF6B35"/>
+
+  <!-- Orange smile arrow sweeping under -->
+  <path d="M70 305 Q130 250 200 260 Q270 270 340 220 L325 200 Q260 242 200 234 Q140 226 85 278 Z" fill="#FF6B35"/>
+
+  <!-- Subtle Amazon-style smile curve overlay -->
+  <path d="M80 295 Q200 260 330 215" stroke="#FF6B35" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.6"/>
+</svg>
