@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description: "Get in touch with the Interview Lab team.",
 };
 
+// Contact page - updated for cache refresh
 export default function ContactPage() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-pa-navy relative overflow-hidden">

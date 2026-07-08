@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description: "Learn about Interview Lab by ProjectAmazonPH — AI-powered mock interviews for Amazon VA roles.",
 };
 
+// About page - updated for cache refresh
 export default function AboutPage() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-pa-navy relative overflow-hidden">
