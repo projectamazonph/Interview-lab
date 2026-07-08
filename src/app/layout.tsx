@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { PapHeader } from "@/components/header";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -234,6 +235,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${plusJakarta.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-body antialiased grain-overlay`}>
+        <PapHeader />
         {children}
         <Toaster />
         <script
