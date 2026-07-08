@@ -19,19 +19,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'bun'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install
+        run: npm ci
 
       - name: TypeScript check
-        run: bun tsc --noEmit
+        run: npx tsc --noEmit
 
       - name: ESLint
-        run: bun eslint .
+        run: npx eslint .
 
       - name: Tests
-        run: CI=true bun vitest run
+        run: CI=true npx vitest run
 
       - name: Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2
@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
-        run: bun run build
+        run: npm run build
         env:
           JWT_SECRET: ci-only-do-not-use-in-prod
           DATABASE_URL: file:./build-test.db
