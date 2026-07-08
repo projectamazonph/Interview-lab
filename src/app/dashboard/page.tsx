@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -19,21 +19,33 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    // Check if user is logged in
+    const checkAuth = () => {
+      try {
+        const stored = localStorage.getItem("interviewlab_user");
+        if (stored) {
+          setUser(JSON.parse(stored));
+        }
+      } catch {
+        // ignore
+      }
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
-    // Check if user is logged in
-    try {
-      const stored = localStorage.getItem("interviewlab_user");
-      if (stored) {
-        setUser(JSON.parse(stored));
-      } else {
-        router.push("/login");
-      }
-    } catch {
+    if (!loading && !user) {
       router.push("/login");
     }
-    setLoading(false);
-  }, [router]);
+  }, [loading, user, router]);
 
   if (loading) {
     return (
