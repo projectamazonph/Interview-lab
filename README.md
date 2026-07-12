@@ -109,3 +109,8 @@ Set in `.env`:
 - Dependencies pruned from 74 to 28 packages — see `PONYTAIL-AUDIT.md`.
 - Run `bun install` after cloning to restore `node_modules`.
 # Force Vercel rebuild Wed Jul  8 06:19:01 UTC 2026
+
+
+## 📊 Codegraph
+
+See [codegraphs/Interview-lab.md](./codegraphs/Interview-lab.md) for the full dependency graph.
