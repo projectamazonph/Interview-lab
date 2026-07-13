@@ -1,0 +1,25 @@
+{
+  "name": "Interview Lab — by ProjectAmazonPH",
+  "short_name": "Interview Lab",
+  "description": "AI-powered mock interviews and interview preparation for Amazon VA roles. Built by ProjectAmazonPH.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "url": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "url": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
