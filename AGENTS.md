@@ -15,9 +15,9 @@
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| **Framework** | Next.js 16 (App Router) | Standalone output |
+| **Framework** | Next.js 16.1.1 (App Router) | Standalone output |
 | **Runtime** | Bun | Package management + scripts |
-| **Database** | Prisma v6 + SQLite | Local dev |
+| **Database** | Prisma v6 + SQLite (dev) / PostgreSQL (prod) | Local dev uses SQLite |
 | **Auth** | JWT (jose v6) + HttpOnly cookies + localStorage client cache | Custom |
 | **UI** | Tailwind CSS v4 | Custom glass design system |
 | **Icons** | Phosphor Icons (light weight) | No thick-stroked icons |
@@ -44,11 +44,13 @@ Interview-lab/
 ├── src/
 │   ├── app/              ← App Router pages, API routes
 │   ├── components/       ← React components (shared + feature)
+│   │   ├── interview-lab/  ← Page components
+│   │   └── ui/             ← Shared primitives
 │   ├── hooks/            ← Custom hooks
 │   └── lib/              ← Utilities, AI client, helpers
 ├── prisma/
 │   └── schema.prisma     ← Database schema
-├── __tests__/            ← Test files (api/, components/)
+├── __tests__/            ← Test files (api/, components/, stress/)
 ├── docs/                 ← Project documentation
 ├── agent-ctx/            ← Agent context files
 ├── codegraphs/           ← Code dependency graphs
@@ -63,6 +65,7 @@ Interview-lab/
 - **Prisma** — generate client on `postinstall`
 - **Path aliases** — `@/` maps to `src/`
 - **Custom design tokens** — defined in Tailwind config, not arbitrary values
+- **Package manager** — Use Bun exclusively (bun.lock, not npm package-lock.json)
 
 ## Guardrails
 
@@ -72,13 +75,15 @@ Interview-lab/
 - ❌ Add dependencies without checking if 50 lines of custom code suffice
 - ❌ Skip Prisma generate after schema changes
 - ❌ Use Inter/Roboto fonts
+- ❌ Scatter AI prompts across components (keep in `src/lib/`)
 
 ### DO
 - ✅ Use Space Grotesk for headings, Plus Jakarta Sans for body
-- ✅ Run `bun test` before PRs
+- ✅ Run `bun run test` before PRs
 - ✅ Run `bun run build` before deploy
-- ✅ Keep AI prompts in `src/lib/` not scattered across components
+- ✅ Keep AI prompts centralized in `src/lib/`
 - ✅ Document new env vars
+- ✅ Add truthfulness warnings on AI-generated resume/coach content
 
 ## Build & Deploy
 
@@ -99,12 +104,12 @@ bun run db:reset           # Reset + seed
 |------|---------|
 | `prisma/schema.prisma` | Database schema |
 | `src/app/` | All routes + API |
-| `src/lib/` | AI client config, business logic |
-| `agent-ctx/` | Agent working context files |
-| `docs/` | Architecture docs, redesign plans |
+| `src/lib/` | AI client config, business logic, prompts |
+| `docs/07-guardrails.md` | AI content safety policies |
+| `docs/08-scoring-rubrics.md` | Interview scoring rubrics |
 | `KANBAN.md` | Project board |
 | `TODO.md` | Task tracking |
 
 ---
 
-*Updated: 2026-07-02 | Part of Ryan's Hermes Agent workspace*
+*Updated: 2026-07-13 | Part of Ryan's Hermes Agent workspace*

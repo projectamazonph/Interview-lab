@@ -1,44 +1,122 @@
 # Interview-lab - Code Dependency Graph
+
 ```mermaid
 graph TD
-    N0["README.md"]
-    N1["package.json"]
-    N2["next.config.js"]
-    N3["tsconfig.json"]
-    N4["prisma/schema.prisma"]
-    N5["prisma/seed.ts"]
-    N6["src/app/layout.tsx"]
-    N7["src/app/page.tsx"]
-    N8["src/app/dashboard/page.tsx"]
-    N9["src/app/interviews/page.tsx"]
-    N10["src/app/analytics/page.tsx"]
-    N11["src/components/Navbar.tsx"]
-    N12["src/components/InterviewCard.tsx"]
-    N13["src/components/CodeEditor.tsx"]
-    N14["src/lib/prisma.ts"]
-    N15["src/lib/ai.ts"]
-    N16["src/styles/globals.css"]
-    N17["public/"]
-    N18["agent-ctx/system-prompt.md"]
-    N19["agent-ctx/tools.md"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N4
-    N1 --> N3
-    N4 --> N5
-    N6 --> N7
-    N7 --> N8
-    N7 --> N9
-    N7 --> N10
-    N7 --> N11
-    N8 --> N12
-    N8 --> N13
-    N9 --> N14
-    N9 --> N15
-    N11 --> N12
-    N11 --> N13
-    N6 --> N16
-    N7 --> N17
-    N0 --> N18
-    N0 --> N19
+    next_config["next_config"]
+    tailwind_config["tailwind_config"]
+    vitest_config["vitest_config"]
+    __tests___run_api_tests["__tests___run_api_tests"]
+    __tests___setup["__tests___setup"]
+    __tests___api_auth_test["__tests___api_auth_test"]
+    __tests___api_profile_dashboard_test["__tests___api_profile_dashboard_test"]
+    __tests___api_questions_interview_ai_test["__tests___api_questions_interview_ai_test"]
+    __tests___api_resources_test["__tests___api_resources_test"]
+    __tests___api_user_paths_test["__tests___api_user_paths_test"]
+    __tests___components_auth_context_test["__tests___components_auth_context_test"]
+    __tests___components_hydration_safety_test["__tests___components_hydration_safety_test"]
+    __tests___components_types_constants_test["__tests___components_types_constants_test"]
+    __tests___stress_stress_test["__tests___stress_stress_test"]
+    prisma_seed["prisma_seed"]
+    src_middleware["src_middleware"]
+    src_app_layout["src_app_layout"]
+    src_app_page["src_app_page"]
+    src_app_sitemap["src_app_sitemap"]
+    src_app_api_route["src_app_api_route"]
+    src_app_api_admin_analytics_route["src_app_api_admin_analytics_route"]
+    src_app_api_admin_questions_route["src_app_api_admin_questions_route"]
+    src_app_api_ai_assessment_score_route["src_app_api_ai_assessment_score_route"]
+    src_app_api_ai_coach_route["src_app_api_ai_coach_route"]
+    src_app_api_ai_cover_letter_route["src_app_api_ai_cover_letter_route"]
+    src_app_api_ai_resume_review_route["src_app_api_ai_resume_review_route"]
+    src_app_api_assessments_route["src_app_api_assessments_route"]
+    src_app_api_assessments_[id]_route["src_app_api_assessments_[id]_route"]
+    src_app_api_auth_login_route["src_app_api_auth_login_route"]
+    src_app_api_auth_logout_route["src_app_api_auth_logout_route"]
+    src_app_api_auth_register_route["src_app_api_auth_register_route"]
+    src_app_api_auth_verify_email_route["src_app_api_auth_verify_email_route"]
+    src_app_api_cover_letter_route["src_app_api_cover_letter_route"]
+    src_app_api_cover_letter_[id]_route["src_app_api_cover_letter_[id]_route"]
+    src_app_api_dashboard_route["src_app_api_dashboard_route"]
+    src_app_api_downloads_route["src_app_api_downloads_route"]
+    src_app_api_downloads_[id]_route["src_app_api_downloads_[id]_route"]
+    src_app_api_export_route["src_app_api_export_route"]
+    src_app_api_guides_route["src_app_api_guides_route"]
+    src_app_api_guides_[id]_route["src_app_api_guides_[id]_route"]
+    src_app_api_guides_progress_route["src_app_api_guides_progress_route"]
+    src_app_api_interview_route["src_app_api_interview_route"]
+    src_app_api_interview_[id]_route["src_app_api_interview_[id]_route"]
+    src_app_api_interview_[id]_complete_route["src_app_api_interview_[id]_complete_route"]
+    src_app_api_profile_route["src_app_api_profile_route"]
+    src_app_api_questions_route["src_app_api_questions_route"]
+    src_app_api_questions_count_route["src_app_api_questions_count_route"]
+    src_app_api_resume_route["src_app_api_resume_route"]
+    src_app_api_resume_[id]_route["src_app_api_resume_[id]_route"]
+    src_app_api_subscription_checkout_route["src_app_api_subscription_checkout_route"]
+    src_app_api_subscription_manage_route["src_app_api_subscription_manage_route"]
+    src_app_api_subscription_status_route["src_app_api_subscription_status_route"]
+    src_app_api_subscription_usage_route["src_app_api_subscription_usage_route"]
+    src_app_api_subscription_webhook_route["src_app_api_subscription_webhook_route"]
+    src_components_interview_lab_AdminPanel["src_components_interview_lab_AdminPanel"]
+    src_components_interview_lab_AppLayout["src_components_interview_lab_AppLayout"]
+    src_components_interview_lab_AuthScreen["src_components_interview_lab_AuthScreen"]
+    src_components_interview_lab_CoverLetterStudio["src_components_interview_lab_CoverLetterStudio"]
+    src_components_interview_lab_DashboardView["src_components_interview_lab_DashboardView"]
+    src_components_interview_lab_DownloadCenter["src_components_interview_lab_DownloadCenter"]
+    src_components_interview_lab_LandingPage["src_components_interview_lab_LandingPage"]
+    src_components_interview_lab_LearningPaths["src_components_interview_lab_LearningPaths"]
+    src_components_interview_lab_MockInterview["src_components_interview_lab_MockInterview"]
+    src_components_interview_lab_OnboardingQuiz["src_components_interview_lab_OnboardingQuiz"]
+    src_components_interview_lab_PracticeTests["src_components_interview_lab_PracticeTests"]
+    src_components_interview_lab_PricingPage["src_components_interview_lab_PricingPage"]
+    src_components_interview_lab_QuestionBank["src_components_interview_lab_QuestionBank"]
+    src_components_interview_lab_ResumeLab["src_components_interview_lab_ResumeLab"]
+    src_components_interview_lab_SubscriptionBanner["src_components_interview_lab_SubscriptionBanner"]
+    src_components_interview_lab_UpgradeModal["src_components_interview_lab_UpgradeModal"]
+    src_components_ui_accordion["src_components_ui_accordion"]
+    src_components_ui_alert["src_components_ui_alert"]
+    src_components_ui_badge["src_components_ui_badge"]
+    src_components_ui_button["src_components_ui_button"]
+    src_components_ui_card["src_components_ui_card"]
+    src_components_ui_checkbox["src_components_ui_checkbox"]
+    src_components_ui_dialog["src_components_ui_dialog"]
+    src_components_ui_glass_badge["src_components_ui_glass_badge"]
+    src_components_ui_glass_button["src_components_ui_glass_button"]
+    src_components_ui_glass_card["src_components_ui_glass_card"]
+    src_components_ui_glass_input["src_components_ui_glass_input"]
+    src_components_ui_input["src_components_ui_input"]
+    src_components_ui_label["src_components_ui_label"]
+    src_components_ui_progress["src_components_ui_progress"]
+    src_components_ui_select["src_components_ui_select"]
+    src_components_ui_separator["src_components_ui_separator"]
+    src_components_ui_switch["src_components_ui_switch"]
+    src_components_ui_tabs["src_components_ui_tabs"]
+    src_components_ui_textarea["src_components_ui_textarea"]
+    src_components_ui_toast["src_components_ui_toast"]
+    src_components_ui_toaster["src_components_ui_toaster"]
+    src_hooks_use_toast["src_hooks_use_toast"]
+    src_lib_animations["src_lib_animations"]
+    src_lib_auth_context["src_lib_auth_context"]
+    src_lib_auth_helpers["src_lib_auth_helpers"]
+    src_lib_browser_llm_integration["src_lib_browser_llm_integration"]
+    src_lib_db["src_lib_db"]
+    src_lib_email_verification["src_lib_email_verification"]
+    src_lib_password["src_lib_password"]
+    src_lib_pricing["src_lib_pricing"]
+    src_lib_rate_limit["src_lib_rate_limit"]
+    src_lib_sanitize["src_lib_sanitize"]
+    src_lib_session["src_lib_session"]
+    src_lib_subscription_guard["src_lib_subscription_guard"]
+    src_lib_types["src_lib_types"]
+    src_lib_use_subscription["src_lib_use_subscription"]
+    src_lib_utils["src_lib_utils"]
+    src_app_layout --> src_app_globals
+    src_lib_auth_context --> src_lib_types
+    src_lib_auth_helpers --> src_lib_db
+    src_lib_auth_helpers --> src_lib_session
+    src_lib_email_verification --> src_lib_db
+    src_lib_rate_limit --> src_lib_db
+    src_lib_subscription_guard --> src_lib_pricing
+    src_lib_use_subscription --> src_lib_auth_context
+    src_lib_use_subscription --> src_lib_pricing
+    src_lib_use_subscription --> src_lib_types
 ```
