@@ -21,21 +21,21 @@ npm run db:reset                               # reset DB
 
 ### Running tests — the plain `npm test` / `bun test` commands do NOT work cleanly
 
-Test files are split across two incompatible runners, and some are live-integration tests. The package.json `test`/`test:api`/`test:components` scripts all wrap plain `vitest run`, but 7 of the `__tests__/api/*.test.ts` files import from `'bun:test'`, not `'vitest'` — running them under vitest fails immediately with `Cannot bundle Node.js built-in "bun:test"`. Conversely, running the whole suite with `bun test` pulls in the vitest-only files (`vi.mock`-based) and several live-integration tests that need a running server, so *that* fails too. Verified working invocations:
+Test files are split across two runners plus some live-integration tests, and the package.json `test`/`test:api`/`test:components` scripts (plain `vitest run`) choke on the 7 `__tests__/api/*.test.ts` files that import from `'bun:test'` instead of `'vitest'` (`Cannot bundle Node.js built-in "bun:test"`). Verified working invocations:
 
 ```bash
-# Reliable, in-memory, no server needed — this is the "218 tests" the README/AGENTS.md refer to, plus component tests:
-bun test __tests__/api/questions.test.ts __tests__/api/auth-register.test.ts __tests__/api/auth-login.test.ts \
-  __tests__/api/assessments.test.ts __tests__/api/profile-dashboard.test.ts __tests__/api/subscription.test.ts \
-  __tests__/api/resume-coverletter.test.ts                      # bun:test — 197 tests
-npx vitest run __tests__/api/interview-session.test.ts __tests__/components   # vitest — 21 + 44 tests
+bun test __tests__/api/                        # 218 pass, 38 fail — the 38 are 4 live-integration
+                                                 # files below; every in-memory unit test passes
+npx vitest run __tests__/components             # 44 pass — needs jsdom (localStorage etc.), which
+                                                 # bun's default test env doesn't provide, so this one stays on vitest
 
-# Single file / single test, in whichever runner that file uses (check its first import):
+# Single file / single test — bun's runner also understands plain vitest imports (describe/it/expect),
+# just not vi.mock, so any single __tests__/api file works under bun:
 bun test __tests__/api/subscription.test.ts
-npx vitest run __tests__/api/interview-session.test.ts -t "some test name"
+bun test __tests__/api/subscription.test.ts -t "some test name"
 ```
 
-`__tests__/api/auth.test.ts`, `user-paths.test.ts`, `questions-interview-ai.test.ts`, `resources.test.ts`, `__tests__/run-api-tests.js`, and `__tests__/stress/stress-test.ts` are **live integration tests** — they `fetch()` `http://localhost:3000` directly and need `npm run dev` running first; several also expect a seeded/reachable Postgres via `DATABASE_URL`. Don't run these to check "does my change break tests" — use the in-memory suite above for that, and only reach for these if you're specifically validating against a running server.
+`__tests__/api/auth.test.ts`, `user-paths.test.ts`, `questions-interview-ai.test.ts`, and `resources.test.ts` are the 4 **live integration tests** inside `__tests__/api/` — they `fetch()` `http://localhost:3000` directly and need `npm run dev` running first (plus `__tests__/run-api-tests.js` and `__tests__/stress/stress-test.ts`, run directly with node, not through a test runner). Don't run these to check "does my change break tests"; the `bun test __tests__/api/` + `npx vitest run __tests__/components` pair above is the real regression suite (262 tests, matches the count README.md cites).
 
 ## Architecture
 

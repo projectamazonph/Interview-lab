@@ -10,13 +10,13 @@
 ┌──────────────────────────────────────────────────────────┐
 │                    Interview Lab                          │
 ├──────────────────────────────────────────────────────────┤
-│  Next.js 15 (App Router) + TypeScript + Bun              │
+│  Next.js 16 (App Router) + TypeScript + Node/Bun          │
 │  Tailwind CSS 4 + Ethereal Glass Design System           │
 │  Framer Motion (animations)                              │
 ├──────────────────────┬───────────────────────────────────┤
 │   Client             │   Server                          │
 │                      │                                   │
-│  • Auth (JWT cache)  │  • Prisma + SQLite                │
+│  • Auth (JWT cache)  │  • Prisma + PostgreSQL             │
 │  • Glass UI          │  • Z AI SDK (coaching)            │
 │  • Interview flows   │  • Export pipeline (docx/PDF/xlsx)│
 │  • Resume upload     │  • JWT auth (jose)                │

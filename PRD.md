@@ -10,6 +10,8 @@ Interview Lab is an **AI-powered interview preparation platform** purpose-built 
 
 **Core Value Proposition:** From VA to Amazon specialist — AI-powered preparation that turns uncertain candidates into confident, interview-ready professionals.
 
+**Positioning (as of the public landing page):** 100% free, presented as a companion to the paid **Project Amazon PH Academy** (repo `projectamazonph/amph-v2`, ₱2,999–₱9,999 course tiers). The Pricing Tiers table below still reflects the authenticated app's own internal paid-tier system (`src/lib/pricing.ts`), which remains live and separate from that public framing — see `CLAUDE.md` for the current split.
+
 ---
 
 ## Target Audience
@@ -116,9 +118,9 @@ Interview Lab is an **AI-powered interview preparation platform** purpose-built 
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Next.js 15 (App Router, standalone output) |
-| **Runtime** | Bun |
-| **Database** | Prisma + SQLite (PostgreSQL planned) |
+| **Framework** | Next.js 16 (App Router, standalone output) |
+| **Runtime** | Node (`package-lock.json` tracked; Bun also works, no `bun.lock` in the repo) |
+| **Database** | Prisma + PostgreSQL only (no SQLite fallback) |
 | **Auth** | Custom JWT (jose + HttpOnly cookies) + localStorage client cache |
 | **UI** | Tailwind CSS 4 + Ethereal Glass design system |
 | **Animation** | Framer Motion |

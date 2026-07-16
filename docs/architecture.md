@@ -1,6 +1,6 @@
 # Architecture — Interview Lab
 
-**Version:** 1.0 | **Updated:** 2026-07-02
+**Version:** 1.1 | **Updated:** 2026-07-16 (corrected against the actual implementation — see `CLAUDE.md` for the verification notes)
 
 ---
 
@@ -10,56 +10,43 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                       Browser                                │
 ├──────────────────────────────────────────────────────────────┤
-│  Next.js 15 App Router — Standalone Output (Vercel)          │
+│  Next.js 16 App Router — Standalone Output (Vercel)           │
 │                                                              │
 │  ┌─────────────────────────┐  ┌───────────────────────────┐  │
 │  │      Client Layer       │  │      Server Layer          │  │
 │  │                         │  │                            │  │
-│  │ • JWT Auth Cache (LS)   │  │ • Prisma ORM + SQLite     │  │
-│  │ • Ethereal Glass UI     │  │ • Z AI SDK (coaching)     │  │
-│  │ • Interview Flows       │  │ • JWT (jose) Auth         │  │
-│  │ • Framer Motion Anim.   │  │ • Export Pipeline         │  │
-│  │ • Zustand State         │  │ • API Routes              │  │
-│  └─────────────────────────┘  └───────────────────────────┘  │
-│                                                              │
+│  │ • JWT Auth Cache (LS)   │  │ • Prisma ORM + PostgreSQL │  │
+│  │ • Ethereal Glass UI     │  │ • Z AI SDK (coach route)  │  │
+│  │ • Interview Flows       │  │ • BrowserLLMIntegration   │  │
+│  │ • Framer Motion Anim.   │  │   (resume/cover/assess.)  │  │
+│  │ • React state/context   │  │ • JWT (jose) Auth         │  │
+│  │   (no external store)   │  │ • Export Pipeline         │  │
+│  └─────────────────────────┘  │ • API Routes              │  │
+│                                └───────────────────────────┘  │
 │  Tailwind CSS v4 · Space Grotesk + Plus Jakarta Sans          │
 │  Phosphor Icons (light weight) · Framer Motion               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
+No state-management library (Zustand, Redux, etc.) is installed or used — client state is plain React state/context (`src/lib/auth-context.tsx`).
+
 ---
 
 ## Route Structure
 
+**This is not a multi-route app.** `src/app/page.tsx` is a single client component acting as a state machine, not a router. Logged-out users see `LandingPage` → `AuthScreen`; once authenticated, `AppLayout` wraps a `renderView()` switch keyed by an `ActiveView` string (`dashboard`, `interview`, `resume`, `cover-letter`, `assessments`, `downloads`, `guides`, `admin`, `pricing`, …). There is no `/dashboard/interviews/[roleId]/[sessionId]` URL — switching features is a state change inside this one page, not a Next.js navigation. (An earlier version of this doc described a nested route tree; it never matched the implementation.)
+
+Actual Next.js routes:
+
 ```
-/                           → Landing page
-/(auth)/login               → Login
-/(auth)/register            → Registration
+/                → src/app/page.tsx — the state-machine shell described above
+/login           → thin login page
+/register        → thin registration page
+/about           → static marketing page
+/contact         → static marketing page
+/dashboard       → separate thin page (not the same as the "dashboard" ActiveView inside `/`)
 
-/(dashboard)/
-├── /                       → User dashboard (progress, stats)
-├── interviews/             → AI Mock Interviews
-│   ├── /                   → Role selection
-│   ├── [roleId]            → Start interview
-│   └── [roleId]/[sessionId] → Active interview + scoring
-├── resume/                 → Resume Lab
-│   └── /                   → Upload, review, improve
-├── cover-letter/           → Cover Letter Studio
-│   └── /                   → Generate, customize, download
-├── practice-tests/         → Practice Tests
-│   ├── /                   → Test selection
-│   └── [testId]            → Active test + results
-├── learning/               → Learning Paths
-│   ├── /                   → Path selection
-│   └── [pathId]            → Path content + progress
-├── downloads/              → Download Center (tier-gated)
-└── profile/               → User profile + settings
-
-/(admin)/
-├── dashboard              → Analytics
-├── users/                 → User management
-├── questions/             → Question bank management
-└── content/              → Content management
+/api/*           → all backend logic — see CLAUDE.md for the route list
 ```
 
 ---
@@ -68,44 +55,43 @@
 
 ### Core Entities
 
+The table below is a simplified read of the real model names in `prisma/schema.prisma` — see that file for the authoritative field list (it also has `AgentRun`, `GuideProgress`, `Subscription`, `Payment`, `VerificationToken`, `RateLimitEntry`, `AppSetting`, `Download`, `Guide`, `Assessment`, and `QuestionAttempt`, none of which are listed here for brevity):
+
 | Entity | Key Fields | Relations |
 |--------|------------|-----------|
-| **User** | id, email, name, password, role, tier | → Interview[], Resume[], CoverLetter[] |
-| **Interview** | id, userId, role, score, answers, feedback, startedAt, completedAt | → User |
-| **Resume** | id, userId, content, analysis, improvements, createdAt | → User |
-| **CoverLetter** | id, userId, role, tone, content, createdAt | → User |
-| **TestAttempt** | id, userId, type, score, answers, duration, completedAt | → User |
-| **Question** | id, role, difficulty, text, idealAnswer, category | |
-| **Progress** | id, userId, pathId, moduleId, completed, score | → User |
+| **User** | id, email, name, passwordHash, subscriptionTier, isAdmin, emailVerified | → UserProfile, Resume[], CoverLetter[], InterviewSession[], Subscription |
+| **InterviewSession** | id, userId, mode, targetRole, overallScore, transcript, startedAt, completedAt | → User, QuestionAttempt[] |
+| **QuestionAttempt** | id, sessionId, questionId, userAnswer, aiFeedback, score, rubricBreakdown | → InterviewSession, Question |
+| **Resume** | id, userId, originalText, targetRole, score, improvedVersion, truthFlags | → User |
+| **CoverLetter** | id, userId, jobDescription, tone, generatedLetter, truthFlags | → User |
+| **Question** | id, role, difficulty, type, skillArea, question, sampleAnswer, status | → QuestionAttempt[] |
 
 ### Auth Flow
 
 ```
-Login → Server Action
+Login → POST /api/auth/login (client fetch from src/app/login/page.tsx, not a Server Action)
   → Validate credentials (bcrypt)
-  → Generate JWT (jose, configurable expiry)
-  → Set HttpOnly cookie (httpOnly, secure, sameSite=lax)
+  → Generate JWT (jose, 24h expiry — src/lib/session.ts)
+  → Set HttpOnly cookie (interviewlab_session; httpOnly, secure in prod, sameSite=lax)
   → Cache token in localStorage (client-side fallback)
-  → Redirect to dashboard
+  → Client-side state transition to the authenticated view (src/app/page.tsx)
 
-Middleware → Check HttpOnly cookie on protected routes
-  → Cache check via localStorage mirror
-  → If invalid/missing → redirect to login
-  → If valid → attach user context → proceed
+Every API route → calls getUserFromRequest()/verifyAuth() (src/lib/auth-helpers.ts) individually
+  → src/middleware.ts does NOT check auth — it only rate-limits /api/* (60/min general,
+    10/15min on /api/auth/login|register); there is no middleware-level auth gate
 ```
 
-### AI Coaching Flow (Z AI SDK)
+### AI Coaching Flow (Z AI SDK) — coach route only
 
 ```
-User starts interview → POST /api/interviews/start
-  → Load role-specific prompt + questions
-  → Initialize Z AI SDK session
-  → Stream AI responses (real-time chat)
-  → Each answer → AI scores + gives feedback
-  → Interview complete → POST /api/interviews/complete
-  → Save transcript + scores + feedback
-  → Return results page
+User submits an interview answer → POST /api/ai/coach
+  → Inline system prompt (interview coach persona, src/app/api/ai/coach/route.ts)
+  → ZAI.create() (z-ai-web-dev-sdk) → single request/response, not a streamed chat
+  → Returns score + rubric breakdown + follow-up question as JSON
+  → Client saves the attempt
 ```
+
+Resume review, cover letter, and assessment scoring (`/api/ai/resume-review`, `/api/ai/cover-letter`, `/api/ai/assessment-score`) do **not** use Z AI SDK — they call `BrowserLLMIntegration` (`src/lib/browser-llm-integration.ts`), a `"use client"`-tagged class invoked from the server route, with a hardcoded JSON fallback in each route's `catch` block.
 
 ---
 
@@ -113,7 +99,7 @@ User starts interview → POST /api/interviews/start
 
 ```
 User requests download (resume/cover letter/report)
-  → Server Action
+  → POST /api/export (API route, not a Server Action)
   → Choose format:
      • DOCX → docx library → structured Word document
      • PDF → pdfkit → formatted PDF with styling
@@ -125,36 +111,7 @@ User requests download (resume/cover letter/report)
 
 ## Design System Tokens
 
-```css
-/* Ethereal Glass — Design Tokens */
-
-:root {
-  /* Background */
-  --bg-primary: #050505;        /* OLED black */
-  --bg-glass: rgba(255,255,255,0.03);
-  --bg-glass-hover: rgba(255,255,255,0.06);
-  
-  /* Glass Effect */
-  --glass-border: rgba(255,255,255,0.06);
-  --glass-border-hover: rgba(255,255,255,0.12);
-  --glass-blur: blur(24px);
-  
-  /* Accents */
-  --accent-primary: #6366f1;    /* Indigo */
-  --accent-secondary: #8b5cf6;  /* Violet */
-  --accent-success: #10b981;    /* Emerald */
-  --accent-warning: #f59e0b;    /* Amber */
-  --accent-danger: #f43f5e;     /* Rose */
-  
-  /* Typography */
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
-  
-  /* Motion */
-  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-```
+The real, authoritative tokens live in `src/app/globals.css` (e.g. `--color-pa-navy: #050505`, `--color-glass-border`, `--background`, `.ease-premium`) — the actual variable names differ from an earlier draft of this doc. Concept (OLED black background, glass-morphism borders, Indigo/violet/emerald/amber/rose accents, Space Grotesk + Plus Jakarta Sans, custom cubic-bezier motion curves) still holds; read `globals.css` directly rather than this doc for exact values, so this section doesn't drift out of sync again.
 
 ---
 
@@ -163,16 +120,14 @@ User requests download (resume/cover letter/report)
 ```
 [Vercel Edge Network]
         ↓
-[Next.js 15 Standalone Output]
-  - SSR pages (landing, interviews, resume)
-  - API Routes (interview sessions, auth, exports)
+[Next.js 16 Standalone Output]
+  - SSR pages (landing, about, contact, thin dashboard/login/register pages)
+  - The authenticated app itself: a single client-rendered page (src/app/page.tsx)
+  - API Routes (interview sessions, auth, exports, subscription, admin, …)
   - Static assets (downloads, images, fonts)
         ↓
-[SQLite Database] (dev)
-[PostgreSQL] (planned production)
+[PostgreSQL] — via DATABASE_URL, same provider for local dev and production (no SQLite)
         ↓
-[Z AI SDK Cloud API]
-  - Interview coaching
-  - Resume analysis
-  - Content generation
+[Z AI SDK Cloud API] — interview coaching only (POST /api/ai/coach)
+[BrowserLLMIntegration] — resume analysis, cover letters, assessment scoring (rule-based/templated, not Z AI)
 ```

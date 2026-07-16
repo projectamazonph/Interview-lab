@@ -10,14 +10,15 @@
 | **Purpose** | Help Filipino VAs prepare for Amazon roles (PPC, Account, Listing, Reporting, Agency VA) |
 | **Status** | Active development |
 | **Domain** | interview-lab.vercel.app |
+| **Positioning** | Public landing page is free, positioned as a companion to the paid Project Amazon PH Academy (repo `projectamazonph/amph-v2`). The authenticated app still has its own paid tier system live — see `src/lib/pricing.ts` — the two aren't unified yet. |
 
 ## Tech Stack
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
 | **Framework** | Next.js 16.1.1 (App Router) | Standalone output |
-| **Runtime** | Bun | Package management + scripts |
-| **Database** | Prisma v6 + SQLite (dev) / PostgreSQL (prod) | Local dev uses SQLite |
+| **Runtime** | Node | `package-lock.json` is the tracked lockfile (no `bun.lock` in the repo); Bun also runs the npm scripts fine |
+| **Database** | Prisma v6 + PostgreSQL only | `prisma/schema.prisma` has no SQLite fallback — `DATABASE_URL` is required even locally |
 | **Auth** | JWT (jose v6) + HttpOnly cookies + localStorage client cache | Custom |
 | **UI** | Tailwind CSS v4 | Custom glass design system |
 | **Icons** | Phosphor Icons (light weight) | No thick-stroked icons |
@@ -25,7 +26,7 @@
 | **Fonts** | Space Grotesk (headings) + Plus Jakarta Sans (body) | No Inter/Roboto |
 | **AI** | Z AI Web Dev SDK | Coaching, scoring, content generation |
 | **Export** | docx, PDF (pdfkit), Excel (exceljs) | Resource downloads |
-| **Testing** | Vitest | unit + API + component tests |
+| **Testing** | Vitest + Bun's test runner | split across two runners — see Build & Deploy below |
 
 ## Design System — Ethereal Glass
 
@@ -61,11 +62,11 @@ Interview-lab/
 
 - **TypeScript strict** — no `any` without justification
 - **ESLint flat config** — `eslint.config.mjs`
-- **Vitest** — tests colocated in `__tests__/` mirroring `src/` structure
+- **Tests** — colocated in `__tests__/` mirroring `src/` structure; 7 of the `__tests__/api/*.test.ts` files import from `'bun:test'` and only run under `bun test`, the rest run under `vitest` — see Build & Deploy below
 - **Prisma** — generate client on `postinstall`
 - **Path aliases** — `@/` maps to `src/`
 - **Custom design tokens** — defined in Tailwind config, not arbitrary values
-- **Package manager** — Use Bun exclusively (bun.lock, not npm package-lock.json)
+- **Package manager** — `package-lock.json` is the tracked lockfile; `bun` works too (no `bun.lock` committed, so don't add one without also dropping `package-lock.json`)
 
 ## Guardrails
 
@@ -79,7 +80,7 @@ Interview-lab/
 
 ### DO
 - ✅ Use Space Grotesk for headings, Plus Jakarta Sans for body
-- ✅ Run `bun run test` before PRs
+- ✅ Run `bun test __tests__/api/` and `npx vitest run __tests__/components` before PRs (plain `bun run test` / `npm test` do not run the whole suite cleanly — see Build & Deploy below)
 - ✅ Run `bun run build` before deploy
 - ✅ Keep AI prompts centralized in `src/lib/`
 - ✅ Document new env vars
@@ -88,14 +89,14 @@ Interview-lab/
 ## Build & Deploy
 
 ```bash
-bun dev                    # http://localhost:3000
-bun run build              # prisma generate + next build
-bun test                   # Vitest
-bun run test:api           # API tests only
-bun run lint               # ESLint
-bun run db:push            # Schema push (dev)
-bun run db:migrate         # Create migration
-bun run db:reset           # Reset + seed
+bun dev                            # http://localhost:3000
+bun run build                      # prisma generate + next build
+bun test __tests__/api/            # 218 pass; ~38 fail without a running dev server (4 live-integration files) — expected
+npx vitest run __tests__/components   # 44 pass — needs vitest's jsdom env
+bun run lint                       # ESLint
+bun run db:push                    # Schema push (DATABASE_URL, Postgres)
+bun run db:migrate                 # Create migration
+bun run db:reset                   # Reset + seed
 ```
 
 ## Key Files

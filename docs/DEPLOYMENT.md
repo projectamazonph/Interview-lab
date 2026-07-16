@@ -4,7 +4,7 @@
 
 | Environment | Purpose | Database |
 |-------------|---------|----------|
-| Local dev | Development | SQLite |
+| Local dev | Development | PostgreSQL (`prisma/schema.prisma` has no SQLite fallback — `DATABASE_URL` is required locally too) |
 | Vercel | Production | PostgreSQL |
 
 ## Local Development
@@ -14,10 +14,9 @@
 bun install
 
 # Set up environment
-cp .env.example .env  # If exists, or create manually
-# Edit .env with your values
+# Create .env with DATABASE_URL (Postgres) and JWT_SECRET — there is no .env.example in the repo
 
-# Push schema to local SQLite
+# Push schema to DATABASE_URL
 bun run db:push
 
 # Start dev server

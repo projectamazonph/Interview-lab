@@ -9,8 +9,8 @@ Translate the product requirements for **Interview Lab** into small, testable im
 | Layer | Technology |
 |-------|------------|
 | Framework | Next.js 16 (App Router, standalone output) |
-| Runtime | Bun |
-| Database | Prisma + SQLite (dev) / PostgreSQL (prod) |
+| Runtime | Node (`package-lock.json` tracked; Bun also works, no `bun.lock` in the repo) |
+| Database | Prisma + PostgreSQL only (no SQLite fallback — `DATABASE_URL` required) |
 | Auth | JWT (jose) + HttpOnly cookies |
 | UI | Tailwind CSS v4 + custom glass design system |
 | Icons | Phosphor Icons (weight="light") |

@@ -33,9 +33,9 @@ When modifying AI-related features (mock interviews, resume coaching, cover lett
 
 | Layer | Tool |
 |-------|------|
-| Runtime | Bun |
+| Runtime | Node (`package-lock.json` tracked; Bun also works, no `bun.lock` in the repo) |
 | Framework | Next.js 16 (App Router) |
-| Database | Prisma + SQLite (dev) / PostgreSQL (prod) |
+| Database | Prisma + PostgreSQL only (no SQLite fallback — `DATABASE_URL` required) |
 | Auth | JWT (jose) + HttpOnly cookies |
 | Styling | Tailwind CSS v4 with glass design system |
 | Icons | Phosphor Icons (weight="light" only) |
@@ -44,12 +44,15 @@ When modifying AI-related features (mock interviews, resume coaching, cover lett
 ## Common Commands
 
 ```bash
-bun install           # Install dependencies
-bun run dev           # Start dev server on :3000
-bun run build         # Production build (prisma generate + next build)
-bun run test          # Vitest suite
-bun run test:api      # API route tests only
-bun run lint          # ESLint
-bun run db:push       # Push schema to SQLite (dev)
-bun run db:generate  # Generate Prisma client
+bun install                          # Install dependencies (or npm install)
+bun run dev                          # Start dev server on :3000
+bun run build                        # Production build (prisma generate + next build)
+bun test __tests__/api/              # API unit tests — 218 pass; ~38 fail without a running dev
+                                      # server (4 live-integration files) — expected, not a regression
+npx vitest run __tests__/components  # Component tests — needs vitest's jsdom env
+bun run lint                         # ESLint
+bun run db:push                      # Push schema to DATABASE_URL (Postgres)
+bun run db:generate                  # Generate Prisma client
 ```
+
+Plain `bun run test` / `npm test` do not run the whole suite cleanly — 7 of the `__tests__/api/*.test.ts` files import from `'bun:test'`, which plain `vitest run` can't load. Use the two commands above instead.

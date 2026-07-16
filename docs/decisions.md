@@ -4,35 +4,36 @@
 
 ---
 
-## ADR-001: Next.js 15 with App Router (Standalone Output)
+## ADR-001: Next.js App Router (Standalone Output)
 
-**Status:** ✅ ACCEPTED
+**Status:** ✅ ACCEPTED — **superseded in part, see note**
 
 **Context:** Need a React framework with SSR, API routes, and Vercel deployment support. The app requires rich interactivity for interview sessions alongside static marketing pages.
 
-**Decision:** Use Next.js 15 with App Router in standalone output mode for Vercel deployment.
+**Decision:** Use Next.js with App Router in standalone output mode for Vercel deployment. (Originally written against v15; the repo has since moved to Next.js 16 — see `package.json`.)
 
 **Consequences:**
 - ✅ Server Components for landing/marketing pages (fast, SEO)
 - ✅ API Routes for interview sessions, auth, exports
-- ✅ Middleware for auth protection
 - ✅ Standalone output optimized for Vercel
-- ⚠️ Must stay on v15 until v16 ecosystem stability
+- ⚠️ **Correction:** `src/middleware.ts` only rate-limits `/api/*` — it does not check auth. Every API route calls `getUserFromRequest()`/`verifyAuth()` (`src/lib/auth-helpers.ts`) individually; there is no middleware-level auth gate. The "Middleware for auth protection" consequence originally listed here never matched the implementation.
 
 ---
 
-## ADR-002: SQLite via Prisma (Dev), PostgreSQL (Production Planned)
+## ADR-002: PostgreSQL via Prisma
 
-**Status:** ✅ ACCEPTED
+**Status:** ✅ ACCEPTED — supersedes the original SQLite-for-dev plan
 
 **Context:** Rapid development requires zero-config database. Production needs concurrent access and durability.
 
-**Decision:** SQLite for development (Prisma ORM abstracts DB layer). PostgreSQL (Neon/Supabase) planned for production migration.
+**Original decision (no longer current):** SQLite for development, PostgreSQL planned for production migration.
+
+**Current state:** `prisma/schema.prisma` has `provider = "postgresql"` with no SQLite fallback — `DATABASE_URL` (a Postgres connection string) is required for local dev too, not just production.
 
 **Consequences:**
-- ✅ Zero-config local dev
+- ✅ One database engine everywhere — no dev/prod schema drift
 - ✅ Type-safe queries via Prisma
-- ⚠️ Migration planning needed before production launch
+- ⚠️ Local dev now needs a reachable Postgres instance (or a service like Neon/Supabase) instead of a zero-config SQLite file
 
 ---
 
@@ -77,7 +78,7 @@
 
 ## ADR-005: Z AI SDK for Coaching Features
 
-**Status:** ✅ ACCEPTED
+**Status:** ✅ ACCEPTED — **implementation only partially matches this decision, see note**
 
 **Context:** Need reliable AI integration for interview coaching, resume analysis, and content generation. Must handle streaming, scoring, and structured output.
 
@@ -87,11 +88,13 @@
 - Resume extraction and analysis
 - Cover letter generation
 
+**Current state:** Only `POST /api/ai/coach` (interview scoring) actually calls `z-ai-web-dev-sdk`. `POST /api/ai/resume-review`, `/api/ai/cover-letter`, and `/api/ai/assessment-score` instead call `BrowserLLMIntegration` (`src/lib/browser-llm-integration.ts`) — a `"use client"`-tagged singleton invoked from server route handlers, which tries `window.ai` (rarely present server-side) and falls back to rule-based/templated JSON. Each of those three routes also has its own hardcoded JSON fallback in its `catch` block. "Single AI provider for all features" is not currently true.
+
 **Consequences:**
-- ✅ Single AI provider for all features
-- ✅ Built-in streaming support
-- ⚠️ Vendor lock-in — migration path unclear
+- ✅ Built-in streaming support (coach route)
+- ⚠️ Vendor lock-in on the coach route — migration path unclear
 - ⚠️ Usage costs scale with user base
+- ⚠️ Resume review / cover letter / assessment scoring do not depend on Z AI at all today, and can silently return templated output on any error
 
 ---
 

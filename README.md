@@ -2,7 +2,7 @@
 
 # 🎙️ Interview Lab
 
-**Amazon VA Interview Preparation Platform**
+**Amazon VA Interview Preparation Platform — a free companion to Project Amazon PH Academy**
 
 AI-powered mock interviews, resume coaching, cover letter generation, and practice tests
 for aspiring Amazon Virtual Assistants.
@@ -30,6 +30,8 @@ for aspiring Amazon Virtual Assistants.
 
 ## 💰 Pricing Tiers
 
+The public landing page presents Interview Lab as 100% free (positioned as a companion to the paid [Project Amazon PH Academy](https://github.com/projectamazonph/amph-v2)). The authenticated app still has these three tiers live under the hood (`src/lib/pricing.ts`, enforced per-feature by `src/lib/subscription-guard.ts`) — `POST /api/subscription/checkout` upgrades a tier directly with no real payment processor wired in yet:
+
 | Tier | Price | Interviews | Resumes | Cover Letters | Practice Tests |
 |------|-------|-----------|---------|--------------|----------------|
 | **Free** | ₱0 | 1/week | 1/month | 1/month | 2/month |
@@ -41,8 +43,8 @@ for aspiring Amazon Virtual Assistants.
 | Layer | Technology |
 |-------|-----------|
 | **Framework** | Next.js 16.1.1 (App Router, standalone) |
-| **Runtime** | Bun |
-| **Database** | Prisma v6 + SQLite (dev) / PostgreSQL (prod) |
+| **Runtime** | Node — `package-lock.json` is the tracked lockfile (`bun` also works for `dev`/`build`/`test`, but there's no `bun.lock`) |
+| **Database** | Prisma v6 + PostgreSQL only (`prisma/schema.prisma` has no SQLite fallback — set `DATABASE_URL` even for local dev) |
 | **Auth** | Custom JWT sessions (jose) + HttpOnly cookies |
 | **UI** | Tailwind CSS v4 + custom glass design system |
 | **Icons** | Phosphor Icons (light weight) |
@@ -114,7 +116,7 @@ src/
 │   └── utils.ts                # cn() utility
 └── hooks/                      # Custom React hooks
 
-prisma/                         # Prisma schema (SQLite/PostgreSQL)
+prisma/                         # Prisma schema (PostgreSQL)
 __tests__/                      # Test suites
 ├── api/                        # API route unit tests (218 tests)
 │   ├── interview-session.test.ts
@@ -132,15 +134,18 @@ docs/                           # PRD, architecture, feature specs
 
 ## 🧪 Testing
 
+`npm test` / `bun test` run against the whole `__tests__/` tree, which includes a handful of live-integration tests that `fetch()` `http://localhost:3000` directly — those fail unless `npm run dev` is already running. For the actual regression suite (in-memory, no server needed):
+
 ```bash
-# Run all tests
-bun test
-
-# Run specific test file
-bun test __tests__/api/subscription.test.ts
-
-# Run API tests only
+# API unit tests — 218 pass; ignore the ~38 failures from the 4 live-integration
+# files (auth.test.ts, user-paths.test.ts, questions-interview-ai.test.ts, resources.test.ts)
 bun test __tests__/api/
+
+# Component tests — needs vitest's jsdom env (bun's default test env has no localStorage)
+npx vitest run __tests__/components
+
+# Run one file
+bun test __tests__/api/subscription.test.ts
 ```
 
 ### Test Coverage
@@ -165,7 +170,7 @@ Tests use in-memory stubs — no database or server required.
 |---------|-------------|
 | `bun run dev` | Dev server with logging |
 | `bun run build` | Production build (standalone) |
-| `bun run db:push` | Push Prisma schema to SQLite |
+| `bun run db:push` | Push Prisma schema to `DATABASE_URL` |
 | `bun run db:generate` | Generate Prisma client |
 | `bun run test` | Run test suite |
 | `bun run lint` | ESLint check |
@@ -185,7 +190,7 @@ The app uses a premium dark-mode glass aesthetic:
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | SQLite connection string (`file:./dev.db`) or PostgreSQL URL |
+| `DATABASE_URL` | PostgreSQL connection string (required — `prisma/schema.prisma` has no SQLite fallback) |
 | `JWT_SECRET` | Secret for signing JWT session tokens |
 | `NEXT_PUBLIC_APP_URL` | App base URL |
 
