@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { Question, InterviewSession, ROLES, INTERVIEW_MODES, ActiveView } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { FieldCard } from '@/components/ui/glass-card';
+import { FieldButton } from '@/components/ui/glass-button';
+import { FieldBadge } from '@/components/ui/glass-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
@@ -253,8 +253,8 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary font-heading">Mock Interview</h2>
-          <p className="text-text-muted mt-1">Practice with AI-powered interview coaching</p>
+          <h2 className="text-2xl font-bold text-[#171717] font-heading">Mock Interview</h2>
+          <p className="text-[#737373] mt-1">Practice with AI-powered interview coaching</p>
         </div>
 
         <div className="flex justify-center mb-2">
@@ -267,26 +267,26 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
           />
         </div>
 
-        <Card className="max-w-lg">
-          <CardHeader>
-            <CardTitle className="font-heading">Start Interview</CardTitle>
-            <CardDescription>Choose your interview mode and target role</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <FieldCard className="max-w-lg">
+          <div>
+            <div className="font-heading">Start Interview</div>
+            <div>Choose your interview mode and target role</div>
+          </div>
+          <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Interview Mode</label>
               {INTERVIEW_MODES.map(m => (
                 <button
                   key={m.value}
                   onClick={() => setMode(m.value)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-violet focus:ring-offset-1 ${
-                    mode === m.value ? 'border-accent-violet bg-accent-violet/8' : 'border-glass-border hover:border-glass-border-hover'
+                  className={`w-full text-left p-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1 ${
+                    mode === m.value ? 'border-[#FF6B35] bg-[#FF6B35]/8' : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
                   }`}
                   aria-pressed={mode === m.value}
                   aria-label={`Select ${m.label} mode`}
                 >
                   <p className="font-medium text-sm">{m.label}</p>
-                  <p className="text-xs text-text-muted mt-0.5 break-words">{m.desc}</p>
+                  <p className="text-xs text-[#737373] mt-0.5 break-words">{m.desc}</p>
                 </button>
               ))}
             </div>
@@ -299,43 +299,43 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              className="w-full bg-accent-violet hover:bg-accent-indigo focus:ring-2 focus:ring-accent-violet focus:ring-offset-1"
+            <FieldButton
+              className="w-full bg-[#FF6B35] hover:bg-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1"
               onClick={startInterview}
               disabled={!mode || loading}
               aria-label="Start interview with selected mode"
             >
               {loading ? 'Starting...' : 'Start Interview'}
-            </Button>
-          </CardContent>
-        </Card>
+            </FieldButton>
+          </div>
+        </FieldCard>
 
         {sessions.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Previous Sessions</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <FieldCard>
+            <div>
+              <div className="text-lg">Previous Sessions</div>
+            </div>
+            <div>
               <div className="space-y-2">
                 {sessions.map(s => (
-                  <div key={s.id} className="flex items-center justify-between gap-2 p-3 bg-glass/40 rounded-lg">
+                  <div key={s.id} className="flex items-center justify-between gap-2 p-3 bg-[#F4F3EE]/40 rounded-lg">
                     <div className="min-w-0">
                       <p className="text-sm font-medium capitalize truncate">{s.mode.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-text-muted">{new Date(s.startedAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-[#737373]">{new Date(s.startedAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex gap-2 shrink-0 flex-wrap">
                       {s.overallScore !== null && s.overallScore !== undefined && (
-                        <Badge variant={s.overallScore >= 7 ? 'default' : 'secondary'}>
+                        <FieldBadge variant={s.overallScore >= 7 ? 'accent' : 'default'}>
                           {s.overallScore.toFixed(1)}/10
-                        </Badge>
+                        </FieldBadge>
                       )}
-                      <Badge variant="outline">{s.completedAt ? 'Completed' : 'In Progress'}</Badge>
+                      <FieldBadge variant="ghost">{s.completedAt ? 'Completed' : 'In Progress'}</FieldBadge>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </FieldCard>
         )}
 
         <UpgradeModal
@@ -357,8 +357,8 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
 
     return (
       <div className="max-w-2xl mx-auto space-y-6">
-        <Card>
-          <CardHeader className="text-center">
+        <FieldCard>
+          <div className="text-center">
             <div className="flex justify-center mb-4">
               <Image
                 src="/images/illustrations/interview-complete-celebration.png"
@@ -368,21 +368,21 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
                 className="w-full max-w-xs h-auto"
               />
             </div>
-            <div className="w-16 h-16 bg-accent-violet/15 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-accent-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="w-16 h-16 bg-[#FF6B35]/15 rounded-md flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#FF6B35]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <CardTitle className="text-2xl font-heading">Interview Complete!</CardTitle>
-            <CardDescription>You answered {transcript.length} questions (including follow-ups)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            <div className="text-2xl font-heading">Interview Complete!</div>
+            <div>You answered {transcript.length} questions (including follow-ups)</div>
+          </div>
+          <div className="space-y-4">
             <div className="text-center">
-              <p className="text-4xl font-bold text-accent-indigo font-mono">{avgScore.toFixed(1)}/10</p>
-              <p className="text-text-muted">Average Score</p>
+              <p className="text-4xl font-bold text-[#FF6B35] font-mono">{avgScore.toFixed(1)}/10</p>
+              <p className="text-[#737373]">Average Score</p>
             </div>
             <div className="space-y-2">
               {scores.map((score, i) => (
                 <div key={`main-${i}`} className="flex items-center gap-3">
-                  <span className="text-sm text-text-muted w-8">Q{i + 1}</span>
+                  <span className="text-sm text-[#737373] w-8">Q{i + 1}</span>
                   <Progress value={score * 10} className="flex-1 min-w-0 h-2" />
                   <span className="text-sm font-medium w-12">{score}/10</span>
                 </div>
@@ -402,27 +402,27 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
                 </div>
               </div>
             )}
-            <Button
-              className="w-full bg-accent-violet hover:bg-accent-indigo"
+            <FieldButton
+              className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
               onClick={() => { setSession(null); setQuestions([]); setCurrentIndex(0); setScores([]); setCompleted(false); setTranscript([]); }}
             >
               Start New Interview
-            </Button>
-          </CardContent>
-        </Card>
+            </FieldButton>
+          </div>
+        </FieldCard>
 
         {/* Recommended Practice Plan */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-heading">Recommended Practice Plan</CardTitle>
-            <CardDescription>Based on your performance in this session</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <FieldCard>
+          <div>
+            <div className="text-lg font-heading">Recommended Practice Plan</div>
+            <div>Based on your performance in this session</div>
+          </div>
+          <div>
             <div className="space-y-3">
               {recommendations.map((rec, i) => (
-                <div key={i} className="flex gap-3 p-3 bg-glass/40 rounded-lg">
-                  <span className="text-accent-indigo font-bold shrink-0">{i + 1}.</span>
-                  <p className="text-sm text-text-secondary">{rec}</p>
+                <div key={i} className="flex gap-3 p-3 bg-[#F4F3EE]/40 rounded-lg">
+                  <span className="text-[#FF6B35] font-bold shrink-0">{i + 1}.</span>
+                  <p className="text-sm text-[#404040]">{rec}</p>
                 </div>
               ))}
             </div>
@@ -430,20 +430,20 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
               <p className="text-sm font-medium mb-2">Quick Actions</p>
               <div className="flex flex-wrap gap-2">
                 {avgScore < 7 && (
-                  <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('quick_drill'); }}>
+                  <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('quick_drill'); }}>
                     Try Quick Drill
-                  </Button>
+                  </FieldButton>
                 )}
-                <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode(''); if (onViewChange) onViewChange('questions'); }}>
+                <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode(''); if (onViewChange) onViewChange('questions'); }}>
                   Review Question Bank
-                </Button>
-                <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('role_interview'); }}>
+                </FieldButton>
+                <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('role_interview'); }}>
                   Practice More
-                </Button>
+                </FieldButton>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </FieldCard>
       </div>
     );
   }
@@ -454,32 +454,32 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm text-text-muted">Question {currentIndex + 1} of {questions.length}</p>
-          <p className="text-sm text-text-muted capitalize truncate">{session.mode.replace(/_/g, ' ')}</p>
+          <p className="text-sm text-[#737373]">Question {currentIndex + 1} of {questions.length}</p>
+          <p className="text-sm text-[#737373] capitalize truncate">{session.mode.replace(/_/g, ' ')}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <Badge variant="outline" className="font-mono tabular-nums" aria-label={`Elapsed time: ${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`}>⏱ {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}</Badge>
-          <Badge variant="outline">{scores.length > 0 ? `Avg: ${(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)}` : 'No scores yet'}</Badge>
+          <FieldBadge variant="ghost" className="font-mono tabular-nums" aria-label={`Elapsed time: ${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`}>⏱ {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}</FieldBadge>
+          <FieldBadge variant="ghost">{scores.length > 0 ? `Avg: ${(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)}` : 'No scores yet'}</FieldBadge>
           {followUpScores.length > 0 && (
-            <Badge variant="secondary" className="text-purple-600">{followUpScores.length} follow-up(s)</Badge>
+            <FieldBadge variant="default" className="text-purple-600">{followUpScores.length} follow-up(s)</FieldBadge>
           )}
         </div>
       </div>
       <Progress value={((currentIndex + 1) / questions.length) * 100} className="h-2" />
 
-      <Card>
-        <CardHeader>
+      <FieldCard>
+        <div>
           <div className="flex flex-wrap gap-2 mb-2">
-            <Badge variant="secondary" className="whitespace-nowrap">{currentQ.difficulty}</Badge>
-            <Badge variant="outline" className="whitespace-nowrap">{currentQ.type.replace(/_/g, ' ')}</Badge>
-            <Badge variant="outline" className="whitespace-nowrap">{currentQ.role}</Badge>
+            <FieldBadge variant="default" className="whitespace-nowrap">{currentQ.difficulty}</FieldBadge>
+            <FieldBadge variant="ghost" className="whitespace-nowrap">{currentQ.type.replace(/_/g, ' ')}</FieldBadge>
+            <FieldBadge variant="ghost" className="whitespace-nowrap">{currentQ.role}</FieldBadge>
           </div>
-          <CardTitle className="text-lg leading-snug">{currentQ.question}</CardTitle>
+          <div className="text-lg leading-snug">{currentQ.question}</div>
           {currentQ.whyEmployersAsk && (
-            <CardDescription><strong>Why employers ask:</strong> {currentQ.whyEmployersAsk}</CardDescription>
+            <div><strong>Why employers ask:</strong> {currentQ.whyEmployersAsk}</div>
           )}
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </div>
+        <div className="space-y-4">
           {!feedback ? (
             <>
               <Textarea
@@ -489,76 +489,76 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
                 rows={6}
                 autoFocus
               />
-              <Button
-                className="w-full bg-accent-violet hover:bg-accent-indigo"
+              <FieldButton
+                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
                 onClick={submitAnswer}
                 disabled={!userAnswer.trim() || submitting}
               >
                 {submitting ? 'Getting AI Feedback...' : 'Submit Answer'}
-              </Button>
+              </FieldButton>
             </>
           ) : (
             <>
-              <div className="p-4 bg-glass/40 rounded-lg overflow-hidden">
-                <p className="text-sm text-text-muted mb-1">Your answer:</p>
-                <p className="text-sm text-text-primary whitespace-pre-wrap break-words">{userAnswer}</p>
+              <div className="p-4 bg-[#F4F3EE]/40 rounded-lg overflow-hidden">
+                <p className="text-sm text-[#737373] mb-1">Your answer:</p>
+                <p className="text-sm text-[#171717] whitespace-pre-wrap break-words">{userAnswer}</p>
               </div>
-              <Card className="border-accent-violet/20 bg-accent-violet/8/50">
-                <CardContent className="p-4 space-y-3">
+              <FieldCard className="border-[#FF6B35]/20 bg-[#FF6B35]/8/50">
+                <div className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-accent-indigo font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
-                    <span className="text-sm text-text-muted">Score</span>
+                    <span className="text-2xl font-bold text-[#FF6B35] font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
+                    <span className="text-sm text-[#737373]">Score</span>
                   </div>
                   {Boolean((feedback as Record<string, unknown>).whatWorked) && (
                     <div>
                       <p className="text-sm font-medium text-green-700">What worked:</p>
-                      <p className="text-sm text-text-secondary break-words">{(feedback as Record<string, unknown>).whatWorked as string}</p>
+                      <p className="text-sm text-[#404040] break-words">{(feedback as Record<string, unknown>).whatWorked as string}</p>
                     </div>
                   )}
                   {Boolean((feedback as Record<string, unknown>).whatToImprove) && (
                     <div>
                       <p className="text-sm font-medium text-amber-700">What to improve:</p>
-                      <p className="text-sm text-text-secondary break-words">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
+                      <p className="text-sm text-[#404040] break-words">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
                     </div>
                   )}
                   {Boolean((feedback as Record<string, unknown>).strongerSampleAnswer) && (
                     <div>
-                      <p className="text-sm font-medium text-accent-indigo">Stronger sample answer:</p>
-                      <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
+                      <p className="text-sm font-medium text-[#FF6B35]">Stronger sample answer:</p>
+                      <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </FieldCard>
 
               {/* Adaptive Follow-up Section */}
               {followUpQuestion && !followUpFeedback && !answeringFollowUp && (
-                <Card className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <CardContent className="p-4 space-y-3">
+                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
+                  <div className="p-4 space-y-3">
                     <div>
                       <p className="text-sm font-medium text-purple-700">Follow-up Question:</p>
-                      <p className="text-sm text-text-primary mt-1 break-words">{followUpQuestion}</p>
+                      <p className="text-sm text-[#171717] mt-1 break-words">{followUpQuestion}</p>
                     </div>
-                    <p className="text-xs text-text-muted">Your score was below 7. Practicing this follow-up can help you improve.</p>
+                    <p className="text-xs text-[#737373]">Your score was below 7. Practicing this follow-up can help you improve.</p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
+                      <FieldButton
                         className="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700"
                         onClick={() => setAnsweringFollowUp(true)}
                       >
                         Practice Follow-up
-                      </Button>
-                      <Button variant="outline" onClick={handleSkipFollowUp}>
+                      </FieldButton>
+                      <FieldButton variant="secondary" onClick={handleSkipFollowUp}>
                         Skip
-                      </Button>
+                      </FieldButton>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </FieldCard>
               )}
 
               {answeringFollowUp && !followUpFeedback && (
-                <Card className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <CardContent className="p-4 space-y-3">
+                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
+                  <div className="p-4 space-y-3">
                     <p className="text-sm font-medium text-purple-700">Answer the follow-up:</p>
-                    <p className="text-sm text-text-primary break-words">{followUpQuestion}</p>
+                    <p className="text-sm text-[#171717] break-words">{followUpQuestion}</p>
                     <Textarea
                       placeholder="Type your answer to the follow-up..."
                       value={followUpAnswer}
@@ -567,52 +567,52 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
                       autoFocus
                     />
                     <div className="flex gap-3">
-                      <Button
+                      <FieldButton
                         className="flex-1 bg-purple-600 hover:bg-purple-700"
                         onClick={submitFollowUpAnswer}
                         disabled={!followUpAnswer.trim() || submitting}
                       >
                         {submitting ? 'Getting Feedback...' : 'Submit Follow-up'}
-                      </Button>
-                      <Button variant="outline" onClick={handleSkipFollowUp}>Skip</Button>
+                      </FieldButton>
+                      <FieldButton variant="secondary" onClick={handleSkipFollowUp}>Skip</FieldButton>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </FieldCard>
               )}
 
               {followUpFeedback && (
-                <Card className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <CardContent className="p-4 space-y-2">
+                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
+                  <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-purple-600">{(followUpFeedback as Record<string, unknown>).score as number}/10</span>
-                      <span className="text-sm text-text-muted">Follow-up Score</span>
+                      <span className="text-sm text-[#737373]">Follow-up Score</span>
                     </div>
                     {Boolean((followUpFeedback as Record<string, unknown>).whatWorked) && (
                       <div>
                         <p className="text-sm font-medium text-green-700">What worked:</p>
-                        <p className="text-sm text-text-secondary break-words">{(followUpFeedback as Record<string, unknown>).whatWorked as string}</p>
+                        <p className="text-sm text-[#404040] break-words">{(followUpFeedback as Record<string, unknown>).whatWorked as string}</p>
                       </div>
                     )}
                     {Boolean((followUpFeedback as Record<string, unknown>).whatToImprove) && (
                       <div>
                         <p className="text-sm font-medium text-amber-700">What to improve:</p>
-                        <p className="text-sm text-text-secondary break-words">{(followUpFeedback as Record<string, unknown>).whatToImprove as string}</p>
+                        <p className="text-sm text-[#404040] break-words">{(followUpFeedback as Record<string, unknown>).whatToImprove as string}</p>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </FieldCard>
               )}
 
-              <Button
-                className="w-full bg-accent-violet hover:bg-accent-indigo"
+              <FieldButton
+                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
                 onClick={nextQuestion}
               >
                 {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Interview'}
-              </Button>
+              </FieldButton>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </FieldCard>
     </div>
   );
 }

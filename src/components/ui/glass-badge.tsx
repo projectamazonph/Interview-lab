@@ -3,26 +3,26 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface GlassBadgeProps extends React.ComponentProps<"span"> {
-  variant?: "default" | "accent" | "success" | "warning" | "danger" | "muted";
+interface FieldBadgeProps extends React.ComponentProps<"span"> {
+  variant?: "default" | "accent" | "success" | "warning" | "danger" | "ghost";
+  size?: "sm" | "md";
 }
 
-const GlassBadge = React.forwardRef<HTMLSpanElement, GlassBadgeProps>(
-  ({ className, variant = "default", ...props }, ref) => {
+const FieldBadge = React.forwardRef<HTMLSpanElement, FieldBadgeProps>(
+  ({ className, variant = "default", size = "sm", ...props }, ref) => {
     return (
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-full px-3 py-1",
-          "text-[11px] font-heading font-medium uppercase tracking-wider",
-          "backdrop-blur-sm",
-          "transition-all duration-400 ease-premium",
-          variant === "default" && "bg-glass-border/30 text-text-secondary border border-glass-border",
-          variant === "accent" && "bg-accent-violet/20 text-accent-indigo border border-accent-violet/20",
-          variant === "success" && "bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/15",
-          variant === "warning" && "bg-accent-amber/15 text-accent-amber border border-accent-amber/15",
-          variant === "danger" && "bg-accent-rose/15 text-accent-rose border border-accent-rose/15",
-          variant === "muted" && "bg-glass-subtle text-text-muted border border-transparent",
+          "inline-flex items-center rounded-sm font-medium w-fit whitespace-nowrap",
+          size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs",
+          "transition-colors duration-150 ease-out-expo",
+          variant === "default" && "bg-surface-2 text-ink-700 border border-border",
+          variant === "accent" && "bg-accent-soft text-accent border border-accent/20",
+          variant === "success" && "bg-success-soft text-success border border-success/20",
+          variant === "warning" && "bg-warning-soft text-warning border border-warning/20",
+          variant === "danger" && "bg-danger-soft text-danger border border-danger/20",
+          variant === "ghost" && "text-ink-500",
           className
         )}
         {...props}
@@ -31,6 +31,6 @@ const GlassBadge = React.forwardRef<HTMLSpanElement, GlassBadgeProps>(
   }
 );
 
-GlassBadge.displayName = "GlassBadge";
+FieldBadge.displayName = "FieldBadge";
 
-export { GlassBadge, type GlassBadgeProps };
+export { FieldBadge, type FieldBadgeProps };

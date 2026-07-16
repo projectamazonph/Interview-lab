@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { PRICING_TIERS, TierKey } from "@/lib/pricing";
 import { UsageInfo } from "@/lib/types";
-import { GlassBadge } from "@/components/ui/glass-badge";
+import { FieldBadge } from "@/components/ui/glass-badge";
 import { Crown, TrendUp } from "@phosphor-icons/react";
 
 interface SubscriptionBannerProps {
@@ -21,26 +21,25 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-text-muted truncate">{label}</span>
+        <span className="text-[11px] text-[#737373] truncate">{label}</span>
         <span className={`text-[11px] font-heading font-medium ${
-          isAtLimit ? "text-accent-amber" : isNearLimit ? "text-accent-amber" : "text-text-muted"
+          isAtLimit ? "text-[#B45309]" : "text-[#737373]"
         }`}>
           {isUnlimited ? "\u221E" : `${current}/${limit}`}
         </span>
       </div>
-      {!isUnlimited && (
-        <div className="h-1 bg-glass-border/30 rounded-full overflow-hidden">
+      {!isUnlimited ? (
+        <div className="h-1 bg-[#E5E5E0] rounded-sm overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ease-premium ${
-              isAtLimit ? "bg-accent-amber" : isNearLimit ? "bg-accent-amber/70" : "bg-accent-violet"
+            className={`h-full rounded-sm transition-all duration-300 ${
+              isAtLimit ? "bg-[#B45309]" : "bg-[#FF6B35]"
             }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
-      )}
-      {isUnlimited && (
-        <div className="h-1 bg-accent-emerald/10 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-accent-emerald/40 w-full" />
+      ) : (
+        <div className="h-1 bg-[#D1FAE5] rounded-sm overflow-hidden">
+          <div className="h-full rounded-sm bg-[#0E7C3A]/40 w-full" />
         </div>
       )}
     </div>
@@ -74,25 +73,25 @@ export function SubscriptionBanner({ tier, onUpgrade }: SubscriptionBannerProps)
     switch (tierKey) {
       case "pro": return "accent" as const;
       case "starter": return "success" as const;
-      default: return "muted" as const;
+      default: return "default" as const;
     }
   };
 
   return (
-    <div className="p-3 border-t border-glass-border/30">
-      <div className="rounded-2xl bg-glass-border/20 border border-glass-border/30 p-3.5 space-y-3">
+    <div className="p-3 border-t border-[#E5E5E0]">
+      <div className="rounded-lg bg-[#F4F3EE] border border-[#E5E5E0] p-3.5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Crown className={`h-4 w-4 shrink-0 ${
-              tierKey === "pro" ? "text-accent-indigo" : tierKey === "starter" ? "text-accent-emerald" : "text-text-muted"
+              tierKey === "pro" ? "text-[#FF6B35]" : tierKey === "starter" ? "text-[#0E7C3A]" : "text-[#737373]"
             }`} />
-            <span className="text-sm font-heading font-semibold text-text-primary truncate">
+            <span className="text-sm font-heading font-semibold text-[#171717] truncate">
               {config.name}
             </span>
           </div>
-          <GlassBadge variant={tierVariant()} className="text-[9px]">
+          <FieldBadge variant={tierVariant()} className="text-[9px]">
             {config.name}
-          </GlassBadge>
+          </FieldBadge>
         </div>
 
         {usage && (
@@ -107,9 +106,9 @@ export function SubscriptionBanner({ tier, onUpgrade }: SubscriptionBannerProps)
         {isFreeOrStarter && (
           <button
             onClick={onUpgrade}
-            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-heading font-semibold text-accent-indigo hover:text-accent-violet transition-all duration-400 ease-premium py-1.5 rounded-xl hover:bg-glass-border/20"
+            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-heading font-semibold text-[#FF6B35] hover:text-[#E55A2B] transition-colors duration-200 py-1.5 rounded-md hover:bg-[#E5E5E0]/50"
           >
-            <TrendUp className="h-3.5 w-3.5" weight="light" />
+            <TrendUp className="h-3.5 w-3.5" />
             Upgrade Plan
           </button>
         )}

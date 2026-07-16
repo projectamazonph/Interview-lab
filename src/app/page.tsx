@@ -27,13 +27,11 @@ function AppContent() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!user && !loading) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreAuthView("landing");
       setActiveView("dashboard");
     }
@@ -41,18 +39,14 @@ function AppContent() {
 
   if (!mounted || loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-pa-navy relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-accent-violet/8 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-15%] w-[50vw] h-[50vw] bg-accent-emerald/5 rounded-full blur-[100px]" />
-        </div>
-        <div className="text-center z-10 animate-fade-up">
-          <div className="w-14 h-14 rounded-full bg-accent-violet/20 flex items-center justify-center mx-auto mb-4 animate-glow-pulse">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-accent-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-lg bg-accent-soft flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </div>
-          <p className="text-text-muted font-heading text-sm">Loading...</p>
+          <p className="text-ink-500 font-heading text-sm">Loading...</p>
         </div>
       </div>
     );

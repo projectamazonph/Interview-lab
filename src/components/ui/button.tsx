@@ -6,32 +6,32 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full text-sm font-heading font-semibold transition-all duration-500 ease-premium active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 outline-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 ease-out-expo active:translate-y-px disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-accent-violet text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:bg-accent-indigo hover:shadow-[0_0_30px_rgba(129,140,248,0.4)]",
+        primary:
+          "bg-accent text-accent-ink hover:bg-accent-hover shadow-sm",
         destructive:
-          "bg-accent-rose/20 text-accent-rose border border-accent-rose/20 hover:bg-accent-rose/30",
+          "bg-danger-soft text-danger border border-danger/20 hover:bg-danger/20",
         outline:
-          "bg-glass-border/30 text-text-primary border border-glass-border backdrop-blur-sm hover:bg-glass-border/50 hover:border-glass-border-hover",
+          "bg-surface-1 text-ink-700 border border-border hover:bg-surface-2 hover:text-ink-900 shadow-sm",
         secondary:
-          "bg-glass-border/40 text-text-secondary border border-glass-border/60 hover:bg-glass-border/60 hover:text-text-primary",
+          "bg-surface-2 text-ink-700 border border-border hover:bg-border hover:text-ink-900",
         ghost:
-          "text-text-secondary hover:bg-glass-border/20 hover:text-text-primary",
-        link: "text-accent-indigo underline-offset-4 hover:underline",
+          "text-ink-700 hover:bg-surface-2 hover:text-ink-900 border border-transparent",
+        link: "text-accent underline-offset-4 hover:underline bg-transparent border-none shadow-none",
       },
       size: {
-        default: "h-11 px-7 py-2.5",
-        sm: "h-9 px-5 py-2 text-xs",
-        lg: "h-13 px-9 py-3.5 text-base",
-        icon: "h-11 w-11 rounded-full",
+        sm: "h-7 rounded-sm px-3 py-1 text-xs",
+        md: "h-9 px-4 py-2",
+        lg: "h-11 px-6 py-3",
+        icon: "h-9 w-9",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "primary",
+      size: "md",
     },
   }
 );
@@ -55,5 +55,7 @@ function Button({
     />
   );
 }
+
+Button.displayName = "Button";
 
 export { Button, buttonVariants };

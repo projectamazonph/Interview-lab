@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { Assessment, ROLES } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { FieldBadge } from '@/components/ui/glass-badge';
+import { FieldButton } from '@/components/ui/glass-button';
+import { FieldCard } from '@/components/ui/glass-card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
@@ -87,24 +87,24 @@ export function PracticeTests() {
 
     return (
       <div className="space-y-6">
-        <Button variant="outline" onClick={() => { setSelectedAssessment(null); setScore(null); setUserAnswers(''); }}>
+        <FieldButton variant="secondary" onClick={() => { setSelectedAssessment(null); setScore(null); setUserAnswers(''); }}>
           ← Back to Assessments
-        </Button>
+        </FieldButton>
 
-        <Card>
-          <CardHeader>
+        <FieldCard>
+          <div className="p-4 pb-0 space-y-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge className={getDifficultyColor(selectedAssessment.difficulty)}>{selectedAssessment.difficulty}</Badge>
-              <Badge variant="outline">{selectedAssessment.role}</Badge>
+              <FieldBadge className={getDifficultyColor(selectedAssessment.difficulty)}>{selectedAssessment.difficulty}</FieldBadge>
+              <FieldBadge variant="ghost">{selectedAssessment.role}</FieldBadge>
             </div>
-            <CardTitle className="font-heading">{selectedAssessment.title}</CardTitle>
-            <CardDescription>{selectedAssessment.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            <h3 className="font-heading text-lg font-semibold">{selectedAssessment.title}</h3>
+            <p className="text-[#737373] text-sm">{selectedAssessment.description}</p>
+          </div>
+          <div className="p-4 space-y-4">
             {dataset && (
-              <div className="bg-glass/40 p-4 rounded-lg">
-                <p className="text-sm font-medium text-text-secondary mb-2">Assessment Data:</p>
-                <pre className="text-xs text-text-secondary overflow-x-auto whitespace-pre-wrap break-words">{JSON.stringify(dataset, null, 2)}</pre>
+              <div className="bg-[#F4F3EE]/40 p-4 rounded-lg">
+                <p className="text-sm font-medium text-[#404040] mb-2">Assessment Data:</p>
+                <pre className="text-xs text-[#404040] overflow-x-auto whitespace-pre-wrap break-words">{JSON.stringify(dataset, null, 2)}</pre>
               </div>
             )}
 
@@ -119,18 +119,19 @@ export function PracticeTests() {
                     rows={8}
                   />
                 </div>
-                <Button
-                  className="w-full bg-accent-violet hover:bg-accent-indigo"
+                <FieldButton
+                  variant="primary"
+                  className="w-full"
                   onClick={handleSubmit}
                   disabled={!userAnswers.trim() || scoring}
                 >
                   {scoring ? 'Scoring...' : 'Submit for AI Scoring'}
-                </Button>
+                </FieldButton>
               </>
             ) : (
               <>
-                <Card className="border-accent-violet/20 bg-accent-violet/8/50">
-                  <CardContent className="p-4 space-y-3">
+                <FieldCard className="border-[#FF6B35]/20 bg-[#FF6B35]/8/50">
+                  <div className="p-4 space-y-3">
                     <div className="flex justify-center mb-2">
                       <Image
                         src="/images/illustrations/ai-feedback-score.png"
@@ -141,13 +142,13 @@ export function PracticeTests() {
                       />
                     </div>
                     <div className="text-center">
-                      <p className="text-3xl font-bold text-accent-indigo font-mono">{(score as Record<string, unknown>).score as number}/100</p>
-                      <p className="text-sm text-text-muted">Assessment Score</p>
+                      <p className="text-3xl font-bold text-[#FF6B35] font-mono">{(score as Record<string, unknown>).score as number}/100</p>
+                      <p className="text-sm text-[#737373]">Assessment Score</p>
                     </div>
                     {Boolean((score as Record<string, unknown>).correctDecisions) && (
                       <div>
                         <p className="text-sm font-medium text-green-700">Correct Decisions:</p>
-                        <ul className="text-sm text-text-secondary">
+                        <ul className="text-sm text-[#404040]">
                           {((score as Record<string, unknown>).correctDecisions as string[]).map((d: string, i: number) => (
                             <li key={i}>✓ {d}</li>
                           ))}
@@ -157,7 +158,7 @@ export function PracticeTests() {
                     {Boolean((score as Record<string, unknown>).incorrectDecisions) && ((score as Record<string, unknown>).incorrectDecisions as string[]).length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-red-700">Incorrect or Risky Decisions:</p>
-                        <ul className="text-sm text-text-secondary">
+                        <ul className="text-sm text-[#404040]">
                           {((score as Record<string, unknown>).incorrectDecisions as string[]).map((d: string, i: number) => (
                             <li key={i}>✗ {d}</li>
                           ))}
@@ -167,7 +168,7 @@ export function PracticeTests() {
                     {Boolean((score as Record<string, unknown>).missedOpportunities) && (
                       <div>
                         <p className="text-sm font-medium text-amber-700">Missed Opportunities:</p>
-                        <ul className="text-sm text-text-secondary">
+                        <ul className="text-sm text-[#404040]">
                           {((score as Record<string, unknown>).missedOpportunities as string[]).map((o: string, i: number) => (
                             <li key={i}>! {o}</li>
                           ))}
@@ -176,43 +177,43 @@ export function PracticeTests() {
                     )}
                     {Boolean((score as Record<string, unknown>).modelAnswer) && (
                       <div>
-                        <p className="text-sm font-medium text-accent-indigo">Model Answer:</p>
-                        <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">{(score as Record<string, unknown>).modelAnswer as string}</p>
+                        <p className="text-sm font-medium text-[#FF6B35]">Model Answer:</p>
+                        <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(score as Record<string, unknown>).modelAnswer as string}</p>
                       </div>
                     )}
                     {Boolean((score as Record<string, unknown>).recommendedNextStep) && (
                       <div>
                         <p className="text-sm font-medium text-purple-700">Recommended Next Step:</p>
-                        <p className="text-sm text-text-secondary break-words">{(score as Record<string, unknown>).recommendedNextStep as string}</p>
+                        <p className="text-sm text-[#404040] break-words">{(score as Record<string, unknown>).recommendedNextStep as string}</p>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-                <Button
-                  variant="outline"
-                  className="w-full border-accent-violet/20 text-accent-indigo"
+                  </div>
+                </FieldCard>
+                <FieldButton
+                  variant="secondary"
+                  className="w-full border-[#FF6B35]/20 text-[#FF6B35]"
                   onClick={() => { setScore(null); setUserAnswers(''); }}
                 >
                   Try Again
-                </Button>
+                </FieldButton>
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </FieldCard>
 
         {/* Rubric */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-heading">Scoring Rubric</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <FieldCard>
+          <div className="p-4 pb-0 space-y-1">
+            <h3 className="text-lg font-heading font-semibold">Scoring Rubric</h3>
+          </div>
+          <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-sm">
               {(() => {
                 try {
                   const rubricData = selectedAssessment.rubric ? JSON.parse(selectedAssessment.rubric) : null;
                   if (rubricData && typeof rubricData === 'object') {
                     return Object.entries(rubricData).map(([key, value]) => (
-                      <div key={key} className="flex justify-between p-2 bg-glass/40 rounded gap-2">
+                      <div key={key} className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2">
                         <span className="truncate">{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
                         <span className="font-medium shrink-0">{String(value)}%</span>
                       </div>
@@ -222,18 +223,18 @@ export function PracticeTests() {
                 // Fallback to default rubric
                 return (
                   <>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Correct metric interpretation</span><span className="font-medium shrink-0">25%</span></div>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Correct action recommendation</span><span className="font-medium shrink-0">25%</span></div>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Data sufficiency judgment</span><span className="font-medium shrink-0">15%</span></div>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Risk awareness</span><span className="font-medium shrink-0">15%</span></div>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Clear explanation</span><span className="font-medium shrink-0">10%</span></div>
-                    <div className="flex justify-between p-2 bg-glass/40 rounded gap-2"><span className="truncate">Documentation quality</span><span className="font-medium shrink-0">10%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Correct metric interpretation</span><span className="font-medium shrink-0">25%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Correct action recommendation</span><span className="font-medium shrink-0">25%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Data sufficiency judgment</span><span className="font-medium shrink-0">15%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Risk awareness</span><span className="font-medium shrink-0">15%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Clear explanation</span><span className="font-medium shrink-0">10%</span></div>
+                    <div className="flex justify-between p-2 bg-[#F4F3EE]/40 rounded gap-2"><span className="truncate">Documentation quality</span><span className="font-medium shrink-0">10%</span></div>
                   </>
                 );
               })()}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </FieldCard>
       </div>
     );
   }
@@ -242,8 +243,8 @@ export function PracticeTests() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-text-primary font-heading">Practice Tests</h2>
-        <p className="text-text-muted mt-1 text-sm sm:text-base">Test your Amazon VA skills with practical exercises across all roles</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Practice Tests</h2>
+        <p className="text-[#737373] mt-1 text-sm sm:text-base">Test your Amazon VA skills with practical exercises across all roles</p>
       </div>
 
       <div className="flex justify-center">
@@ -268,24 +269,24 @@ export function PracticeTests() {
 
       {loading ? (
         <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-glass-border/30 rounded-lg" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-[#E5E5E0]/30 rounded-lg" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {assessments.map(a => (
-            <Card key={a.id} className="hover:shadow-md transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1" onClick={() => setSelectedAssessment(a)} tabIndex={0} role="button" aria-label={`Start test: ${a.title}`}>
-              <CardHeader>
+            <FieldCard key={a.id} variant="interactive" className="focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1" onClick={() => setSelectedAssessment(a)} tabIndex={0} role="button" aria-label={`Start test: ${a.title}`}>
+              <div className="p-4 pb-0 space-y-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <Badge className={getDifficultyColor(a.difficulty)}>{a.difficulty}</Badge>
-                  <Badge variant="outline">{a.role}</Badge>
+                  <FieldBadge className={getDifficultyColor(a.difficulty)}>{a.difficulty}</FieldBadge>
+                  <FieldBadge variant="ghost">{a.role}</FieldBadge>
                 </div>
-                <CardTitle className="text-base leading-snug">{a.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{a.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button size="sm" className="bg-accent-violet hover:bg-accent-indigo" onClick={(e) => { e.stopPropagation(); setSelectedAssessment(a); }}>Start Test</Button>
-              </CardContent>
-            </Card>
+                <h3 className="text-base leading-snug font-semibold">{a.title}</h3>
+                <p className="text-[#737373] text-sm line-clamp-2">{a.description}</p>
+              </div>
+              <div className="p-4 pt-0">
+                <FieldButton size="sm" variant="primary" onClick={(e) => { e.stopPropagation(); setSelectedAssessment(a); }}>Start Test</FieldButton>
+              </div>
+            </FieldCard>
           ))}
         </div>
       )}

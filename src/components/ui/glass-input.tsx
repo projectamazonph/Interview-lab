@@ -3,33 +3,31 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type GlassInputProps = React.ComponentProps<"input"> & {
+type FieldInputProps = React.ComponentProps<"input"> & {
   icon?: React.ReactNode;
 };
 
-const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
+const FieldInput = React.forwardRef<HTMLInputElement, FieldInputProps>(
   ({ className, icon, ...props }, ref) => {
     return (
       <div className="relative">
         {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-500 pointer-events-none">
             {icon}
           </div>
         )}
         <input
           ref={ref}
           className={cn(
-            "w-full rounded-xl px-4 py-3",
-            "bg-glass-border/40 border border-glass-border",
-            "text-text-primary placeholder:text-text-muted",
-            "backdrop-blur-sm",
-            "transition-all duration-500 ease-premium",
-            "focus:outline-none focus:border-accent-violet/50 focus:ring-1 focus:ring-accent-violet/20",
-            "focus:bg-glass-border/60",
-            "hover:border-glass-border-hover",
-            "text-sm font-body",
+            "w-full rounded-md px-3 py-2.5",
+            "bg-surface-1 border border-border",
+            "text-ink-900 placeholder:text-ink-500",
+            "text-sm",
+            "transition-all duration-150 ease-out-expo",
+            "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
+            "hover:border-ink-300",
             "disabled:opacity-40 disabled:cursor-not-allowed",
-            icon && "pl-12",
+            icon && "pl-10",
             className
           )}
           {...props}
@@ -39,25 +37,21 @@ const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
   }
 );
 
-GlassInput.displayName = "GlassInput";
+FieldInput.displayName = "FieldInput";
 
-
-
-const GlassTextarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
+const FieldTextarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
   ({ className, ...props }, ref) => {
     return (
       <textarea
         ref={ref}
         className={cn(
-          "w-full rounded-xl px-4 py-3 min-h-[120px]",
-          "bg-glass-border/40 border border-glass-border",
-          "text-text-primary placeholder:text-text-muted",
-          "backdrop-blur-sm",
-          "transition-all duration-500 ease-premium",
-          "focus:outline-none focus:border-accent-violet/50 focus:ring-1 focus:ring-accent-violet/20",
-          "focus:bg-glass-border/60",
-          "hover:border-glass-border-hover",
-          "text-sm font-body leading-relaxed resize-y",
+          "w-full rounded-md px-3 py-2.5 min-h-[100px]",
+          "bg-surface-1 border border-border",
+          "text-ink-900 placeholder:text-ink-500",
+          "text-sm leading-relaxed resize-y",
+          "transition-all duration-150 ease-out-expo",
+          "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
+          "hover:border-ink-300",
           "disabled:opacity-40 disabled:cursor-not-allowed",
           className
         )}
@@ -67,6 +61,6 @@ const GlassTextarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps
   }
 );
 
-GlassTextarea.displayName = "GlassTextarea";
+FieldTextarea.displayName = "FieldTextarea";
 
-export { GlassInput, GlassTextarea };
+export { FieldInput, FieldTextarea };

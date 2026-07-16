@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { CoverLetter, ROLES } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { FieldCard, FieldCardContent, FieldCardDescription, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
+import { FieldButton } from '@/components/ui/glass-button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { FieldBadge } from '@/components/ui/glass-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileArrowDown, FileText, Clock, ArrowClockwise } from '@phosphor-icons/react';
 import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
@@ -133,32 +133,32 @@ export function CoverLetterStudio() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl font-bold text-text-primary font-heading">Cover Letter Studio</h2>
-          <p className="text-text-muted mt-1 text-sm sm:text-base">Generate tailored cover letters with truthfulness guardrails</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Cover Letter Studio</h2>
+          <p className="text-[#737373] mt-1 text-sm sm:text-base">Generate tailored cover letters with truthfulness guardrails</p>
         </div>
-        <Button variant="outline" onClick={() => setShowHistory(!showHistory)} className="shrink-0 whitespace-nowrap focus:ring-2 focus:ring-accent-violet focus:ring-offset-1" aria-label={showHistory ? 'Hide history' : 'Show history'}>
+        <FieldButton variant="outline" onClick={() => setShowHistory(!showHistory)} className="shrink-0 whitespace-nowrap focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1" aria-label={showHistory ? 'Hide history' : 'Show history'}>
           <Clock weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
           {showHistory ? 'Hide History' : 'History'} ({coverLetters.length})
-        </Button>
+        </FieldButton>
       </div>
 
       {/* Cover Letter History */}
       {showHistory && coverLetters.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Previous Cover Letters</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <FieldCard>
+          <FieldCardHeader className="pb-2">
+            <FieldCardTitle className="text-sm">Previous Cover Letters</FieldCardTitle>
+          </FieldCardHeader>
+          <FieldCardContent>
             <div className="space-y-2">
               {coverLetters.map((cl) => (
-                <div key={cl.id} className="flex items-center justify-between p-3 bg-glass/40 rounded-lg gap-2">
+                <div key={cl.id} className="flex items-center justify-between p-3 bg-[#F4F3EE]/40 rounded-lg gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{cl.tone || 'Formal'} Cover Letter</p>
-                    <p className="text-xs text-text-muted">{new Date(cl.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-[#737373]">{new Date(cl.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{cl.tone}</Badge>
-                    <Button size="sm" variant="ghost" className="text-xs"
+                    <FieldBadge variant="outline">{cl.tone}</FieldBadge>
+                    <FieldButton size="sm" variant="ghost" className="text-xs"
                       onClick={() => {
                         if (cl.generatedLetter) {
                           setResult({ draftLetter: cl.generatedLetter, claimsToVerify: cl.truthFlags ? (() => { try { return JSON.parse(cl.truthFlags); } catch { return []; } })() : [] });
@@ -168,22 +168,22 @@ export function CoverLetterStudio() {
                         setShowHistory(false);
                       }}>
                       Load
-                    </Button>
+                    </FieldButton>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </FieldCardContent>
+        </FieldCard>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Description</CardTitle>
-            <CardDescription>Paste the job description to generate a tailored cover letter</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <FieldCard>
+          <FieldCardHeader>
+            <FieldCardTitle>Job Description</FieldCardTitle>
+            <FieldCardDescription>Paste the job description to generate a tailored cover letter</FieldCardDescription>
+          </FieldCardHeader>
+          <FieldCardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Target Role</Label>
               <Select value={targetRole} onValueChange={setTargetRole}>
@@ -201,17 +201,17 @@ export function CoverLetterStudio() {
                   {TONE_OPTIONS.map(opt => (
                     <SelectItem key={opt.value} value={opt.value}>
                       <span>{opt.label}</span>
-                      <span className="text-text-muted text-xs ml-1">— {opt.desc}</span>
+                      <span className="text-[#737373] text-xs ml-1">— {opt.desc}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-text-muted">{TONE_OPTIONS.find(o => o.value === tone)?.desc}</p>
+              <p className="text-xs text-[#737373]">{TONE_OPTIONS.find(o => o.value === tone)?.desc}</p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Job Description</Label>
-                <span className="text-xs text-text-muted tabular-nums font-mono">{jobDescription.length} chars</span>
+                <span className="text-xs text-[#737373] tabular-nums font-mono">{jobDescription.length} chars</span>
               </div>
               <Textarea
                 placeholder="Paste the job description here..."
@@ -221,15 +221,15 @@ export function CoverLetterStudio() {
               />
             </div>
             <div className="flex gap-3">
-              <Button
-                className="flex-1 bg-accent-violet hover:bg-accent-indigo whitespace-nowrap text-sm"
+              <FieldButton
+                className="flex-1 bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap text-sm"
                 onClick={handleGenerate}
                 disabled={!jobDescription.trim() || loading}
               >
                 {loading ? 'Generating...' : 'Generate Letter'}
-              </Button>
+              </FieldButton>
               {result && (
-                <Button
+                <FieldButton
                   variant="outline"
                   onClick={handleGenerate}
                   disabled={!jobDescription.trim() || loading}
@@ -238,66 +238,66 @@ export function CoverLetterStudio() {
                   className="shrink-0"
                 >
                   <ArrowClockwise weight="light" className="h-4 w-4" aria-hidden="true" />
-                </Button>
+                </FieldButton>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </FieldCardContent>
+        </FieldCard>
 
         <div className="space-y-4">
           {result ? (
             <>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Badge variant="secondary" className="bg-accent-violet/15 text-accent-indigo">{tone}</Badge>
+              <FieldCard>
+                <FieldCardHeader className="pb-2">
+                  <FieldCardTitle className="text-sm flex items-center gap-2">
+                    <FieldBadge variant="secondary" className="bg-[#FF6B35]/15 text-[#FF6B35]">{tone}</FieldBadge>
                     Generated Cover Letter
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-glass/40 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">{(result as Record<string, unknown>).draftLetter as string}</p>
+                  </FieldCardTitle>
+                </FieldCardHeader>
+                <FieldCardContent>
+                  <div className="bg-[#F4F3EE]/40 p-4 rounded-lg max-h-96 overflow-y-auto">
+                    <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(result as Record<string, unknown>).draftLetter as string}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </FieldCardContent>
+              </FieldCard>
 
               {(result as Record<string, unknown>).shorterVersion && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Shorter Version</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-text-secondary whitespace-pre-wrap break-words">{(result as Record<string, unknown>).shorterVersion as string}</p>
-                  </CardContent>
-                </Card>
+                <FieldCard>
+                  <FieldCardHeader className="pb-2">
+                    <FieldCardTitle className="text-sm">Shorter Version</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
+                    <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(result as Record<string, unknown>).shorterVersion as string}</p>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {(result as Record<string, unknown>).subjectLine && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Subject Line / Proposal Opener</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-text-secondary">{(result as Record<string, unknown>).subjectLine as string}</p>
-                  </CardContent>
-                </Card>
+                <FieldCard>
+                  <FieldCardHeader className="pb-2">
+                    <FieldCardTitle className="text-sm">Subject Line / Proposal Opener</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
+                    <p className="text-sm text-[#404040]">{(result as Record<string, unknown>).subjectLine as string}</p>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {(result as Record<string, unknown>).customizationTips && ((result as Record<string, unknown>).customizationTips as string[]).length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Customization Tips</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader className="pb-2">
+                    <FieldCardTitle className="text-sm">Customization Tips</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <ul className="space-y-1">
                       {((result as Record<string, unknown>).customizationTips as string[]).map((tip: string, i: number) => (
-                        <li key={i} className="text-sm text-text-secondary flex gap-2">
-                          <span className="text-accent-indigo">•</span>{tip}
+                        <li key={i} className="text-sm text-[#404040] flex gap-2">
+                          <span className="text-[#FF6B35]">•</span>{tip}
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {(result as Record<string, unknown>).claimsToVerify && ((result as Record<string, unknown>).claimsToVerify as string[]).length > 0 && (
@@ -313,11 +313,11 @@ export function CoverLetterStudio() {
 
               {/* Export Buttons */}
               {(result as Record<string, unknown>).draftLetter && (
-                <Card>
-                  <CardContent className="p-4">
+                <FieldCard>
+                  <FieldCardContent className="p-4">
                     <p className="text-sm font-medium mb-3">Export Cover Letter</p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
+                      <FieldButton
                         variant="outline"
                         className="flex-1 whitespace-nowrap"
                         onClick={() => handleExport('docx')}
@@ -325,8 +325,8 @@ export function CoverLetterStudio() {
                       >
                         <FileArrowDown weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
                         {exporting ? 'Exporting...' : 'Download DOCX'}
-                      </Button>
-                      <Button
+                      </FieldButton>
+                      <FieldButton
                         variant="outline"
                         className="flex-1 whitespace-nowrap"
                         onClick={() => handleExport('pdf')}
@@ -334,15 +334,15 @@ export function CoverLetterStudio() {
                       >
                         <FileText weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
                         {exporting ? 'Exporting...' : 'Download PDF'}
-                      </Button>
+                      </FieldButton>
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
             </>
           ) : (
-            <Card>
-              <CardContent className="p-8 text-center text-text-muted">
+            <FieldCard>
+              <FieldCardContent className="p-8 text-center text-[#737373]">
                 <Image
                   src="/images/illustrations/cover-letter-transformation.png"
                   alt="Transform your job applications with AI-generated cover letters"
@@ -351,28 +351,28 @@ export function CoverLetterStudio() {
                   className="w-full max-w-xs h-auto mx-auto mb-4"
                 />
                 <p>Paste a job description to generate a tailored cover letter</p>
-              </CardContent>
-            </Card>
+              </FieldCardContent>
+            </FieldCard>
           )}
         </div>
       </div>
 
       {/* Cover Letter Structure Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Cover Letter Structure</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <FieldCard>
+        <FieldCardHeader>
+          <FieldCardTitle className="text-lg">Cover Letter Structure</FieldCardTitle>
+        </FieldCardHeader>
+        <FieldCardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-sm">
-            <div className="p-2 bg-glass/40 rounded">1. Role-specific opening</div>
-            <div className="p-2 bg-glass/40 rounded">2. Relevant Amazon/VA skills</div>
-            <div className="p-2 bg-glass/40 rounded">3. Proof of process discipline</div>
-            <div className="p-2 bg-glass/40 rounded">4. Tool familiarity</div>
-            <div className="p-2 bg-glass/40 rounded">5. Practical value proposition</div>
-            <div className="p-2 bg-glass/40 rounded">6. Confident close</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">1. Role-specific opening</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">2. Relevant Amazon/VA skills</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">3. Proof of process discipline</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">4. Tool familiarity</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">5. Practical value proposition</div>
+            <div className="p-2 bg-[#F4F3EE]/40 rounded">6. Confident close</div>
           </div>
-        </CardContent>
-      </Card>
+        </FieldCardContent>
+      </FieldCard>
 
       <UpgradeModal
         open={upgradeModal.open}

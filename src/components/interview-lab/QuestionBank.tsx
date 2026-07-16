@@ -4,10 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { Question, ROLES, DIFFICULTIES, QUESTION_TYPES, SKILL_AREAS } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -77,19 +74,19 @@ export function QuestionBank() {
   };
 
   const getTypeColor = (t: string) => {
-    if (t === 'behavioral') return 'bg-accent-violet/15 text-accent-indigo';
+    if (t === 'behavioral') return 'bg-[#FF6B35]/15 text-[#FF6B35]';
     if (t === 'technical') return 'bg-purple-100 text-purple-700';
-    if (t === 'scenario') return 'bg-accent-violet/15 text-accent-indigo';
+    if (t === 'scenario') return 'bg-[#FF6B35]/15 text-[#FF6B35]';
     if (t === 'trick') return 'bg-red-100 text-red-700';
-    return 'bg-glass-border/20 text-text-secondary';
+    return 'bg-[#E5E5E0]/20 text-[#404040]';
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-2xl font-bold text-text-primary font-heading">Question Bank</h2>
-          <p className="text-text-muted mt-1">{total} questions available</p>
+          <h2 className="text-2xl font-bold text-[#171717] font-heading">Question Bank</h2>
+          <p className="text-[#737373] mt-1">{total} questions available</p>
         </div>
       </div>
 
@@ -104,8 +101,8 @@ export function QuestionBank() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-3 sm:p-4">
+      <div className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0]">
+        <div className="p-3 sm:p-4">
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <Select value={filters.role} onValueChange={(v) => setFilters(f => ({ ...f, role: v }))}>
@@ -143,48 +140,48 @@ export function QuestionBank() {
               />
             </div>
             {(filters.role !== 'all' || filters.difficulty !== 'all' || filters.type !== 'all' || filters.skillArea !== 'all' || filters.search) && (
-              <Button variant="ghost" size="sm" className="text-text-muted hover:text-text-primary self-start" onClick={() => setFilters({ role: 'all', difficulty: 'all', type: 'all', skillArea: 'all', search: '' })}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <button className="text-[#737373] hover:text-[#171717] self-start text-sm py-1 px-2 rounded-md" onClick={() => setFilters({ role: 'all', difficulty: 'all', type: 'all', skillArea: 'all', search: '' })}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 Clear all filters
-              </Button>
+              </button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Questions List */}
       {loading ? (
         <div className="animate-pulse space-y-3">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-glass-border/30 rounded-lg" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#E5E5E0]/30 rounded-md" />)}
         </div>
       ) : (
         <div className="space-y-3">
           {questions.map(q => (
-            <Card key={q.id} className="hover:shadow-sm transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1" onClick={() => { setPracticeQuestion(q); setUserAnswer(''); setFeedback(null); }} tabIndex={0} role="button" aria-label={`Practice: ${q.question.slice(0, 60)}`}>
-              <CardContent className="p-3 sm:p-4">
+            <div key={q.id} className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0] hover:shadow-sm transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1" onClick={() => { setPracticeQuestion(q); setUserAnswer(''); setFeedback(null); }} tabIndex={0} role="button" aria-label={`Practice: ${q.question.slice(0, 60)}`}>
+              <div className="p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-text-primary line-clamp-2">{q.question}</p>
+                    <p className="font-medium text-[#171717] line-clamp-2">{q.question}</p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <Badge className={`${getDifficultyColor(q.difficulty)} whitespace-nowrap`}>{q.difficulty}</Badge>
-                      <Badge className={`${getTypeColor(q.type)} whitespace-nowrap`}>{q.type.replace(/_/g, ' ')}</Badge>
-                      <Badge variant="outline" className="whitespace-nowrap">{q.role}</Badge>
-                      <Badge variant="outline" className="whitespace-nowrap">{q.skillArea.replace(/_/g, ' ')}</Badge>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getDifficultyColor(q.difficulty)} whitespace-nowrap`}>{q.difficulty}</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getTypeColor(q.type)} whitespace-nowrap`}>{q.type.replace(/_/g, ' ')}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{q.role}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{q.skillArea.replace(/_/g, ' ')}</span>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" className="shrink-0 whitespace-nowrap border-accent-violet/20 text-accent-indigo hover:bg-accent-violet/10">
+                  <button className="shrink-0 whitespace-nowrap text-sm font-medium px-3 py-1.5 rounded-md border border-[#FF6B35]/20 text-[#FF6B35] hover:bg-[#FF6B35]/10">
                     Practice
-                  </Button>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
           {questions.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center text-text-muted">
+            <div className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0]">
+              <div className="p-8 text-center text-[#737373]">
                 No questions match your filters. Try adjusting your search criteria.
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -200,18 +197,18 @@ export function QuestionBank() {
               <div className="space-y-4">
                 <div>
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    <Badge className={`${getDifficultyColor(practiceQuestion.difficulty)} whitespace-nowrap`}>{practiceQuestion.difficulty}</Badge>
-                    <Badge className={`${getTypeColor(practiceQuestion.type)} whitespace-nowrap`}>{practiceQuestion.type.replace(/_/g, ' ')}</Badge>
-                    <Badge variant="outline" className="whitespace-nowrap">{practiceQuestion.role}</Badge>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getDifficultyColor(practiceQuestion.difficulty)} whitespace-nowrap`}>{practiceQuestion.difficulty}</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getTypeColor(practiceQuestion.type)} whitespace-nowrap`}>{practiceQuestion.type.replace(/_/g, ' ')}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{practiceQuestion.role}</span>
                   </div>
-                  <p className="text-lg font-medium text-text-primary">{practiceQuestion.question}</p>
+                  <p className="text-lg font-medium text-[#171717]">{practiceQuestion.question}</p>
                   {practiceQuestion.whyEmployersAsk && (
-                    <p className="text-sm text-text-muted mt-2"><strong>Why employers ask:</strong> {practiceQuestion.whyEmployersAsk}</p>
+                    <p className="text-sm text-[#737373] mt-2"><strong>Why employers ask:</strong> {practiceQuestion.whyEmployersAsk}</p>
                   )}
                   {practiceQuestion.strongAnswerPoints && (
                     <div className="mt-2">
-                      <p className="text-sm font-medium text-text-secondary">Strong answer should include:</p>
-                      <ul className="list-disc list-inside text-sm text-text-secondary">
+                      <p className="text-sm font-medium text-[#404040]">Strong answer should include:</p>
+                      <ul className="list-disc list-inside text-sm text-[#404040]">
                         {JSON.parse(practiceQuestion.strongAnswerPoints || '[]').map((point: string, i: number) => (
                           <li key={i}>{point}</li>
                         ))}
@@ -225,53 +222,51 @@ export function QuestionBank() {
                   onChange={(e) => setUserAnswer(e.target.value)}
                   rows={5}
                 />
-                <Button
-                  className="w-full bg-accent-violet hover:bg-accent-indigo"
+                <button
+                  className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/80 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handlePractice}
                   disabled={!userAnswer.trim() || submitting}
                 >
                   {submitting ? 'Getting AI Feedback...' : 'Submit Answer for AI Feedback'}
-                </Button>
+                </button>
 
                 {feedback && (
-                  <Card className="border-accent-violet/20 bg-accent-violet/8/50">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-accent-indigo font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
-                        <span className="text-sm text-text-muted">Overall Score</span>
+                  <div className="bg-[#F4F3EE] rounded-md border border-[#FF6B35]/20 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-[#FF6B35] font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
+                      <span className="text-sm text-[#737373]">Overall Score</span>
+                    </div>
+                    {Boolean((feedback as Record<string, unknown>).whatWorked) && (
+                      <div>
+                        <p className="text-sm font-medium text-green-700">What worked:</p>
+                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatWorked as string}</p>
                       </div>
-                      {Boolean((feedback as Record<string, unknown>).whatWorked) && (
-                        <div>
-                          <p className="text-sm font-medium text-green-700">What worked:</p>
-                          <p className="text-sm text-text-secondary break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatWorked as string}</p>
-                        </div>
-                      )}
-                      {Boolean((feedback as Record<string, unknown>).whatToImprove) && (
-                        <div>
-                          <p className="text-sm font-medium text-amber-700">What to improve:</p>
-                          <p className="text-sm text-text-secondary break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
-                        </div>
-                      )}
-                      {Boolean((feedback as Record<string, unknown>).strongerSampleAnswer) && (
-                        <div>
-                          <p className="text-sm font-medium text-accent-indigo">Stronger sample answer:</p>
-                          <p className="text-sm text-text-secondary break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
-                        </div>
-                      )}
-                      {Boolean((feedback as Record<string, unknown>).followUpQuestion) && (
-                        <div>
-                          <p className="text-sm font-medium text-purple-700">Follow-up question:</p>
-                          <p className="text-sm text-text-secondary break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).followUpQuestion as string}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    )}
+                    {Boolean((feedback as Record<string, unknown>).whatToImprove) && (
+                      <div>
+                        <p className="text-sm font-medium text-[#B45309]">What to improve:</p>
+                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
+                      </div>
+                    )}
+                    {Boolean((feedback as Record<string, unknown>).strongerSampleAnswer) && (
+                      <div>
+                        <p className="text-sm font-medium text-[#FF6B35]">Stronger sample answer:</p>
+                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
+                      </div>
+                    )}
+                    {Boolean((feedback as Record<string, unknown>).followUpQuestion) && (
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Follow-up question:</p>
+                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).followUpQuestion as string}</p>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {practiceQuestion.sampleAnswer && !feedback && (
                   <details className="mt-2">
-                    <summary className="text-sm text-text-muted cursor-pointer hover:text-text-primary">Show sample answer</summary>
-                    <p className="text-sm text-text-secondary mt-2 whitespace-pre-wrap">{practiceQuestion.sampleAnswer}</p>
+                    <summary className="text-sm text-[#737373] cursor-pointer hover:text-[#171717]">Show sample answer</summary>
+                    <p className="text-sm text-[#404040] mt-2 whitespace-pre-wrap">{practiceQuestion.sampleAnswer}</p>
                   </details>
                 )}
               </div>

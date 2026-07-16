@@ -194,11 +194,11 @@ export function LearningPaths() {
                     <div key={i} className="flex items-center gap-2.5 ml-4 my-1.5">
                       <input
                         type="checkbox"
-                        className="accent-blue-600 h-5 w-5 shrink-0 rounded cursor-pointer focus:ring-2 focus:ring-accent-violet focus:ring-offset-1"
+                        className="accent-blue-600 h-5 w-5 shrink-0 rounded cursor-pointer focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1"
                         checked={checklistState[i] ?? false}
                         onChange={(e) => handleChecklistChange(i, e.target.checked)}
                       />
-                      <span className={`text-sm min-w-0 ${checklistState[i] ? 'line-through text-text-muted' : 'text-text-secondary'}`}>
+                      <span className={`text-sm min-w-0 ${checklistState[i] ? 'line-through text-[#737373]' : 'text-[#404040]'}`}>
                         {line.replace('- [ ] ', '')}
                       </span>
                     </div>
@@ -206,22 +206,22 @@ export function LearningPaths() {
                 }
                 if (line.startsWith('- ')) return <li key={i} className="text-sm ml-4">{line.replace('- ', '')}</li>;
                 if (line.trim() === '') return <br key={i} />;
-                return <p key={i} className="text-sm text-text-secondary my-1">{line}</p>;
+                return <p key={i} className="text-sm text-[#404040] my-1">{line}</p>;
               })}
             </div>
           </CardContent>
         </Card>
 
         {nextGuide && (
-          <Card className="border-accent-violet/20 bg-accent-violet/8">
+          <Card className="border-[#FF6B35]/20 bg-[#FF6B35]/8">
             <CardContent className="p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-accent-indigo">Next Guide</p>
-                  <p className="text-sm text-accent-indigo truncate">{nextGuide.title}</p>
+                  <p className="text-sm font-medium text-[#FF6B35]">Next Guide</p>
+                  <p className="text-sm text-[#FF6B35] truncate">{nextGuide.title}</p>
                 </div>
                 <Button
-                  className="bg-accent-violet hover:bg-accent-indigo shrink-0 whitespace-nowrap"
+                  className="bg-[#FF6B35] hover:bg-[#FF6B35] shrink-0 whitespace-nowrap"
                   size="sm"
                   onClick={() => {
                     setSelectedGuide(nextGuide);
@@ -248,8 +248,8 @@ export function LearningPaths() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl font-bold text-text-primary font-heading">Learning Paths</h2>
-          <p className="text-text-muted mt-1 text-sm sm:text-base">Role-based guides organized by experience level</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Learning Paths</h2>
+          <p className="text-[#737373] mt-1 text-sm sm:text-base">Role-based guides organized by experience level</p>
         </div>
       </div>
 
@@ -269,10 +269,10 @@ export function LearningPaths() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium">Your Progress</p>
-              <p className="text-sm text-text-muted">{completedGuides}/{totalGuides} guides completed</p>
+              <p className="text-sm text-[#737373]">{completedGuides}/{totalGuides} guides completed</p>
             </div>
             <Progress value={overallPercent} className="h-2" />
-            <p className="text-xs text-text-muted mt-1">{overallPercent}% complete</p>
+            <p className="text-xs text-[#737373] mt-1">{overallPercent}% complete</p>
           </CardContent>
         </Card>
       )}
@@ -306,15 +306,15 @@ export function LearningPaths() {
         return (
           <div key={level}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-text-primary capitalize">{level} Guides</h3>
+              <h3 className="text-lg font-semibold text-[#171717] capitalize">{level} Guides</h3>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted">{completedInLevel}/{levelGuides.length}</span>
+                <span className="text-xs text-[#737373]">{completedInLevel}/{levelGuides.length}</span>
                 <Progress value={levelPercent} className="w-24 h-1.5" />
               </div>
             </div>
             {loading ? (
               <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2].map(i => <div key={i} className="h-20 bg-glass-border/30 rounded-lg" />)}
+                {[1, 2].map(i => <div key={i} className="h-20 bg-[#E5E5E0]/30 rounded-lg" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -336,16 +336,16 @@ export function LearningPaths() {
                               {isDone ? (
                                 <CheckCircle weight="light" className="h-4 w-4 text-green-500 shrink-0" aria-hidden="true" />
                               ) : (
-                                <Circle weight="light" className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
+                                <Circle weight="light" className="h-4 w-4 text-[#737373] shrink-0" aria-hidden="true" />
                               )}
-                              <p className={`font-medium text-sm truncate ${isDone ? 'text-green-700' : 'text-text-primary'}`}>{g.title}</p>
+                              <p className={`font-medium text-sm truncate ${isDone ? 'text-green-700' : 'text-[#171717]'}`}>{g.title}</p>
                             </div>
                     <div className="flex flex-wrap gap-2 mt-1 ml-6">
                               <Badge className={`${getLevelColor(g.level)} whitespace-nowrap`}>{g.level}</Badge>
                               <Badge variant="outline" className="whitespace-nowrap">{g.role}</Badge>
                             </div>
                           </div>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#737373] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                         </div>
                       </CardContent>
                     </Card>

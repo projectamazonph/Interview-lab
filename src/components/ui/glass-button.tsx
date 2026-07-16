@@ -1,67 +1,60 @@
 "use client";
 
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-interface GlassButtonProps extends React.ComponentProps<"button"> {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-  size?: "sm" | "md" | "lg";
-  iconRight?: React.ReactNode;
+const fieldButtonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 ease-out-expo active:translate-y-px disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35] focus-visible:ring-offset-2 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0",
+  {
+    variants: {
+      variant: {
+        primary:
+          "bg-[#FF6B35] text-white hover:bg-[#E55A2B] shadow-sm",
+        secondary:
+          "bg-white text-[#171717] border border-[#E5E5E0] hover:bg-[#F4F3EE] shadow-sm",
+        ghost:
+          "text-[#404040] hover:bg-[#F4F3EE] border border-transparent",
+        danger:
+          "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA] hover:bg-[#FECACA]",
+        link:
+          "text-[#FF6B35] underline-offset-4 hover:underline bg-transparent border-none shadow-none",
+      },
+      size: {
+        sm: "h-7 px-3 py-1 text-xs",
+        md: "h-9 px-4 py-2",
+        lg: "h-11 px-6 py-3",
+        icon: "h-9 w-9",
+        "icon-sm": "h-7 w-7",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  }
+);
+
+interface FieldButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof fieldButtonVariants> {
+  asChild?: boolean;
 }
 
-const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
-  ({ className, variant = "primary", size = "md", iconRight, children, ...props }, ref) => {
+const FieldButton = React.forwardRef<HTMLButtonElement, FieldButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
+      <Comp
         ref={ref}
-        className={cn(
-          "group inline-flex items-center justify-center gap-2.5",
-          "rounded-full font-heading font-semibold",
-          "transition-all duration-500 ease-premium",
-          "active:scale-[0.97]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:opacity-40 disabled:pointer-events-none",
-          size === "sm" && "px-5 py-2 text-sm",
-          size === "md" && "px-7 py-3 text-sm",
-          size === "lg" && "px-9 py-4 text-base",
-          variant === "primary" && [
-            "bg-accent-violet text-white",
-            "shadow-[0_0_20px_rgba(99,102,241,0.3)]",
-            "hover:bg-accent-indigo",
-            "hover:shadow-[0_0_30px_rgba(129,140,248,0.4)]",
-          ],
-          variant === "secondary" && [
-            "bg-glass-border/30 text-text-primary",
-            "border border-glass-border",
-            "backdrop-blur-sm",
-            "hover:bg-glass-border/50",
-            "hover:border-glass-border-hover",
-          ],
-          variant === "ghost" && [
-            "text-text-secondary",
-            "hover:bg-glass-border/20",
-            "hover:text-text-primary",
-          ],
-          variant === "danger" && [
-            "bg-accent-rose/20 text-accent-rose",
-            "border border-accent-rose/20",
-            "hover:bg-accent-rose/30",
-          ],
-          className
-        )}
+        className={cn(fieldButtonVariants({ variant, size, className }))}
         {...props}
-      >
-        {children}
-        {iconRight && (
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 transition-all duration-500 ease-premium group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:scale-105 shrink-0">
-            {iconRight}
-          </span>
-        )}
-      </button>
+      />
     );
   }
 );
 
-GlassButton.displayName = "GlassButton";
+FieldButton.displayName = "FieldButton";
 
-export { GlassButton, type GlassButtonProps };
+export { FieldButton, fieldButtonVariants };

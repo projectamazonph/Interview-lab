@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { ROLES, DIFFICULTIES, TOOLS_LIST } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { FieldCard, FieldCardContent, FieldCardDescription, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
+import { FieldButton } from '@/components/ui/glass-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+import { FieldBadge } from '@/components/ui/glass-badge';
 
 interface OnboardingQuizProps {
   onComplete: () => void;
@@ -84,16 +84,16 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
 
   return (
     <div className="max-w-2xl mx-auto px-1 sm:px-0">
-      <Card>
-        <CardHeader>
+      <FieldCard>
+        <FieldCardHeader>
           <div className="flex items-center justify-between mb-2">
-            <Badge variant="secondary">Step {step + 1} of {steps.length}</Badge>
-            <span className="text-sm text-text-muted whitespace-nowrap">{Math.round(((step + 1) / steps.length) * 100)}% complete</span>
+            <FieldBadge variant="secondary">Step {step + 1} of {steps.length}</FieldBadge>
+            <span className="text-sm text-[#737373] whitespace-nowrap">{Math.round(((step + 1) / steps.length) * 100)}% complete</span>
           </div>
-          <CardTitle className="text-xl sm:text-2xl font-heading">{steps[step].title}</CardTitle>
-          <CardDescription>{steps[step].description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+          <FieldCardTitle className="text-xl sm:text-2xl font-heading">{steps[step].title}</FieldCardTitle>
+          <FieldCardDescription>{steps[step].description}</FieldCardDescription>
+        </FieldCardHeader>
+        <FieldCardContent className="space-y-6">
           {step === 0 && (
             <div className="space-y-3">
               <div className="flex justify-center mb-2">
@@ -111,12 +111,12 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
                   onClick={() => setFormData(prev => ({ ...prev, targetRole: role }))}
                   className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-colors ${
                     formData.targetRole === role
-                      ? 'border-accent-violet bg-accent-violet/8'
-                      : 'border-glass-border hover:border-glass-border-hover'
+                      ? 'border-[#FF6B35] bg-[#FF6B35]/8'
+                      : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
                   }`}
                 >
                   <p className="font-medium truncate">{role}</p>
-                  <p className="text-xs sm:text-sm text-text-muted mt-1">
+                  <p className="text-xs sm:text-sm text-[#737373] mt-1">
                     {role === 'PPC VA' && 'Campaign setup, keyword research, ACoS/ROAS, bid adjustments, reporting'}
                     {role === 'Account VA' && 'Seller Central tasks, catalog support, inventory checks, case logs'}
                     {role === 'Listing VA' && 'Titles, bullets, A+ content, indexing, keyword placement'}
@@ -138,12 +138,12 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
                   onClick={() => setFormData(prev => ({ ...prev, experienceLevel: level }))}
                   className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-colors ${
                     formData.experienceLevel === level
-                      ? 'border-accent-violet bg-accent-violet/8'
-                      : 'border-glass-border hover:border-glass-border-hover'
+                      ? 'border-[#FF6B35] bg-[#FF6B35]/8'
+                      : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
                   }`}
                 >
                   <p className="font-medium capitalize">{level}</p>
-                  <p className="text-xs sm:text-sm text-text-muted mt-1">
+                  <p className="text-xs sm:text-sm text-[#737373] mt-1">
                     {level === 'beginner' && 'New to Amazon operations, need foundational knowledge'}
                     {level === 'intermediate' && 'Know the basics, need structured practice and stronger answers'}
                     {level === 'advanced' && 'Experienced, need advanced case studies and optimization skills'}
@@ -163,8 +163,8 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
                     onClick={() => toggleTool(tool)}
                     className={`p-2 sm:p-3 rounded-lg border-2 text-xs sm:text-sm transition-colors min-h-[44px] ${
                       formData.toolsKnown.includes(tool)
-                        ? 'border-accent-violet bg-accent-violet/8 text-accent-indigo'
-                        : 'border-glass-border text-text-secondary hover:border-glass-border-hover'
+                        ? 'border-[#FF6B35] bg-[#FF6B35]/8 text-[#FF6B35]'
+                        : 'border-[#E5E5E0] text-[#404040] hover:border-[#D4D4D4]'
                     }`}
                   >
                     <span className="break-words">{tool}</span>
@@ -184,8 +184,8 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
                     onClick={() => toggleWeakArea(area)}
                     className={`p-2 sm:p-3 rounded-lg border-2 text-xs sm:text-sm text-left transition-colors min-h-[44px] ${
                       formData.weakAreas.includes(area)
-                        ? 'border-accent-violet bg-accent-violet/8 text-accent-indigo'
-                        : 'border-glass-border text-text-secondary hover:border-glass-border-hover'
+                        ? 'border-[#FF6B35] bg-[#FF6B35]/8 text-[#FF6B35]'
+                        : 'border-[#E5E5E0] text-[#404040] hover:border-[#D4D4D4]'
                     }`}
                   >
                     <span className="break-words">{area}</span>
@@ -240,34 +240,34 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
 
           {/* Navigation */}
           <div className="flex justify-between pt-4">
-            <Button
+            <FieldButton
               variant="outline"
               onClick={() => setStep(s => Math.max(0, s - 1))}
               disabled={step === 0}
             >
               Previous
-            </Button>
+            </FieldButton>
             {step < steps.length - 1 ? (
-              <Button
-                className="bg-accent-violet hover:bg-accent-indigo min-w-[80px]"
+              <FieldButton
+                className="bg-[#FF6B35] hover:bg-[#FF6B35] min-w-[80px]"
                 onClick={() => setStep(s => s + 1)}
                 disabled={step === 0 && !formData.targetRole}
               >
                 Next
-              </Button>
+              </FieldButton>
             ) : (
-              <Button
-                className="bg-accent-violet hover:bg-accent-indigo min-w-[80px]"
+              <FieldButton
+                className="bg-[#FF6B35] hover:bg-[#FF6B35] min-w-[80px]"
                 onClick={handleSubmit}
                 disabled={submitting}
               >
                 {submitting ? 'Saving...' : 'Complete Onboarding'}
-              </Button>
+              </FieldButton>
             )}
           </div>
           {error && <p className="text-sm text-red-500 text-center pt-2">{error}</p>}
-        </CardContent>
-      </Card>
+        </FieldCardContent>
+      </FieldCard>
     </div>
   );
 }

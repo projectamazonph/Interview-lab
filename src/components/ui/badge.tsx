@@ -6,24 +6,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full px-3 py-1 text-[11px] font-heading font-medium uppercase tracking-wider w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none backdrop-blur-sm transition-all duration-400 ease-premium",
+  "inline-flex items-center justify-center rounded-sm px-2 py-0.5 text-[11px] font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors duration-150 ease-out-expo",
   {
     variants: {
       variant: {
         default:
-          "bg-glass-border/30 text-text-secondary border border-glass-border",
+          "bg-surface-2 text-ink-700 border border-border",
         accent:
-          "bg-accent-violet/20 text-accent-indigo border border-accent-violet/20",
+          "bg-accent-soft text-accent border border-accent/20",
         success:
-          "bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/15",
+          "bg-success-soft text-success border border-success/20",
         warning:
-          "bg-accent-amber/15 text-accent-amber border border-accent-amber/15",
+          "bg-warning-soft text-warning border border-warning/20",
         destructive:
-          "bg-accent-rose/15 text-accent-rose border border-accent-rose/15",
+          "bg-danger-soft text-danger border border-danger/20",
         outline:
-          "text-text-secondary border border-glass-border",
-        secondary:
-          "bg-glass-subtle text-text-muted border border-transparent",
+          "text-ink-700 border border-border",
+        ghost:
+          "text-ink-500",
       },
     },
     defaultVariants: {
@@ -48,5 +48,7 @@ function Badge({
     />
   );
 }
+
+Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };

@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Question, ROLES, DIFFICULTIES, QUESTION_TYPES, SKILL_AREAS } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { FieldBadge } from '@/components/ui/glass-badge';
+import { FieldButton } from '@/components/ui/glass-button';
+import { FieldCard, FieldCardContent, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -265,7 +265,7 @@ export function AdminPanel() {
   if (!user?.isAdmin) {
     return (
       <div className="text-center py-12">
-        <p className="text-text-muted">You don&apos;t have admin access.</p>
+        <p className="text-[#737373]">You don&apos;t have admin access.</p>
       </div>
     );
   }
@@ -273,8 +273,8 @@ export function AdminPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-text-primary font-heading">Admin Panel</h2>
-        <p className="text-text-muted mt-1 text-sm sm:text-base">Manage questions, guides, downloads, and analytics</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Admin Panel</h2>
+        <p className="text-[#737373] mt-1 text-sm sm:text-base">Manage questions, guides, downloads, and analytics</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminTab)}>
@@ -305,21 +305,21 @@ export function AdminPanel() {
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={() => handleExportContent('json')} className="whitespace-nowrap">
+              <FieldButton variant="outline" size="sm" onClick={() => handleExportContent('json')} className="whitespace-nowrap">
                 Export JSON
-              </Button>
+              </FieldButton>
             </div>
-            <Button className="bg-accent-violet hover:bg-accent-indigo whitespace-nowrap shrink-0" onClick={() => { resetQuestionForm(); setShowForm(!showForm); }}>
+            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap shrink-0" onClick={() => { resetQuestionForm(); setShowForm(!showForm); }}>
               {showForm && !editingId ? 'Cancel' : (editingId ? 'Cancel Edit' : 'Add Question')}
-            </Button>
+            </FieldButton>
           </div>
 
           {showForm && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{editingId ? 'Edit Question' : 'Create New Question'}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <FieldCard>
+              <FieldCardHeader>
+                <FieldCardTitle>{editingId ? 'Edit Question' : 'Create New Question'}</FieldCardTitle>
+              </FieldCardHeader>
+              <FieldCardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label>Role</Label>
@@ -395,63 +395,63 @@ export function AdminPanel() {
                   <Label>Sample Answer</Label>
                   <Textarea value={form.sampleAnswer} onChange={(e) => setForm(f => ({ ...f, sampleAnswer: e.target.value }))} rows={3} />
                 </div>
-                <Button className="w-full bg-accent-violet hover:bg-accent-indigo" onClick={handleSaveQuestion}>
+                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleSaveQuestion}>
                   {editingId ? 'Update Question' : 'Create Question'}
-                </Button>
-              </CardContent>
-            </Card>
+                </FieldButton>
+              </FieldCardContent>
+            </FieldCard>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Question Database ({total} total)</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <FieldCard>
+            <FieldCardHeader>
+              <FieldCardTitle className="text-lg">Question Database ({total} total)</FieldCardTitle>
+            </FieldCardHeader>
+            <FieldCardContent>
               {loading ? (
-                <div className="animate-pulse space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-12 bg-glass-border/30 rounded" />)}</div>
+                <div className="animate-pulse space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-12 bg-[#E5E5E0]/30 rounded" />)}</div>
               ) : (
                 <div className="space-y-2 max-h-[500px] overflow-y-auto">
                   {questions.map(q => (
-                    <div key={q.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-glass/40 rounded-lg hover:bg-glass-border/30 gap-2">
+                    <div key={q.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-[#F4F3EE]/40 rounded-lg hover:bg-[#E5E5E0]/30 gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-text-primary line-clamp-2">{q.question}</p>
+                        <p className="text-sm text-[#171717] line-clamp-2">{q.question}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <Badge variant="outline" className="text-xs">{q.role}</Badge>
-                          <Badge variant="outline" className="text-xs">{q.difficulty}</Badge>
-                          <Badge variant="outline" className="text-xs">{q.type}</Badge>
+                          <FieldBadge variant="outline" className="text-xs">{q.role}</FieldBadge>
+                          <FieldBadge variant="outline" className="text-xs">{q.difficulty}</FieldBadge>
+                          <FieldBadge variant="outline" className="text-xs">{q.type}</FieldBadge>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant={q.status === 'published' ? 'default' : (q.status === 'archived' ? 'destructive' : 'secondary')} className="text-xs whitespace-nowrap">
+                        <FieldBadge variant={q.status === 'published' ? 'default' : (q.status === 'archived' ? 'destructive' : 'secondary')} className="text-xs whitespace-nowrap">
                           {q.status}
-                        </Badge>
-                        <Button variant="ghost" size="sm" className="whitespace-nowrap" onClick={() => handleEditQuestion(q)}>Edit</Button>
+                        </FieldBadge>
+                        <FieldButton variant="ghost" size="sm" className="whitespace-nowrap" onClick={() => handleEditQuestion(q)}>Edit</FieldButton>
                         {q.status !== 'archived' && (
-                          <Button variant="ghost" size="sm" className="text-red-500 whitespace-nowrap" onClick={() => handleArchiveQuestion(q.id)}>Archive</Button>
+                          <FieldButton variant="ghost" size="sm" className="text-red-500 whitespace-nowrap" onClick={() => handleArchiveQuestion(q.id)}>Archive</FieldButton>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </FieldCardContent>
+          </FieldCard>
         </TabsContent>
 
         {/* ===== GUIDES TAB ===== */}
         <TabsContent value="guides" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-            <Button className="bg-accent-violet hover:bg-accent-indigo whitespace-nowrap" onClick={() => { resetGuideForm(); setShowGuideForm(!showGuideForm); }}>
+            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap" onClick={() => { resetGuideForm(); setShowGuideForm(!showGuideForm); }}>
               {showGuideForm ? 'Cancel' : 'Add Guide'}
-            </Button>
+            </FieldButton>
           </div>
 
           {showGuideForm && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{editingGuideId ? 'Edit Guide' : 'Create New Guide'}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <FieldCard>
+              <FieldCardHeader>
+                <FieldCardTitle>{editingGuideId ? 'Edit Guide' : 'Create New Guide'}</FieldCardTitle>
+              </FieldCardHeader>
+              <FieldCardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Title</Label>
@@ -486,51 +486,51 @@ export function AdminPanel() {
                   <Label>Content (Markdown)</Label>
                   <Textarea value={guideForm.content} onChange={(e) => setGuideForm(f => ({ ...f, content: e.target.value }))} rows={10} placeholder="# Title\n\nContent goes here..." />
                 </div>
-                <Button className="w-full bg-accent-violet hover:bg-accent-indigo" onClick={handleSaveGuide}>
+                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleSaveGuide}>
                   {editingGuideId ? 'Update Guide' : 'Create Guide'}
-                </Button>
-              </CardContent>
-            </Card>
+                </FieldButton>
+              </FieldCardContent>
+            </FieldCard>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Guide Articles ({guides.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <FieldCard>
+            <FieldCardHeader>
+              <FieldCardTitle className="text-lg">Guide Articles ({guides.length})</FieldCardTitle>
+            </FieldCardHeader>
+            <FieldCardContent>
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {guides.map(g => (
-                  <div key={g.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-glass/40 rounded-lg hover:bg-glass-border/30 gap-2">
+                  <div key={g.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-[#F4F3EE]/40 rounded-lg hover:bg-[#E5E5E0]/30 gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-primary">{g.title}</p>
+                      <p className="text-sm font-medium text-[#171717]">{g.title}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">{g.level}</Badge>
-                        <Badge variant="outline" className="text-xs">{g.role}</Badge>
-                        <Badge variant={g.status === 'published' ? 'default' : 'secondary'} className="text-xs">{g.status}</Badge>
+                        <FieldBadge variant="outline" className="text-xs">{g.level}</FieldBadge>
+                        <FieldBadge variant="outline" className="text-xs">{g.role}</FieldBadge>
+                        <FieldBadge variant={g.status === 'published' ? 'default' : 'secondary'} className="text-xs">{g.status}</FieldBadge>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => handleEditGuide(g)}>Edit</Button>
+                    <FieldButton variant="ghost" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => handleEditGuide(g)}>Edit</FieldButton>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </FieldCardContent>
+          </FieldCard>
         </TabsContent>
 
         {/* ===== DOWNLOADS TAB ===== */}
         <TabsContent value="downloads" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-            <Button className="bg-accent-violet hover:bg-accent-indigo whitespace-nowrap" onClick={() => setShowDownloadForm(!showDownloadForm)}>
+            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap" onClick={() => setShowDownloadForm(!showDownloadForm)}>
               {showDownloadForm ? 'Cancel' : 'Add Download'}
-            </Button>
+            </FieldButton>
           </div>
 
           {showDownloadForm && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Downloadable Resource</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <FieldCard>
+              <FieldCardHeader>
+                <FieldCardTitle>Add Downloadable Resource</FieldCardTitle>
+              </FieldCardHeader>
+              <FieldCardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Title</Label>
@@ -589,34 +589,34 @@ export function AdminPanel() {
                   <Label>Description</Label>
                   <Input value={downloadForm.description} onChange={(e) => setDownloadForm(f => ({ ...f, description: e.target.value }))} />
                 </div>
-                <Button className="w-full bg-accent-violet hover:bg-accent-indigo" onClick={handleCreateDownload}>Add Download</Button>
-              </CardContent>
-            </Card>
+                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleCreateDownload}>Add Download</FieldButton>
+              </FieldCardContent>
+            </FieldCard>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Downloadable Resources ({downloads.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <FieldCard>
+            <FieldCardHeader>
+              <FieldCardTitle className="text-lg">Downloadable Resources ({downloads.length})</FieldCardTitle>
+            </FieldCardHeader>
+            <FieldCardContent>
               <div className="space-y-2 max-h-96 sm:max-h-[500px] overflow-y-auto">
                 {downloads.map(d => (
-                  <div key={d.id} className="flex items-center justify-between p-3 bg-glass/40 rounded-lg gap-2">
+                  <div key={d.id} className="flex items-center justify-between p-3 bg-[#F4F3EE]/40 rounded-lg gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-primary truncate">{d.title}</p>
+                      <p className="text-sm font-medium text-[#171717] truncate">{d.title}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">{d.fileType}</Badge>
-                        <Badge variant="outline" className="text-xs">{d.role}</Badge>
-                        <Badge variant="outline" className="text-xs">{d.category}</Badge>
-                        <Badge variant="outline" className="text-xs">{d.accessTier}</Badge>
-                        <Badge variant="outline" className="text-xs">{d.downloadCount} downloads</Badge>
+                        <FieldBadge variant="outline" className="text-xs">{d.fileType}</FieldBadge>
+                        <FieldBadge variant="outline" className="text-xs">{d.role}</FieldBadge>
+                        <FieldBadge variant="outline" className="text-xs">{d.category}</FieldBadge>
+                        <FieldBadge variant="outline" className="text-xs">{d.accessTier}</FieldBadge>
+                        <FieldBadge variant="outline" className="text-xs">{d.downloadCount} downloads</FieldBadge>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </FieldCardContent>
+          </FieldCard>
         </TabsContent>
 
         {/* ===== ANALYTICS TAB ===== */}
@@ -625,67 +625,67 @@ export function AdminPanel() {
             <>
               {/* Platform Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-accent-indigo font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalUsers as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Total Users</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-accent-indigo font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalSessions as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Interview Sessions</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-accent-indigo font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalAttempts as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Practice Attempts</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-accent-indigo font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.avgScore as number ?? 0}/10</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Platform Avg Score</p>
-                  </CardContent>
-                </Card>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalUsers as number ?? 0}</p>
+                    <p className="text-xs sm:text-sm text-[#737373]">Total Users</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalSessions as number ?? 0}</p>
+                    <p className="text-xs sm:text-sm text-[#737373]">Interview Sessions</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalAttempts as number ?? 0}</p>
+                    <p className="text-xs sm:text-sm text-[#737373]">Practice Attempts</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.avgScore as number ?? 0}/10</p>
+                    <p className="text-xs sm:text-sm text-[#737373]">Platform Avg Score</p>
+                  </FieldCardContent>
+                </FieldCard>
               </div>
 
               {/* Secondary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
                     <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Total Questions</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-xs sm:text-sm text-[#737373]">Total Questions</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
                     <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalGuides as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Total Guides</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-xs sm:text-sm text-[#737373]">Total Guides</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
                     <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalDownloads as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Download Resources</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
+                    <p className="text-xs sm:text-sm text-[#737373]">Download Resources</p>
+                  </FieldCardContent>
+                </FieldCard>
+                <FieldCard>
+                  <FieldCardContent className="p-3 sm:p-4 text-center">
                     <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.sessionsLast30Days as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-text-muted">Sessions (30d)</p>
-                  </CardContent>
-                </Card>
+                    <p className="text-xs sm:text-sm text-[#737373]">Sessions (30d)</p>
+                  </FieldCardContent>
+                </FieldCard>
               </div>
 
               {/* Users by Subscription Tier */}
               {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.usersByTier && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Users by Subscription Tier</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Users by Subscription Tier</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-3">
                       {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).usersByTier).map(([tier, count]) => {
                         const totalUsers = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalUsers as number || 1;
@@ -693,25 +693,25 @@ export function AdminPanel() {
                         return (
                           <div key={tier} className="flex items-center gap-2 sm:gap-3">
                             <span className="text-sm w-20 sm:w-28 truncate capitalize">{tier}</span>
-                            <div className="flex-1 min-w-0 bg-glass-border/20 rounded-full h-3 sm:h-4">
-                              <div className={`${BAR_COLORS.usersByTier ?? 'bg-accent-violet'} h-3 sm:h-4 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
+                              <div className={`${BAR_COLORS.usersByTier ?? 'bg-[#FF6B35]'} h-3 sm:h-4 rounded-md transition-all`} style={{ width: `${pct}%` }} />
                             </div>
-                            <span className="text-xs sm:text-sm text-text-muted whitespace-nowrap">{count} ({pct}%)</span>
+                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {/* Questions by Role (from API) */}
               {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByRole && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Questions by Role</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Questions by Role</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-3">
                       {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByRole).map(([role, count]) => {
                         const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
@@ -719,25 +719,25 @@ export function AdminPanel() {
                         return (
                           <div key={role} className="flex items-center gap-2 sm:gap-3">
                             <span className="text-sm w-20 sm:w-28 truncate">{role}</span>
-                            <div className="flex-1 min-w-0 bg-glass-border/20 rounded-full h-3 sm:h-4">
-                              <div className="bg-sky-500 h-3 sm:h-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
+                              <div className="bg-sky-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
                             </div>
-                            <span className="text-xs sm:text-sm text-text-muted whitespace-nowrap">{count} ({pct}%)</span>
+                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {/* Questions by Difficulty (from API) */}
               {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByDifficulty && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Questions by Difficulty</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Questions by Difficulty</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-3">
                       {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByDifficulty).map(([diff, count]) => {
                         const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
@@ -745,25 +745,25 @@ export function AdminPanel() {
                         return (
                           <div key={diff} className="flex items-center gap-2 sm:gap-3">
                             <span className="text-sm w-20 sm:w-28 truncate capitalize">{diff}</span>
-                            <div className="flex-1 min-w-0 bg-glass-border/20 rounded-full h-3 sm:h-4">
-                              <div className="bg-amber-500 h-3 sm:h-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
+                              <div className="bg-amber-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
                             </div>
-                            <span className="text-xs sm:text-sm text-text-muted whitespace-nowrap">{count} ({pct}%)</span>
+                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {/* Questions by Status */}
               {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByStatus && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Questions by Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Questions by Status</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-3">
                       {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByStatus).map(([status, count]) => {
                         const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
@@ -771,75 +771,75 @@ export function AdminPanel() {
                         return (
                           <div key={status} className="flex items-center gap-2 sm:gap-3">
                             <span className="text-sm w-20 sm:w-28 truncate capitalize">{status}</span>
-                            <div className="flex-1 min-w-0 bg-glass-border/20 rounded-full h-3 sm:h-4">
-                              <div className="bg-rose-500 h-3 sm:h-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
+                              <div className="bg-rose-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
                             </div>
-                            <span className="text-xs sm:text-sm text-text-muted whitespace-nowrap">{count} ({pct}%)</span>
+                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {/* Top Downloaded Resources */}
               {((analytics as Record<string, unknown>).topDownloaded as Array<{ id: string; title: string; downloadCount: number; fileType: string; category: string }>) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Top Downloaded Resources</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Top Downloaded Resources</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-2">
                       {((analytics as Record<string, unknown>).topDownloaded as Array<{ id: string; title: string; downloadCount: number; fileType: string; category: string }>).map((d, i) => (
-                        <div key={d.id} className="flex items-center justify-between gap-2 p-2 bg-glass/40 rounded">
+                        <div key={d.id} className="flex items-center justify-between gap-2 p-2 bg-[#F4F3EE]/40 rounded">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-text-muted">{i + 1}.</span>
+                            <span className="text-sm font-medium text-[#737373]">{i + 1}.</span>
                             <span className="text-sm truncate">{d.title}</span>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="outline" className="text-xs">{d.category}</Badge>
-                            <Badge variant="outline" className="whitespace-nowrap">{d.downloadCount} downloads</Badge>
+                            <FieldBadge variant="outline" className="text-xs">{d.category}</FieldBadge>
+                            <FieldBadge variant="outline" className="whitespace-nowrap">{d.downloadCount} downloads</FieldBadge>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
 
               {/* Recent Users */}
               {((analytics as Record<string, unknown>).recentUsers as Array<{ id: string; email: string; name: string | null; subscriptionTier: string; isAdmin: boolean; createdAt: string }>) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Recent Users</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <FieldCard>
+                  <FieldCardHeader>
+                    <FieldCardTitle className="text-lg">Recent Users</FieldCardTitle>
+                  </FieldCardHeader>
+                  <FieldCardContent>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {((analytics as Record<string, unknown>).recentUsers as Array<{ id: string; email: string; name: string | null; subscriptionTier: string; isAdmin: boolean; createdAt: string }>).map(u => (
-                        <div key={u.id} className="flex items-center justify-between gap-2 p-2 bg-glass/40 rounded">
+                        <div key={u.id} className="flex items-center justify-between gap-2 p-2 bg-[#F4F3EE]/40 rounded">
                           <div className="min-w-0">
                             <p className="text-sm truncate">{u.name || u.email}</p>
-                            <p className="text-xs text-text-muted truncate">{u.email}</p>
+                            <p className="text-xs text-[#737373] truncate">{u.email}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="outline" className="text-xs capitalize">{u.subscriptionTier}</Badge>
-                            {u.isAdmin && <Badge className="bg-accent-violet/15 text-accent-indigo text-xs">Admin</Badge>}
-                            <span className="text-xs text-text-muted whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</span>
+                            <FieldBadge variant="outline" className="text-xs capitalize">{u.subscriptionTier}</FieldBadge>
+                            {u.isAdmin && <FieldBadge className="bg-[#FF6B35]/15 text-[#FF6B35] text-xs">Admin</FieldBadge>}
+                            <span className="text-xs text-[#737373] whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </FieldCardContent>
+                </FieldCard>
               )}
             </>
           ) : (
             <div className="animate-pulse space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-glass-border/30 rounded-lg" />)}
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#E5E5E0]/30 rounded-lg" />)}
               </div>
-              {[1, 2, 3].map(i => <div key={i} className="h-40 bg-glass-border/30 rounded-lg" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-40 bg-[#E5E5E0]/30 rounded-lg" />)}
             </div>
           )}
         </TabsContent>

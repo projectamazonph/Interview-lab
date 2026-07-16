@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SubscriptionBanner } from "@/components/interview-lab/SubscriptionBanner";
 import { ProjectAmazonPHHeader } from "@/components/shared/ProjectAmazonPHHeader";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   SquaresFour,
   Question,
@@ -71,10 +70,10 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
           <button
             key={item.id}
             onClick={() => { onViewChange(item.id); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-400 ease-premium text-left ${
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-400 ease-out-expo text-left ${
               isActive
-                ? "bg-accent-violet/15 text-accent-indigo shadow-[0_0_12px_rgba(99,102,241,0.08)]"
-                : "text-text-secondary hover:text-text-primary hover:bg-glass-border/20"
+                ? "bg-[#FFE5D9] text-[#E55A2B] font-semibold"
+                : "text-ink-700 hover:bg-[#F4F3EE]"
             }`}
           >
             <span className="shrink-0">{item.icon}</span>
@@ -90,13 +89,13 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
 
       {user?.isAdmin && (
         <>
-          <div className="h-px bg-glass-border/40 my-2" />
+          <div className="h-px bg-[#E5E5E0] my-2" />
           <button
             onClick={() => { onViewChange("admin"); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-400 ease-premium text-left ${
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-400 ease-out-expo text-left ${
               activeView === "admin"
-                ? "bg-accent-violet/15 text-accent-indigo"
-                : "text-text-secondary hover:text-text-primary hover:bg-glass-border/20"
+                ? "bg-[#FFE5D9] text-[#E55A2B] font-semibold"
+                : "text-ink-700 hover:bg-[#F4F3EE]"
             }`}
           >
             <GearSix className="w-5 h-5 shrink-0" weight="light" />
@@ -108,9 +107,9 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
   );
 
   return (
-    <div className="flex min-h-[100dvh] bg-pa-navy">
+    <div className="flex min-h-[100dvh] bg-background">
       {/* ─── Desktop Sidebar ─── */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-pa-deep/80 backdrop-blur-xl border-r border-glass-border/30">
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-white border-r border-[#E5E5E0] sticky top-0 h-screen">
         <div className="p-5">
           <ProjectAmazonPHHeader projectName="Interview Lab" />
         </div>
@@ -122,20 +121,20 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
           onUpgrade={() => { onViewChange("pricing"); setSidebarOpen(false); }}
         />
 
-        <div className="p-3 border-t border-glass-border/30">
+        <div className="p-3 border-t border-[#E5E5E0]">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-9 h-9 rounded-full bg-accent-violet/15 flex items-center justify-center shrink-0">
-              <span className="text-sm font-heading font-semibold text-accent-indigo">
+            <div className="w-9 h-9 rounded-md bg-[#FF6B35]/15 flex items-center justify-center shrink-0">
+              <span className="text-sm font-heading font-semibold text-[#FF6B35]">
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-primary truncate">{user?.name}</p>
-              <p className="text-xs text-text-muted truncate">{user?.email}</p>
+              <p className="text-sm font-medium text-ink-900 truncate">{user?.name}</p>
+              <p className="text-xs text-ink-500 truncate">{user?.email}</p>
             </div>
             <button
               onClick={logout}
-              className="p-2 rounded-lg text-text-muted hover:text-accent-rose hover:bg-glass-border/20 transition-all duration-400 ease-premium"
+              className="p-2 rounded-md text-ink-500 hover:text-[#B91C1C] hover:bg-[#F4F3EE] transition-all duration-400 ease-out-expo"
               title="Log out"
               aria-label="Log out"
             >
@@ -146,77 +145,62 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
       </aside>
 
       {/* ─── Mobile Overlay ─── */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
+      {sidebarOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          <aside className="fixed inset-y-0 left-0 w-72 z-50 bg-white border-r border-[#E5E5E0] flex flex-col lg:hidden">
+            <div className="flex items-center justify-between p-5">
+              <ProjectAmazonPHHeader projectName="Interview Lab" />
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-md text-ink-500 hover:text-ink-900 hover:bg-[#F4F3EE] transition-all duration-400 ease-out-expo"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" weight="light" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">{renderNav()}</div>
+
+            <SubscriptionBanner
+              tier={user?.subscriptionTier || "free"}
+              onUpgrade={() => { onViewChange("pricing"); setSidebarOpen(false); }}
             />
-            <motion.aside
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 w-72 z-50 bg-pa-deep/95 backdrop-blur-2xl border-r border-glass-border/30 flex flex-col lg:hidden"
-            >
-              <div className="flex items-center justify-between p-5">
-                <ProjectAmazonPHHeader projectName="Interview Lab" />
+
+            <div className="p-3 border-t border-[#E5E5E0]">
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="w-9 h-9 rounded-md bg-[#FF6B35]/15 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-heading font-semibold text-[#FF6B35]">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-ink-900 truncate">{user?.name}</p>
+                  <p className="text-xs text-ink-500 truncate">{user?.email}</p>
+                </div>
                 <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-glass-border/20 transition-all duration-400 ease-premium"
-                  aria-label="Close menu"
+                  onClick={logout}
+                  className="p-2 rounded-md text-ink-500 hover:text-[#B91C1C] hover:bg-[#F4F3EE] transition-all duration-400 ease-out-expo"
+                  title="Log out"
+                  aria-label="Log out"
                 >
-                  <X className="w-5 h-5" weight="light" />
+                  <SignOut className="w-4 h-4" weight="light" />
                 </button>
               </div>
-
-              <div className="flex-1 overflow-y-auto">{renderNav()}</div>
-
-              <SubscriptionBanner
-                tier={user?.subscriptionTier || "free"}
-                onUpgrade={() => { onViewChange("pricing"); setSidebarOpen(false); }}
-              />
-
-              <div className="p-3 border-t border-glass-border/30">
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <div className="w-9 h-9 rounded-full bg-accent-violet/15 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-heading font-semibold text-accent-indigo">
-                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">{user?.name}</p>
-                    <p className="text-xs text-text-muted truncate">{user?.email}</p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    className="p-2 rounded-lg text-text-muted hover:text-accent-rose hover:bg-glass-border/20 transition-all duration-400 ease-premium"
-                    title="Log out"
-                    aria-label="Log out"
-                  >
-                    <SignOut className="w-4 h-4" weight="light" />
-                  </button>
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+          </aside>
+        </>
+      )}
 
       {/* ─── Main Content ─── */}
       <main className="flex-1 min-w-0 min-h-[100dvh]">
-        {/* Mobile header */}
-        <div className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-pa-navy/90 backdrop-blur-xl border-b border-glass-border/30">
+        <div className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-background border-b border-[#E5E5E0]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-glass-border/20 transition-all duration-400 ease-premium"
+            className="p-2 rounded-md hover:bg-[#F4F3EE] transition-all duration-400 ease-out-expo"
             aria-label="Open menu"
           >
-            <List className="w-5 h-5 text-text-secondary" weight="light" />
+            <List className="w-5 h-5 text-ink-700" weight="light" />
           </button>
           <div className="flex items-center gap-2 min-w-0">
             <ProjectAmazonPHHeader projectName="Interview Lab" className="gap-2" />

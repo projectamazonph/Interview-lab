@@ -12,7 +12,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 const spaceGrotesk = Space_Grotesk({
-  variable: "--font-clash",
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700"],
@@ -28,7 +28,7 @@ const BASE_URL = "https://interview-lab.vercel.app";
 
 export const viewport: Viewport = {
   themeColor: "#FF6B35",
-  colorScheme: "dark",
+  colorScheme: "light",
 };
 
 export const metadata: Metadata = {
@@ -237,10 +237,16 @@ const structuredData = {
   ],
 };
 
+const fontVariables = [
+  plusJakarta.variable,
+  spaceGrotesk.variable,
+  jetbrainsMono.variable,
+].join(" ");
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-body antialiased grain-overlay`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontVariables} font-body antialiased`}>
         <PapHeader />
         {children}
         <Toaster />

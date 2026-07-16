@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { FieldCard } from '@/components/ui/glass-card';
+import { FieldButton } from '@/components/ui/glass-button';
+import { FieldBadge } from '@/components/ui/glass-badge';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/auth-context';
 import { PRICING_TIERS, TierKey, BillingPeriod, getTierPrice, getYearlySavings, formatPrice, CURRENCY } from '@/lib/pricing';
@@ -87,7 +87,6 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
         setSubscription(data);
       }
     } catch {
-      // Silently fail — subscription status is optional
     }
   };
 
@@ -145,14 +144,14 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
     <div className="min-h-screen">
       {/* Hero Section */}
       <div className="text-center mb-10 sm:mb-14">
-        <div className="inline-flex items-center gap-2 bg-pa-blue/10 border border-pa-blue/20 rounded-full px-4 py-1.5 mb-4">
-          <Crown className="h-4 w-4 text-pa-blue" />
-          <span className="text-sm font-medium text-pa-blue">Simple, transparent pricing</span>
+        <div className="inline-flex items-center gap-2 bg-accent-soft border border-accent/20 rounded-md px-4 py-1.5 mb-4">
+          <Crown className="h-4 w-4 text-accent" />
+          <span className="text-sm font-medium text-accent">Simple, transparent pricing</span>
         </div>
-        <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-pa-charcoal mb-4">
+        <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 mb-4">
           Choose Your Interview Prep Plan
         </h1>
-        <p className="font-body text-lg text-pa-slate max-w-2xl mx-auto mb-6">
+        <p className="font-body text-lg text-ink-700 max-w-2xl mx-auto mb-6">
           From free practice to full interview mastery — pick the plan that matches your prep goals and budget.
         </p>
         <div className="flex justify-center mb-4">
@@ -167,7 +166,7 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center gap-3">
-          <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-pa-charcoal' : 'text-pa-muted'}`}>
+          <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-ink-900' : 'text-ink-500'}`}>
             Monthly
           </span>
           <Switch
@@ -175,13 +174,13 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
             onCheckedChange={(checked) => setBillingPeriod(checked ? 'yearly' : 'monthly')}
             aria-label="Toggle yearly billing"
           />
-          <span className={`text-sm font-medium ${billingPeriod === 'yearly' ? 'text-pa-charcoal' : 'text-pa-muted'}`}>
+          <span className={`text-sm font-medium ${billingPeriod === 'yearly' ? 'text-ink-900' : 'text-ink-500'}`}>
             Yearly
           </span>
           {billingPeriod === 'yearly' && (
-            <Badge className="bg-pa-green/10 text-pa-green border-pa-green/20 ml-2 text-xs">
+            <FieldBadge variant="success" className="ml-2">
               Save up to 25%
-            </Badge>
+            </FieldBadge>
           )}
         </div>
       </div>
@@ -194,7 +193,7 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
         </div>
       )}
       {success && (
-        <div className="max-w-2xl mx-auto mb-6 p-4 bg-pa-green/10 border border-pa-green/20 rounded-lg text-sm text-pa-green">
+        <div className="max-w-2xl mx-auto mb-6 p-4 bg-success/10 border border-success/20 rounded-lg text-sm text-success">
           {success}
           <button onClick={() => setSuccess(null)} className="ml-2 font-semibold underline">Dismiss</button>
         </div>
@@ -211,80 +210,73 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
           const isPopular = tier === 'pro';
 
           return (
-            <Card
+            <FieldCard
               key={tier}
               className={`relative flex flex-col ${
                 isPopular
-                  ? 'ring-2 ring-pa-blue shadow-glass-glow scale-[1.02] border-pa-blue/30'
-                  : 'border-glass-border/40'
+                  ? 'ring-2 ring-accent shadow-md scale-[1.02] border-accent/30'
+                  : 'border-[#E5E5E0]'
               } ${current ? 'opacity-90' : ''}`}
             >
               {isPopular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-pa-blue text-white px-4 py-1 text-xs font-semibold shadow-glass">
+                  <FieldBadge variant="accent" className="bg-accent text-accent-ink px-4 py-1 border-accent/20">
                     <Sparkle className="h-3 w-3 mr-1" />
                     Most Popular
-                  </Badge>
+                  </FieldBadge>
                 </div>
               )}
-              <CardHeader className="text-center pb-2 pt-6">
-                <CardTitle className="font-heading text-xl font-bold text-pa-charcoal">
+              <div className="text-center px-6 pt-6 pb-2">
+                <h3 className="font-heading text-xl font-bold text-ink-900">
                   {config.name}
-                </CardTitle>
-                <CardDescription className="text-pa-slate text-sm">
+                </h3>
+                <p className="text-sm text-ink-700 mt-1">
                   {config.description}
-                </CardDescription>
+                </p>
                 {current && (
-                  <Badge variant="secondary" className="mx-auto mt-2 bg-pa-blue/10 text-pa-blue text-xs">
+                  <FieldBadge variant="accent" className="mx-auto mt-2">
                     Current Plan
-                  </Badge>
+                  </FieldBadge>
                 )}
-              </CardHeader>
-              <CardContent className="flex-1">
+              </div>
+              <div className="px-6 pb-6 flex-1">
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="font-heading text-4xl sm:text-5xl font-bold text-pa-charcoal">
+                    <span className="font-heading text-4xl sm:text-5xl font-bold text-ink-900">
                       {formatPrice(price)}
                     </span>
                     {price > 0 && (
-                      <span className="text-pa-muted text-sm">/mo</span>
+                      <span className="text-ink-500 text-sm">/mo</span>
                     )}
                   </div>
                   {billingPeriod === 'yearly' && price > 0 && (
-                    <p className="text-xs text-pa-muted mt-1">
+                    <p className="text-xs text-ink-500 mt-1">
                       billed yearly ({formatPrice(price * 12)}/yr)
                     </p>
                   )}
                   {billingPeriod === 'yearly' && savings > 0 && (
-                    <Badge className="bg-pa-green/10 text-pa-green border-pa-green/20 mt-2 text-xs">
+                    <FieldBadge variant="success" className="mt-2">
                       Save {formatPrice(savings)}/yr
-                    </Badge>
+                    </FieldBadge>
                   )}
                   {price === 0 && (
-                    <p className="text-xs text-pa-muted mt-1">Free forever</p>
+                    <p className="text-xs text-ink-500 mt-1">Free forever</p>
                   )}
                 </div>
 
                 <ul className="space-y-3">
                   {config.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2.5">
-                      <Check className="h-4 w-4 text-pa-green shrink-0 mt-0.5" />
-                      <span className="text-sm text-pa-slate">{feature}</span>
+                      <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                      <span className="text-sm text-ink-700">{feature}</span>
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-              <CardFooter className="pt-4">
-                <Button
-                  className={`w-full font-heading font-semibold ${
-                    current
-                      ? 'bg-glass-border/20 text-text-muted cursor-not-allowed hover:bg-glass-border/30'
-                      : isPopular
-                        ? 'bg-pa-blue hover:bg-pa-blue-dark text-white'
-                        : tier === 'starter'
-                          ? 'bg-pa-navy hover:bg-pa-navy/90 text-white'
-                          : 'bg-pa-charcoal hover:bg-pa-charcoal/90 text-white'
-                  }`}
+              </div>
+              <div className="px-6 pb-6 pt-0">
+                <FieldButton
+                  className="w-full"
+                  variant={current ? 'secondary' : isPopular ? 'primary' : 'secondary'}
                   disabled={current || isLoading}
                   onClick={() => handleUpgrade(tier)}
                 >
@@ -296,9 +288,9 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
                   ) : (
                     getButtonLabel(tier)
                   )}
-                </Button>
-              </CardFooter>
-            </Card>
+                </FieldButton>
+              </div>
+            </FieldCard>
           );
         })}
       </div>
@@ -306,46 +298,46 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
       {/* Feature Comparison Table */}
       <div className="max-w-6xl mx-auto mb-16 sm:mb-24">
         <div className="text-center mb-10">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-pa-charcoal mb-3">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink-900 mb-3">
             Compare Plans in Detail
           </h2>
-          <p className="font-body text-pa-slate max-w-xl mx-auto">
+          <p className="font-body text-ink-700 max-w-xl mx-auto">
             See exactly what you get with each plan so you can choose the right fit for your interview prep needs.
           </p>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-glass-border/40 bg-pa-navy shadow-inner-highlight-sm">
+        <div className="overflow-x-auto rounded-md border border-[#E5E5E0] bg-surface-1">
           <table className="w-full min-w-[600px]">
             <thead>
-              <tr className="border-b border-glass-border/40 bg-glass/40">
-                <th className="text-left text-sm font-semibold text-pa-charcoal px-4 sm:px-6 py-4 w-[40%]">
+              <tr className="border-b border-[#E5E5E0] bg-surface-2">
+                <th className="text-left text-sm font-semibold text-ink-900 px-4 sm:px-6 py-4 w-[40%]">
                   Feature
                 </th>
-                <th className="text-center text-sm font-semibold text-pa-charcoal px-3 sm:px-4 py-4">
+                <th className="text-center text-sm font-semibold text-ink-900 px-3 sm:px-4 py-4">
                   Free
                 </th>
-                <th className="text-center text-sm font-semibold text-pa-charcoal px-3 sm:px-4 py-4">
+                <th className="text-center text-sm font-semibold text-ink-900 px-3 sm:px-4 py-4">
                   Starter
                 </th>
                 <th className="text-center text-sm font-semibold px-3 sm:px-4 py-4">
-                  <span className="text-pa-blue">Pro</span>
+                  <span className="text-accent">Pro</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {COMPARISON_FEATURES.map((feature, i) => (
-                <tr key={feature.name} className={i % 2 === 0 ? 'bg-pa-navy' : 'bg-glass/40/50'}>
-                  <td className="text-sm text-pa-slate px-4 sm:px-6 py-3.5 border-t border-glass-border/40/50">
+                <tr key={feature.name} className={i % 2 === 0 ? 'bg-surface-1' : 'bg-surface-2/50'}>
+                  <td className="text-sm text-ink-700 px-4 sm:px-6 py-3.5 border-t border-[#E5E5E0]/50">
                     {feature.name}
                   </td>
                   {(['free', 'starter', 'pro'] as TierKey[]).map((tier) => (
-                    <td key={tier} className="text-center px-3 sm:px-4 py-3.5 border-t border-glass-border/40/50">
+                    <td key={tier} className="text-center px-3 sm:px-4 py-3.5 border-t border-[#E5E5E0]/50">
                       {feature[tier] === '✓' ? (
-                        <Check className="h-4 w-4 text-pa-green mx-auto" />
+                        <Check className="h-4 w-4 text-success mx-auto" />
                       ) : feature[tier] === '—' ? (
-                        <X weight="light" className="h-4 w-4 text-text-muted mx-auto" />
+                        <X weight="light" className="h-4 w-4 text-ink-500 mx-auto" />
                       ) : (
-                        <span className={`text-sm ${tier === 'pro' ? 'font-medium text-pa-charcoal' : 'text-pa-slate'}`}>
+                        <span className={`text-sm ${tier === 'pro' ? 'font-medium text-ink-900' : 'text-ink-700'}`}>
                           {feature[tier]}
                         </span>
                       )}
@@ -361,10 +353,10 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
       {/* FAQ Section */}
       <div className="max-w-3xl mx-auto mb-16 sm:mb-24">
         <div className="text-center mb-10">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-pa-charcoal mb-3">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink-900 mb-3">
             Frequently Asked Questions
           </h2>
-          <p className="font-body text-pa-slate">
+          <p className="font-body text-ink-700">
             Got questions? We&apos;ve got answers.
           </p>
         </div>
@@ -372,10 +364,10 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
         <Accordion type="single" collapsible className="w-full">
           {FAQ_ITEMS.map((item, i) => (
             <AccordionItem key={i} value={`faq-${i}`}>
-              <AccordionTrigger className="text-left font-heading text-sm sm:text-base font-semibold text-pa-charcoal hover:text-pa-blue">
+              <AccordionTrigger className="text-left font-heading text-sm sm:text-base font-semibold text-ink-900 hover:text-accent">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="text-sm text-pa-slate leading-relaxed font-body">
+              <AccordionContent className="text-sm text-ink-700 leading-relaxed font-body">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
@@ -385,12 +377,13 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
 
       {/* Bottom CTA */}
       <div className="text-center pb-8">
-        <p className="font-body text-pa-slate mb-4">
+        <p className="font-body text-ink-700 mb-4">
           Still not sure? Start with the Free plan and upgrade anytime.
         </p>
-        <Button
+        <FieldButton
           onClick={() => handleUpgrade(currentTier === 'free' ? 'starter' : 'pro')}
-          className="bg-pa-blue hover:bg-pa-blue-dark text-white font-heading font-semibold px-8"
+          variant="primary"
+          size="lg"
           disabled={loadingTier !== null}
         >
           {loadingTier ? (
@@ -404,7 +397,7 @@ export function PricingPage({ onUpgradeSuccess }: PricingPageProps) {
               Get Started Today
             </>
           )}
-        </Button>
+        </FieldButton>
       </div>
     </div>
   );
