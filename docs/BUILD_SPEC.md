@@ -70,13 +70,38 @@ This slice proves:
 | POST /api/auth/register | User registration |
 | POST /api/auth/login | User login |
 | POST /api/auth/logout | User logout |
-| GET /api/auth/me | Get current user |
+| POST /api/auth/verify-email | Email verification |
 | GET /api/questions | List questions (role, difficulty filters) |
-| POST /api/interviews | Create interview session |
-| POST /api/interviews/:id/answer | Submit answer |
-| GET /api/interviews/:id/results | Get session results |
-| POST /api/resume/review | Upload and review resume |
-| POST /api/cover-letter/generate | Generate cover letter |
+| GET /api/questions/count | Question count |
+| POST /api/interview | Create interview session |
+| GET /api/interview/[id] | Get interview session |
+| POST /api/interview/[id]/complete | Complete interview |
+| GET /api/dashboard | Dashboard aggregation |
+| GET /api/profile | Get user profile |
+| PUT /api/profile | Update user profile |
+| POST /api/resume | Upload resume |
+| GET /api/resume/[id] | Get resume |
+| POST /api/cover-letter | Generate cover letter |
+| GET /api/cover-letter/[id] | Get cover letter |
+| GET /api/assessments | List assessments |
+| GET /api/assessments/[id] | Get assessment |
+| GET /api/guides | List guides |
+| GET /api/guides/[id] | Get guide |
+| POST /api/guides/progress | Update guide progress |
+| GET /api/downloads | List downloads |
+| GET /api/downloads/[id] | Get download |
+| POST /api/export | Export DOCX/PDF/Excel |
+| POST /api/ai/coach | AI interview coach |
+| POST /api/ai/resume-review | AI resume review |
+| POST /api/ai/cover-letter | AI cover letter generation |
+| POST /api/ai/assessment-score | AI assessment scoring |
+| GET /api/subscription/status | Get subscription status |
+| GET /api/subscription/usage | Get usage limits |
+| POST /api/subscription/checkout | Create checkout session |
+| POST /api/subscription/webhook | Stripe webhook |
+| POST /api/subscription/manage | Manage subscription |
+| GET /api/admin/questions | Admin: manage questions |
+| GET /api/admin/analytics | Admin: analytics |
 
 ### Data Models
 

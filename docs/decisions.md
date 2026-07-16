@@ -4,20 +4,20 @@
 
 ---
 
-## ADR-001: Next.js 15 with App Router (Standalone Output)
+## ADR-001: Next.js 16.1.1 with App Router (Standalone Output)
 
 **Status:** ✅ ACCEPTED
 
 **Context:** Need a React framework with SSR, API routes, and Vercel deployment support. The app requires rich interactivity for interview sessions alongside static marketing pages.
 
-**Decision:** Use Next.js 15 with App Router in standalone output mode for Vercel deployment.
+**Decision:** Use Next.js 16.1.1 with App Router in standalone output mode for Vercel deployment.
 
 **Consequences:**
 - ✅ Server Components for landing/marketing pages (fast, SEO)
 - ✅ API Routes for interview sessions, auth, exports
 - ✅ Middleware for auth protection
 - ✅ Standalone output optimized for Vercel
-- ⚠️ Must stay on v15 until v16 ecosystem stability
+- ✅ React 19 server components for streaming AI responses
 
 ---
 

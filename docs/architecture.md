@@ -1,6 +1,6 @@
 # Architecture — Interview Lab
 
-**Version:** 1.0 | **Updated:** 2026-07-02
+**Version:** 1.1 | **Updated:** 2026-07-16
 
 ---
 
@@ -10,7 +10,7 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                       Browser                                │
 ├──────────────────────────────────────────────────────────────┤
-│  Next.js 15 App Router — Standalone Output (Vercel)          │
+│  Next.js 16.1.1 App Router — Standalone Output (Vercel)       │
 │                                                              │
 │  ┌─────────────────────────┐  ┌───────────────────────────┐  │
 │  │      Client Layer       │  │      Server Layer          │  │
@@ -33,33 +33,51 @@
 
 ```
 /                           → Landing page
-/(auth)/login               → Login
-/(auth)/register            → Registration
+/login                      → Login
+/register                   → Registration
+/dashboard                  → User dashboard (progress, stats)
+/about                      → About page
+/contact                    → Contact page
+```
 
-/(dashboard)/
-├── /                       → User dashboard (progress, stats)
-├── interviews/             → AI Mock Interviews
-│   ├── /                   → Role selection
-│   ├── [roleId]            → Start interview
-│   └── [roleId]/[sessionId] → Active interview + scoring
-├── resume/                 → Resume Lab
-│   └── /                   → Upload, review, improve
-├── cover-letter/           → Cover Letter Studio
-│   └── /                   → Generate, customize, download
-├── practice-tests/         → Practice Tests
-│   ├── /                   → Test selection
-│   └── [testId]            → Active test + results
-├── learning/               → Learning Paths
-│   ├── /                   → Path selection
-│   └── [pathId]            → Path content + progress
-├── downloads/              → Download Center (tier-gated)
-└── profile/               → User profile + settings
+### API Routes
 
-/(admin)/
-├── dashboard              → Analytics
-├── users/                 → User management
-├── questions/             → Question bank management
-└── content/              → Content management
+```
+POST   /api/auth/register           → User registration
+POST   /api/auth/login              → User login
+POST   /api/auth/logout             → User logout
+POST   /api/auth/verify-email       → Email verification
+GET    /api/questions               → List questions (role, difficulty filters)
+GET    /api/questions/count         → Question count
+POST   /api/interview               → Create interview session
+GET    /api/interview/[id]          → Get interview session
+POST   /api/interview/[id]/complete → Complete interview
+GET    /api/dashboard               → Dashboard aggregation
+GET    /api/profile                 → Get user profile
+PUT    /api/profile                 → Update user profile
+POST   /api/resume                  → Upload resume
+GET    /api/resume/[id]             → Get resume
+POST   /api/cover-letter            → Generate cover letter
+GET    /api/cover-letter/[id]       → Get cover letter
+GET    /api/assessments             → List assessments
+GET    /api/assessments/[id]        → Get assessment
+GET    /api/guides                  → List guides
+GET    /api/guides/[id]             → Get guide
+POST   /api/guides/progress        → Update guide progress
+GET    /api/downloads              → List downloads
+GET    /api/downloads/[id]         → Get download
+POST   /api/export                 → Export DOCX/PDF/Excel
+POST   /api/ai/coach               → AI interview coach
+POST   /api/ai/resume-review        → AI resume review
+POST   /api/ai/cover-letter         → AI cover letter generation
+POST   /api/ai/assessment-score     → AI assessment scoring
+GET    /api/subscription/status     → Get subscription status
+GET    /api/subscription/usage      → Get usage limits
+POST   /api/subscription/checkout   → Create checkout session
+POST   /api/subscription/webhook    → Stripe webhook
+POST   /api/subscription/manage     → Manage subscription
+GET    /api/admin/questions         → Admin: manage questions
+GET    /api/admin/analytics         → Admin: analytics
 ```
 
 ---
@@ -70,13 +88,23 @@
 
 | Entity | Key Fields | Relations |
 |--------|------------|-----------|
-| **User** | id, email, name, password, role, tier | → Interview[], Resume[], CoverLetter[] |
-| **Interview** | id, userId, role, score, answers, feedback, startedAt, completedAt | → User |
-| **Resume** | id, userId, content, analysis, improvements, createdAt | → User |
-| **CoverLetter** | id, userId, role, tone, content, createdAt | → User |
-| **TestAttempt** | id, userId, type, score, answers, duration, completedAt | → User |
-| **Question** | id, role, difficulty, text, idealAnswer, category | |
-| **Progress** | id, userId, pathId, moduleId, completed, score | → User |
+| **User** | id, email, name, passwordHash, subscriptionTier, isAdmin, emailVerified | → UserProfile, Resume[], CoverLetter[], InterviewSession[], AgentRun[], GuideProgress[], Subscription, Payment[] |
+| **UserProfile** | id, userId, targetRole, experienceLevel, toolsKnown, weakAreas, onboardingDone | → User |
+| **Question** | id, role, difficulty, type, skillArea, question, whyEmployersAsk, strongAnswerPoints, weakAnswerWarnings, sampleAnswer, answerFormat, timeLimit, status | → QuestionAttempt[] |
+| **InterviewSession** | id, userId, mode, targetRole, overallScore, transcript | → User, QuestionAttempt[] |
+| **QuestionAttempt** | id, sessionId, questionId, userAnswer, aiFeedback, score, rubricBreakdown | → InterviewSession, Question |
+| **Resume** | id, userId, originalText, targetRole, score, improvedVersion, truthFlags | → User |
+| **CoverLetter** | id, userId, jobDescription, tone, generatedLetter, truthFlags | → User |
+| **Assessment** | id, title, role, difficulty, description, datasetInfo, answerKey, rubric | |
+| **Download** | id, title, fileType, role, fileName, accessTier, category, downloadCount | |
+| **Guide** | id, title, slug, level, role, content, status | → GuideProgress[] |
+| **GuideProgress** | id, userId, guideId, completed, checklist | → User, Guide |
+| **AgentRun** | id, userId, agentType, input, output, safetyFlags | → User |
+| **Subscription** | id, userId, tier, status, stripeCustomerId, stripePriceId, stripeSubscriptionId, currentPeriodStart, currentPeriodEnd, cancelAtPeriodEnd | → User |
+| **Payment** | id, userId, amount, currency, status, stripePaymentId, stripeInvoiceId, description, metadata | → User |
+| **AppSetting** | key, value | |
+| **VerificationToken** | id, token, email, expiresAt | |
+| **RateLimitEntry** | id, key, count, resetTime | |
 
 ### Auth Flow
 
@@ -97,12 +125,12 @@ Middleware → Check HttpOnly cookie on protected routes
 ### AI Coaching Flow (Z AI SDK)
 
 ```
-User starts interview → POST /api/interviews/start
+User starts interview → POST /api/interview
   → Load role-specific prompt + questions
   → Initialize Z AI SDK session
   → Stream AI responses (real-time chat)
   → Each answer → AI scores + gives feedback
-  → Interview complete → POST /api/interviews/complete
+  → Interview complete → POST /api/interview/[id]/complete
   → Save transcript + scores + feedback
   → Return results page
 ```
@@ -163,16 +191,17 @@ User requests download (resume/cover letter/report)
 ```
 [Vercel Edge Network]
         ↓
-[Next.js 15 Standalone Output]
-  - SSR pages (landing, interviews, resume)
-  - API Routes (interview sessions, auth, exports)
+[Next.js 16.1.1 Standalone Output]
+  - SSR pages (landing, dashboard, about, contact)
+  - API Routes (auth, interview, questions, assessments, subscription, admin, ai, export, guides, downloads, resume, cover-letter, profile, dashboard)
   - Static assets (downloads, images, fonts)
         ↓
 [SQLite Database] (dev)
-[PostgreSQL] (planned production)
+[PostgreSQL] (production — Neon/Supabase)
         ↓
 [Z AI SDK Cloud API]
   - Interview coaching
   - Resume analysis
-  - Content generation
+  - Cover letter generation
+  - Assessment scoring
 ```

@@ -32,7 +32,7 @@
 | README.md | valid | Complete, accurate documentation |
 | docs/ARCHITECTURE.md | valid | Comprehensive architecture docs |
 | docs/DECISIONS.md | valid | Contains project decisions |
-| AGENTS.md | stale | Needs update to reflect current stack |
+| AGENTS.md | valid | Updated to reflect current stack (Next.js 16.1.1, Prisma v6, etc.) |
 
 ## Stack Detected
 
@@ -50,9 +50,9 @@
 
 TBD - Run `python3 scripts/validate_project.py --target . --profile standard`
 
-## Next Actions
+## Completed Actions
 
-1. Run validation script to verify project structure
-2. Update AGENTS.md to fix stale content
-3. Create remaining docs (ENGINEERING_DIARY, ERROR_LOG, LOOP_ENGINEERING)
-4. Set up CI/CD verification
+- [x] AGENTS.md updated with current stack (Next.js 16.1.1, Prisma v6, etc.)
+- [x] ENGINEERING_DIARY.md, ERROR_LOG.md, LOOP_ENGINEERING.md created
+- [x] CI/CD pipeline configured (GitHub Actions with PostgreSQL, unit + integration tests)
+- [x] All docs audited and stale references updated (2026-07-16)
