@@ -11,6 +11,12 @@ export default defineConfig({
     include: ['__tests__/**/*.test.ts', '__tests__/**/*.test.tsx'],
     testTimeout: 30000,
     hookTimeout: 30000,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/app/**/page.tsx', 'src/app/**/layout.tsx', 'src/components/ui/**'],
+    },
   },
   resolve: {
     alias: {

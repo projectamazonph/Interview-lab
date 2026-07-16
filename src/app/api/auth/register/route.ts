@@ -42,7 +42,8 @@ export async function POST(request: Request) {
     // Persistent rate limiting (survives server restarts)
     const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || 'unknown';
-    const rl = await checkRateLimit(clientIp, 'auth-register', 5, 15 * 60_000);
+    const registerRateLimitMax = Number(process.env.AUTH_REGISTER_RATE_LIMIT_MAX) || 5;
+    const rl = await checkRateLimit(clientIp, 'auth-register', registerRateLimitMax, 15 * 60_000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: 'Too many registration attempts. Please try again later.' },

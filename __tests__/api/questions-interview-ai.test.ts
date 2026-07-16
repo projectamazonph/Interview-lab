@@ -8,8 +8,13 @@
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
-// Skip integration tests in CI (no live server available)
-const testIfServer = process.env.CI ? it.skip : it;
+// Skip integration tests in CI unless a live server is provided via TEST_BASE_URL
+const testIfServer = process.env.CI && !process.env.TEST_BASE_URL ? it.skip : it;
+
+function extractSessionCookie(setCookieHeader: string | null): string | undefined {
+  if (!setCookieHeader) return undefined;
+  return setCookieHeader.match(/interviewlab_session=[^;]+/)?.[0];
+}
 
 async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
   const opts: RequestInit = {
@@ -19,15 +24,19 @@ async function api(method: string, path: string, body?: unknown, headers?: Recor
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);
   const json = await res.json();
-  return { status: res.status, body: json };
+  return {
+    status: res.status,
+    body: json,
+    cookie: extractSessionCookie(res.headers.get('set-cookie')),
+  };
 }
 
-async function getDemoUserId() {
-  const { body } = await api('POST', '/api/auth/login', {
+async function getDemoUser() {
+  const { body, cookie } = await api('POST', '/api/auth/login', {
     email: 'demo@interviewlab.com',
     password: 'demo123',
   });
-  return body.id;
+  return { id: body.id as string, cookie: cookie as string };
 }
 
 describe('Questions API', () => {
@@ -41,11 +50,11 @@ describe('Questions API', () => {
   });
 
   testIfServer('should filter questions by role', async () => {
-    const { status, body } = await api('GET', '/api/questions?role=Amazon%20PPC%20VA');
+    const { status, body } = await api('GET', '/api/questions?role=PPC%20VA');
     expect(status).toBe(200);
     expect(body.questions.length).toBeGreaterThan(0);
     body.questions.forEach((q: { role: string }) => {
-      expect(q.role).toBe('Amazon PPC VA');
+      expect(q.role).toBe('PPC VA');
     });
   });
 
@@ -74,18 +83,18 @@ describe('Questions API', () => {
 });
 
 describe('Interview API', () => {
-  let userId: string;
+  let userCookie: string;
   let sessionId: string;
 
   beforeAll(async () => {
-    userId = await getDemoUserId();
+    ({ cookie: userCookie } = await getDemoUser());
   });
 
   testIfServer('should create an interview session', async () => {
     const { status, body } = await api('POST', '/api/interview', {
       mode: 'quick_drill',
       targetRole: 'Amazon PPC VA',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('session');
     expect(body.session).toHaveProperty('id');
@@ -96,7 +105,7 @@ describe('Interview API', () => {
 
   testIfServer('should list interview sessions', async () => {
     const { status, body } = await api('GET', '/api/interview', undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect(body).toHaveProperty('sessions');
@@ -113,7 +122,7 @@ describe('Interview API', () => {
 
   testIfServer('should get interview session by ID with auth', async () => {
     const { status, body } = await api('GET', `/api/interview/${sessionId}`, undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect(body).toHaveProperty('id');
@@ -133,7 +142,7 @@ describe('Interview API', () => {
     const { status, body } = await api('POST', `/api/interview/${sessionId}`, {
       questionId,
       userAnswer: 'I would check the ACoS and reduce bids on underperforming keywords',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(201);
     expect(body).toHaveProperty('id');
   });
@@ -141,7 +150,7 @@ describe('Interview API', () => {
   testIfServer('should complete an interview session with auth', async () => {
     const { status, body } = await api('POST', `/api/interview/${sessionId}/complete`, {
       transcript: { test: 'data' },
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('sessionId');
   });
@@ -153,10 +162,10 @@ describe('Interview API', () => {
 });
 
 describe('AI Endpoints', () => {
-  let userId: string;
+  let userCookie: string;
 
   beforeAll(async () => {
-    userId = await getDemoUserId();
+    ({ cookie: userCookie } = await getDemoUser());
   });
 
   testIfServer('should require auth for AI coach', async () => {
@@ -169,7 +178,7 @@ describe('AI Endpoints', () => {
 
   testIfServer('should validate required fields for AI coach', async () => {
     const { status, body } = await api('POST', '/api/ai/coach', {}, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(400);
     expect(body).toHaveProperty('error');

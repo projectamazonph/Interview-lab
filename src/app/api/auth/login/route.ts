@@ -9,7 +9,8 @@ export async function POST(request: Request) {
     // Persistent rate limiting for login (survives server restarts)
     const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || 'unknown';
-    const rl = await checkRateLimit(clientIp, 'auth-login', 10, 15 * 60_000);
+    const loginRateLimitMax = Number(process.env.AUTH_LOGIN_RATE_LIMIT_MAX) || 10;
+    const rl = await checkRateLimit(clientIp, 'auth-login', loginRateLimitMax, 15 * 60_000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: 'Too many login attempts. Please try again later.' },
