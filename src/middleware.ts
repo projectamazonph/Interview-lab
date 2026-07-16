@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const GENERAL_WINDOW = 60_000; // 1 minute
-const GENERAL_MAX = 60; // 60 requests per minute per IP for general API
+const GENERAL_MAX = Number(process.env.API_RATE_LIMIT_MAX) || 60; // requests per minute per IP for general API
 const AUTH_WINDOW = 15 * 60_000; // 15 minutes
-const AUTH_MAX = 10; // 10 auth attempts per 15 minutes per IP
+const AUTH_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 10; // auth attempts per 15 minutes per IP
 
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');

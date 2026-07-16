@@ -7,7 +7,7 @@
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
 describe('Auth API', () => {
-  const testIfServer = process.env.CI ? it.skip : it;
+  const testIfServer = process.env.CI && !process.env.TEST_BASE_URL ? it.skip : it;
 
   async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
     const opts: RequestInit = {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // --- In-memory store ---
 let users: Array<{email: string; name: string; passwordHash: string; emailVerified: boolean}> = [];

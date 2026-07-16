@@ -9,7 +9,33 @@ on:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: interviewlab_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      JWT_SECRET: ci-only-do-not-use-in-prod
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/interviewlab_test
+      # Auth/API rate limits are tuned tight for production; the live-server
+      # integration suite below makes far more requests per minute than a
+      # real user would, so we relax the limits for this job only.
+      AUTH_LOGIN_RATE_LIMIT_MAX: '1000'
+      AUTH_REGISTER_RATE_LIMIT_MAX: '1000'
+      API_RATE_LIMIT_MAX: '100000'
+      AUTH_RATE_LIMIT_MAX: '1000'
 
     steps:
       - uses: actions/checkout@v4
@@ -30,16 +56,40 @@ jobs:
       - name: ESLint
         run: npx eslint .
 
-      - name: Tests
+      - name: Push database schema
+        run: npx prisma db push --accept-data-loss
+
+      - name: Seed database
+        run: npm run db:seed
+
+      - name: Unit tests
         run: CI=true npx vitest run
+
+      - name: Build
+        run: npm run build
+
+      - name: Start server
+        run: |
+          npm run start -- -p 3000 &
+          echo $! > server.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000 >/dev/null 2>&1; then
+              echo "Server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start" >&2
+          exit 1
+
+      - name: Integration tests (live server)
+        run: CI=true TEST_BASE_URL=http://localhost:3000 npx vitest run __tests__/api/auth.test.ts __tests__/api/resources.test.ts __tests__/api/questions-interview-ai.test.ts __tests__/api/user-paths.test.ts
+
+      - name: Stop server
+        if: always()
+        run: kill "$(cat server.pid)" 2>/dev/null || true
 
       - name: Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build
-        run: npm run build
-        env:
-          JWT_SECRET: ci-only-do-not-use-in-prod
-          DATABASE_URL: file:./build-test.db

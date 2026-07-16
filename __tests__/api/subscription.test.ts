@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // --- In-memory pricing model (mirrors src/lib/pricing.ts) ---
 const CURRENCY = { code: 'PHP', symbol: '₱' };

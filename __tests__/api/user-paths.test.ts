@@ -9,8 +9,13 @@
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
-// Skip integration tests in CI (no live server available)
-const testIfServer = process.env.CI ? it.skip : it;
+// Skip integration tests in CI unless a live server is provided via TEST_BASE_URL
+const testIfServer = process.env.CI && !process.env.TEST_BASE_URL ? it.skip : it;
+
+function extractSessionCookie(setCookieHeader: string | null): string | undefined {
+  if (!setCookieHeader) return undefined;
+  return setCookieHeader.match(/interviewlab_session=[^;]+/)?.[0];
+}
 
 async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
   const opts: RequestInit = {
@@ -20,12 +25,21 @@ async function api(method: string, path: string, body?: unknown, headers?: Recor
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);
   const json = await res.json();
-  return { status: res.status, body: json as Record<string, unknown> };
+  return {
+    status: res.status,
+    body: json as Record<string, unknown>,
+    cookie: extractSessionCookie(res.headers.get('set-cookie')),
+  };
+}
+
+async function login(email: string, password: string) {
+  const { body, cookie } = await api('POST', '/api/auth/login', { email, password });
+  return { id: body.id as string, cookie: cookie as string };
 }
 
 describe('User Path: New User Registration to First Interview', () => {
   const testEmail = `e2e_new_${Date.now()}@test.com`;
-  let userId: string;
+  let userCookie: string;
 
   testIfServer('Step 1: Register a new account', async () => {
     const { status, body } = await api('POST', '/api/auth/register', {
@@ -34,22 +48,22 @@ describe('User Path: New User Registration to First Interview', () => {
       password: 'TestPass123!',
     });
     expect(status).toBe(201);
-    userId = body.id;
-    expect(userId).toBeTruthy();
+    expect(body.id).toBeTruthy();
   });
 
   testIfServer('Step 2: Login with new credentials', async () => {
-    const { status, body } = await api('POST', '/api/auth/login', {
+    const { status, body, cookie } = await api('POST', '/api/auth/login', {
       email: testEmail,
       password: 'TestPass123!',
     });
     expect(status).toBe(200);
     expect(body.email).toBe(testEmail);
+    userCookie = cookie as string;
   });
 
   testIfServer('Step 3: Get profile (should have onboardingDone: false)', async () => {
-    const { status, body } = await api('GET', '/api/profile', undefined, {
-      'x-user-id': userId,
+    const { status } = await api('GET', '/api/profile', undefined, {
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     // New user should not have completed onboarding
@@ -66,13 +80,13 @@ describe('User Path: New User Registration to First Interview', () => {
       resumeStatus: 'needs-work',
       country: 'Philippines',
       onboardingDone: true,
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
   });
 
   testIfServer('Step 5: View dashboard', async () => {
     const { status, body } = await api('GET', '/api/dashboard', undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect(body).toHaveProperty('stats');
@@ -80,7 +94,7 @@ describe('User Path: New User Registration to First Interview', () => {
   });
 
   testIfServer('Step 6: Browse questions', async () => {
-    const { status, body } = await api('GET', '/api/questions?role=Amazon+PPC+VA');
+    const { status, body } = await api('GET', '/api/questions?role=PPC+VA');
     expect(status).toBe(200);
     expect((body.questions as unknown[]).length).toBeGreaterThan(0);
   });
@@ -89,7 +103,7 @@ describe('User Path: New User Registration to First Interview', () => {
     const { status, body } = await api('POST', '/api/interview', {
       mode: 'quick_drill',
       targetRole: 'Amazon PPC VA',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('session');
     expect(body).toHaveProperty('questions');
@@ -110,31 +124,27 @@ describe('User Path: New User Registration to First Interview', () => {
 });
 
 describe('User Path: Resume Review Flow', () => {
-  let userId: string;
+  let userCookie: string;
   let resumeId: string;
 
   beforeAll(async () => {
-    const { body } = await api('POST', '/api/auth/login', {
-      email: 'demo@interviewlab.com',
-      password: 'demo123',
-    });
-    userId = body.id;
+    ({ cookie: userCookie } = await login('demo@interviewlab.com', 'demo123'));
   });
 
   testIfServer('Step 1: Create a resume', async () => {
     const { status, body } = await api('POST', '/api/resume', {
       originalText: 'Jane Smith\nAmazon PPC Virtual Assistant\n- Managed PPC campaigns\n- Used Helium10 for keyword research\n- Created weekly reports for clients\n- Familiar with Seller Central',
       targetRole: 'Amazon PPC VA',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(201);
-    resumeId = body.id;
+    resumeId = body.id as string;
   });
 
   testIfServer('Step 2: Get AI resume review', async () => {
     const { status, body } = await api('POST', '/api/ai/resume-review', {
       resumeText: 'Jane Smith - Amazon PPC VA - Managed campaigns with Helium10',
       targetRole: 'Amazon PPC VA',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('score');
     expect(body).toHaveProperty('missingKeywords');
@@ -142,17 +152,17 @@ describe('User Path: Resume Review Flow', () => {
   });
 
   testIfServer('Step 3: Update resume with AI feedback', async () => {
-    const { status, body } = await api('PUT', `/api/resume/${resumeId}`, {
+    const { status } = await api('PUT', `/api/resume/${resumeId}`, {
       score: 72,
       improvedVersion: 'Improved resume text',
       truthFlags: ['unverifiable: "Managed campaigns"'],
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
   });
 
   testIfServer('Step 4: List resumes and verify', async () => {
     const { status, body } = await api('GET', '/api/resume', undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect((body.resumes as unknown[]).length).toBeGreaterThan(0);
@@ -160,39 +170,35 @@ describe('User Path: Resume Review Flow', () => {
 });
 
 describe('User Path: Full Interview Session', () => {
-  let userId: string;
+  let userCookie: string;
   let sessionId: string;
   let questionId: string;
 
   beforeAll(async () => {
-    const { body } = await api('POST', '/api/auth/login', {
-      email: 'demo@interviewlab.com',
-      password: 'demo123',
-    });
-    userId = body.id;
+    ({ cookie: userCookie } = await login('demo@interviewlab.com', 'demo123'));
   });
 
   testIfServer('Step 1: Create role interview session', async () => {
     const { status, body } = await api('POST', '/api/interview', {
       mode: 'role_interview',
       targetRole: 'Amazon PPC VA',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     sessionId = (body.session as Record<string, unknown>).id as string;
     questionId = ((body.questions as Record<string, unknown>[])[0]?.id) as string;
   });
 
   testIfServer('Step 2: Submit answer to first question', async () => {
-    const { status, body } = await api('POST', `/api/interview/${sessionId}`, {
+    const { status } = await api('POST', `/api/interview/${sessionId}`, {
       questionId,
       userAnswer: 'ACoS stands for Advertising Cost of Sales. It measures the ratio of ad spend to sales. A lower ACoS means better efficiency. I would aim for a target ACoS based on the product profit margin.',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(201);
   });
 
   testIfServer('Step 3: Get session with attempts', async () => {
     const { status, body } = await api('GET', `/api/interview/${sessionId}`, undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect((body.attempts as unknown[]).length).toBeGreaterThan(0);
@@ -201,14 +207,14 @@ describe('User Path: Full Interview Session', () => {
   testIfServer('Step 4: Complete the session', async () => {
     const { status, body } = await api('POST', `/api/interview/${sessionId}/complete`, {
       transcript: { notes: 'Test session' },
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('sessionId');
   });
 
   testIfServer('Step 5: Verify dashboard shows updated stats', async () => {
     const { status, body } = await api('GET', '/api/dashboard', undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     expect((body.stats as Record<string, number>).totalSessions).toBeGreaterThan(0);
@@ -216,14 +222,10 @@ describe('User Path: Full Interview Session', () => {
 });
 
 describe('User Path: Cover Letter Generation', () => {
-  let userId: string;
+  let userCookie: string;
 
   beforeAll(async () => {
-    const { body } = await api('POST', '/api/auth/login', {
-      email: 'demo@interviewlab.com',
-      password: 'demo123',
-    });
-    userId = body.id;
+    ({ cookie: userCookie } = await login('demo@interviewlab.com', 'demo123'));
   });
 
   testIfServer('Step 1: Generate cover letter with AI', async () => {
@@ -232,7 +234,7 @@ describe('User Path: Cover Letter Generation', () => {
       tone: 'professional',
       targetRole: 'Amazon PPC VA',
       userName: 'Test User',
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
     expect(body).toHaveProperty('draftLetter');
   });
@@ -243,23 +245,19 @@ describe('User Path: Cover Letter Generation', () => {
       tone: 'professional',
       generatedLetter: 'Dear Hiring Manager...',
       truthFlags: [],
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(201);
     expect(body).toHaveProperty('id');
   });
 });
 
 describe('User Path: Learning Path Progress', () => {
-  let userId: string;
+  let userCookie: string;
   let guideId: string;
 
   beforeAll(async () => {
-    const { body } = await api('POST', '/api/auth/login', {
-      email: 'demo@interviewlab.com',
-      password: 'demo123',
-    });
-    userId = body.id;
-    
+    ({ cookie: userCookie } = await login('demo@interviewlab.com', 'demo123'));
+
     // Get a beginner guide
     const guideRes = await api('GET', '/api/guides?level=beginner&limit=1');
     guideId = ((guideRes.body.guides as Record<string, unknown>[])[0]?.id) as string;
@@ -279,7 +277,7 @@ describe('User Path: Learning Path Progress', () => {
       guideId,
       completed: false,
       checklist: { '0': true, '1': true, '2': false },
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
   });
 
@@ -289,13 +287,13 @@ describe('User Path: Learning Path Progress', () => {
       guideId,
       completed: true,
       checklist: { '0': true, '1': true, '2': true },
-    }, { 'x-user-id': userId });
+    }, { Cookie: userCookie });
     expect(status).toBe(200);
   });
 
   testIfServer('Step 4: Verify progress is persisted', async () => {
     const { status, body } = await api('GET', '/api/guides/progress', undefined, {
-      'x-user-id': userId,
+      Cookie: userCookie,
     });
     expect(status).toBe(200);
     const progress = body.progress as Record<string, unknown>[];
@@ -306,19 +304,15 @@ describe('User Path: Learning Path Progress', () => {
 });
 
 describe('User Path: Admin Operations', () => {
-  let adminId: string;
+  let adminCookie: string;
 
   beforeAll(async () => {
-    const { body } = await api('POST', '/api/auth/login', {
-      email: 'admin@interviewlab.com',
-      password: 'admin123',
-    });
-    adminId = body.id;
+    ({ cookie: adminCookie } = await login('admin@interviewlab.com', 'admin123'));
   });
 
   testIfServer('Step 1: List all questions as admin', async () => {
     const { status, body } = await api('GET', '/api/admin/questions?limit=10', undefined, {
-      'x-user-id': adminId,
+      Cookie: adminCookie,
     });
     expect(status).toBe(200);
     expect((body.questions as unknown[]).length).toBeGreaterThan(0);
@@ -326,28 +320,28 @@ describe('User Path: Admin Operations', () => {
 
   testIfServer('Step 2: Create a new question', async () => {
     const { status, body } = await api('POST', '/api/admin/questions', {
-      role: 'Amazon PPC VA',
+      role: 'PPC VA',
       difficulty: 'beginner',
       type: 'technical',
-      skillArea: 'PPC Fundamentals',
+      skillArea: 'PPC',
       question: 'E2E Test Question: What is the difference between ACoS and ROAS?',
       strongAnswerPoints: ['ACoS measures cost', 'ROAS measures return'],
       weakAnswerWarnings: ['Confusing the two metrics'],
       sampleAnswer: 'ACoS is the ratio of ad spend to sales, while ROAS is the inverse - sales per dollar of ad spend.',
-    }, { 'x-user-id': adminId });
+    }, { Cookie: adminCookie });
     expect(status).toBe(201);
     expect(body).toHaveProperty('id');
   });
 
   testIfServer('Step 3: Create a new guide', async () => {
-    const { status, body } = await api('POST', '/api/guides', {
+    const { status } = await api('POST', '/api/guides', {
       title: 'E2E Test Guide',
-      slug: 'e2e-test-guide',
+      slug: `e2e-test-guide-${Date.now()}`,
       level: 'beginner',
       role: 'Amazon PPC VA',
       content: '# Test Guide\n\nThis is a test guide for E2E testing.\n\n- [ ] Checklist item 1\n- [ ] Checklist item 2',
       status: 'draft',
-    }, { 'x-user-id': adminId });
+    }, { Cookie: adminCookie });
     expect(status).toBe(201);
   });
 
