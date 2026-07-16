@@ -62,10 +62,10 @@ const TESTIMONIALS = [
 ];
 
 const FAQ = [
-  { q: "Can I switch plans at any time?", a: "Yes. Upgrade or downgrade anytime. Upgrades give immediate access. Downgrades take effect at billing period end." },
-  { q: "Is there a free trial?", a: "The Free plan lets you explore the platform with limited access. Paid plans unlock everything from day one." },
-  { q: "What payment methods?", a: "GCash, all major credit cards, and debit cards. All prices in Philippine Peso." },
-  { q: "Can I cancel?", a: "Cancel anytime from account settings. Access continues until the end of your billing period." },
+  { q: "Is Interview Lab really free?", a: "Yes. Mock interviews, the question bank, resume review, cover letters, practice tests — all of it, no card required. It's built as a free companion to Project Amazon PH Academy." },
+  { q: "What's the difference between Interview Lab and the Academy?", a: "Interview Lab gets you ready for the interview: questions, mock practice, resume feedback. Project Amazon PH Academy is the paid, in-depth training — full Amazon ads courses, tools, and certifications for after you're hired." },
+  { q: "Do I need the Academy to use Interview Lab?", a: "No. Interview Lab stands on its own. The Academy is there if you want to go deeper once you've landed the role." },
+  { q: "Which Amazon VA roles does it cover?", a: "PPC, Account, Listing, Reporting, Agency, and Senior PPC — six role-specific tracks, each with its own questions and mock interviews." },
 ];
 
 export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) {
@@ -89,12 +89,15 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             <div className="w-8 h-8 rounded-full bg-accent-violet/20 flex items-center justify-center">
               <Lightning className="w-4 h-4 text-accent-indigo" weight="light" />
             </div>
-            <span className="font-heading font-bold text-sm text-text-primary hidden sm:block">Interview Lab</span>
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="font-heading font-bold text-sm text-text-primary">Interview Lab</span>
+              <span className="text-[10px] text-text-muted tracking-wide">by Project Amazon PH</span>
+            </div>
           </div>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
-            {["Why This", "VA Roles", "Features", "Pricing"].map((link) => (
+            {["Why This", "VA Roles", "Features", "Academy"].map((link) => (
               <a
                 key={link}
                 href={`#${link.toLowerCase().replace(" ", "-")}`}
@@ -131,7 +134,7 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             className="md:hidden mt-2 bg-glass/80 backdrop-blur-3xl border border-glass-border rounded-2xl p-6 shadow-glass-lg"
           >
             <div className="flex flex-col gap-2">
-              {["Why This", "VA Roles", "Features", "Pricing"].map((link, i) => (
+              {["Why This", "VA Roles", "Features", "Academy"].map((link, i) => (
                 <a
                   key={link}
                   href={`#${link.toLowerCase().replace(" ", "-")}`}
@@ -154,7 +157,7 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             <motion.div variants={fadeUpVariants}>
               <GlassBadge variant="accent" className="mb-8">
                 <Sparkle className="w-3 h-3 mr-1" weight="light" />
-                Built for Filipino VAs targeting Amazon roles
+                100% free — a Project Amazon PH tool
               </GlassBadge>
             </motion.div>
 
@@ -172,7 +175,7 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
               className="text-text-secondary text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-12 font-body"
             >
               The exact questions agencies ask, AI coaching that shows you how to answer,
-              and the confidence to finally land that Amazon VA role.
+              and the confidence to finally land that Amazon VA role — free, no card required.
             </motion.p>
 
             <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -184,6 +187,13 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
                 Try a Practice Test
               </GlassButton>
             </motion.div>
+
+            <motion.p variants={fadeUpVariants} className="text-text-muted text-sm mt-6">
+              No card, no trial countdown. Built free by the team behind{" "}
+              <a href="#academy" className="text-text-secondary underline underline-offset-2 hover:text-text-primary transition-colors duration-400">
+                Project Amazon PH Academy
+              </a>.
+            </motion.p>
           </motion.div>
         </div>
       </section>
@@ -407,8 +417,8 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
         </div>
       </section>
 
-      {/* ═══════════════════ PRICING ═══════════════════ */}
-      <section id="pricing" className="py-24 sm:py-32 px-4 sm:px-6">
+      {/* ═══════════════════ ACADEMY (formerly Pricing) ═══════════════════ */}
+      <section id="academy" className="py-24 sm:py-32 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial="hidden"
@@ -418,11 +428,15 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             className="text-center mb-16"
           >
             <motion.div variants={fadeUpVariants}>
-              <GlassBadge className="mb-6">Simple Pricing</GlassBadge>
+              <GlassBadge className="mb-6">Free Tool, Paid Academy</GlassBadge>
             </motion.div>
             <motion.h2 variants={fadeUpVariants} className="font-heading text-3xl sm:text-5xl font-bold mb-4">
-              Start Free. Upgrade When Ready.
+              Get Hired Free. Go Deeper When You&apos;re Ready.
             </motion.h2>
+            <motion.p variants={fadeUpVariants} className="text-text-secondary text-lg max-w-xl mx-auto">
+              Interview Lab gets you interview-ready at zero cost. Project Amazon PH Academy
+              is the paid, in-depth training for after you land the role.
+            </motion.p>
           </motion.div>
 
           <motion.div
@@ -430,42 +444,20 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"
           >
-            {/* Free */}
+            {/* Interview Lab — Free */}
             <motion.div variants={fadeUpVariants}>
-              <GlassCard className="p-8 overflow-hidden">
-                <GlassBadge variant="muted" className="mb-4">Free</GlassBadge>
-                <div className="font-heading text-3xl font-bold text-text-primary mb-1">&#8369;0</div>
-                <div className="text-text-muted text-sm mb-6">Get started with basic prep</div>
-                <GlassButton variant="secondary" size="sm" className="w-full mb-6" onClick={onGetStarted}>
-                  Get Started
-                </GlassButton>
-                <ul className="space-y-3">
-                  {["1 mock interview per week", "Beginner question bank", "Basic resume review", "Free downloads"].map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
-                      <Check className="w-4 h-4 text-accent-emerald mt-0.5 shrink-0" weight="light" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </GlassCard>
-            </motion.div>
-
-            {/* Pro — Highlighted */}
-            <motion.div variants={fadeUpVariants} custom={1}>
               <GlassCard variant="elevated" className="p-8 ring-1 ring-accent-violet/30 shadow-glass-glow overflow-hidden">
-                <GlassBadge variant="accent" className="mb-4">
-                  <Crown className="w-3 h-3 mr-1" weight="light" /> Most Popular
-                </GlassBadge>
-                <div className="font-heading text-3xl font-bold text-text-primary mb-1">&#8369;499<span className="text-base font-normal text-text-muted">/mo</span></div>
-                <div className="text-text-muted text-sm mb-6">Everything you need</div>
+                <GlassBadge variant="accent" className="mb-4">Free Forever</GlassBadge>
+                <div className="font-heading text-2xl font-bold text-text-primary mb-1">Interview Lab</div>
+                <div className="text-text-muted text-sm mb-6">Everything you need to land the interview</div>
                 <GlassButton size="sm" className="w-full mb-6" onClick={onGetStarted}>
-                  Start 7-Day Free Trial
+                  Start Free
                   <ArrowUpRight className="w-4 h-4" weight="light" />
                 </GlassButton>
                 <ul className="space-y-3">
-                  {["5 mock interviews per week", "All question difficulties", "Unlimited resume reviews", "Unlimited cover letters", "Starter downloads", "Export to DOCX & PDF"].map((f) => (
+                  {["Unlimited mock interviews", "264+ question bank, all roles", "AI resume review", "Unlimited cover letters", "Practice tests & learning paths", "No card, no trial countdown"].map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
                       <Check className="w-4 h-4 text-accent-indigo mt-0.5 shrink-0" weight="light" />
                       {f}
@@ -475,17 +467,25 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
               </GlassCard>
             </motion.div>
 
-            {/* Premium */}
-            <motion.div variants={fadeUpVariants} custom={2}>
+            {/* Project Amazon PH Academy — Paid */}
+            <motion.div variants={fadeUpVariants} custom={1}>
               <GlassCard className="p-8 overflow-hidden">
-                <GlassBadge className="mb-4">Premium</GlassBadge>
-                <div className="font-heading text-3xl font-bold text-text-primary mb-1">&#8369;999<span className="text-base font-normal text-text-muted">/mo</span></div>
-                <div className="text-text-muted text-sm mb-6">For serious candidates</div>
-                <GlassButton variant="secondary" size="sm" className="w-full mb-6" onClick={onGetStarted}>
-                  Start Free Trial
+                <GlassBadge className="mb-4">
+                  <Crown className="w-3 h-3 mr-1" weight="light" /> Paid Academy
+                </GlassBadge>
+                <div className="font-heading text-2xl font-bold text-text-primary mb-1">Project Amazon PH Academy</div>
+                <div className="text-text-muted text-sm mb-6">Structured courses for after you&apos;re hired — &#8369;2,999 to &#8369;9,999</div>
+                <GlassButton
+                  variant="secondary"
+                  size="sm"
+                  className="w-full mb-6"
+                  onClick={() => window.open("https://projectamazonph.com", "_blank", "noopener,noreferrer")}
+                >
+                  Explore the Academy
+                  <ArrowUpRight className="w-4 h-4" weight="light" />
                 </GlassButton>
                 <ul className="space-y-3">
-                  {["Unlimited mock interviews", "Advanced question bank", "AI coaching with feedback", "Priority support", "All downloads", "Admin access"].map((f) => (
+                  {["Full Amazon ads course curriculum", "Campaign Builder & Bid Elevator tools", "Certificates recognized in our hiring pipeline", "Ultimate tier: weekly live classes + 1-on-1 review"].map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
                       <Check className="w-4 h-4 text-accent-emerald mt-0.5 shrink-0" weight="light" />
                       {f}
@@ -581,11 +581,13 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
           <div className="flex items-center gap-2">
             <Lightning className="w-4 h-4 text-accent-indigo" weight="light" />
             <span className="font-heading font-bold text-sm text-text-secondary">Interview Lab</span>
+            <span className="text-text-muted text-xs">by Project Amazon PH</span>
           </div>
           <div className="flex items-center gap-6 text-text-muted text-xs">
             <a href="#privacy" className="hover:text-text-secondary transition-colors duration-400">Privacy</a>
             <a href="#terms" className="hover:text-text-secondary transition-colors duration-400">Terms</a>
-            <span>&copy; {year} Interview Lab</span>
+            <a href="https://projectamazonph.com" target="_blank" rel="noopener noreferrer" className="hover:text-text-secondary transition-colors duration-400">Academy</a>
+            <span>&copy; {year} Project Amazon PH Interview Lab</span>
           </div>
         </div>
       </footer>
