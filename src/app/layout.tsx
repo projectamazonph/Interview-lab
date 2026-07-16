@@ -34,41 +34,42 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Interview Lab — AI-Powered Amazon VA Interview Preparation",
-    template: "%s | Interview Lab",
+    default: "Project Amazon PH Interview Lab — Free AI Interview Prep for Amazon VAs",
+    template: "%s | Project Amazon PH Interview Lab",
   },
   description:
-    "Get interview-ready for Amazon VA roles with AI mock interviews, resume coaching, cover letter writing, practice tests, and downloadable templates for PPC, Account, Listing, Reporting, and Agency VA positions.",
+    "Free AI mock interviews, resume coaching, cover letter writing, practice tests, and downloadable templates for Amazon VA roles — PPC, Account, Listing, Reporting, and Agency VA. A free companion to Project Amazon PH Academy.",
   keywords: [
     "Amazon VA", "Amazon PPC VA", "Amazon Account VA",
     "Amazon Listing VA", "Amazon Reporting VA", "Amazon Agency VA",
     "VA interview prep", "mock interview", "resume builder",
     "cover letter", "Amazon VA training", "Seller Central",
     "virtual assistant Philippines", "work from home jobs",
+    "Project Amazon PH Academy",
   ],
   authors: [{ name: "Ryan Roland Dabao", url: "https://projectamazonph.com" }],
   creator: "Ryan Roland Dabao",
   publisher: "ProjectAmazonPH",
   openGraph: {
-    title: "Interview Lab — AI-Powered Amazon VA Interview Preparation",
-    description: "Get interview-ready for Amazon VA roles with AI mock interviews, resume coaching, cover letter writing, and practice tests.",
+    title: "Project Amazon PH Interview Lab — Free AI Interview Prep for Amazon VAs",
+    description: "Free AI mock interviews, resume coaching, cover letter writing, and practice tests for Amazon VA roles. A free companion to Project Amazon PH Academy.",
     type: "website",
     locale: "en_US",
-    siteName: "Interview Lab",
+    siteName: "Project Amazon PH Interview Lab",
     url: BASE_URL,
     images: [
       {
         url: "/og/il-og.png",
         width: 1200,
         height: 630,
-        alt: "Interview Lab — Built by ProjectAmazonPH",
+        alt: "Project Amazon PH Interview Lab — Built by ProjectAmazonPH",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Interview Lab — AI-Powered Amazon VA Interview Preparation",
-    description: "Get interview-ready for Amazon VA roles with AI mock interviews, resume coaching, cover letter writing, and practice tests.",
+    title: "Project Amazon PH Interview Lab — Free AI Interview Prep for Amazon VAs",
+    description: "Free AI mock interviews, resume coaching, cover letter writing, and practice tests for Amazon VA roles.",
     site: "@ProjectAmazonPH",
     creator: "@ProjectAmazonPH",
   },
@@ -90,7 +91,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Interview Lab",
+    title: "PAPH Interview Lab",
   },
   icons: {
     icon: [
@@ -108,8 +109,13 @@ const structuredData = {
     {
       "@type": "Organization",
       "@id": `${BASE_URL}/#organization`,
-      name: "Interview Lab",
+      name: "Project Amazon PH Interview Lab",
       url: BASE_URL,
+      parentOrganization: {
+        "@type": "Organization",
+        name: "ProjectAmazonPH",
+        url: "https://projectamazonph.com",
+      },
       logo: {
         "@type": "ImageObject",
         url: `${BASE_URL}/icons/icon-180.png`,
@@ -130,9 +136,9 @@ const structuredData = {
       "@type": "WebSite",
       "@id": `${BASE_URL}/#website`,
       url: BASE_URL,
-      name: "Interview Lab",
+      name: "Project Amazon PH Interview Lab",
       publisher: { "@id": `${BASE_URL}/#organization` },
-      description: "AI-powered mock interviews and interview preparation for Amazon VA roles.",
+      description: "Free AI-powered mock interviews and interview preparation for Amazon VA roles.",
       inLanguage: "en-US",
       potentialAction: {
         "@type": "SearchAction",
@@ -144,7 +150,7 @@ const structuredData = {
       "@type": "WebPage",
       "@id": `${BASE_URL}/#webpage`,
       url: BASE_URL,
-      name: "Interview Lab — AI-Powered Amazon VA Interview Preparation",
+      name: "Project Amazon PH Interview Lab — Free AI-Powered Amazon VA Interview Preparation",
       isPartOf: { "@id": `${BASE_URL}/#website` },
       about: { "@id": `${BASE_URL}/#organization` },
       description: "Get interview-ready for Amazon VA roles with AI mock interviews, resume coaching, cover letter writing, practice tests, and downloadable templates.",
@@ -154,17 +160,17 @@ const structuredData = {
     },
     {
       "@type": "SoftwareApplication",
-      name: "Interview Lab",
+      name: "Project Amazon PH Interview Lab",
       "@id": `${BASE_URL}/#app`,
       url: BASE_URL,
-      description: "AI-powered mock interviews and interview preparation for Amazon VA roles.",
+      description: "Free AI-powered mock interviews and interview preparation for Amazon VA roles. A free companion to Project Amazon PH Academy.",
       applicationCategory: "EducationApplication",
       operatingSystem: "Web",
       offers: {
         "@type": "Offer",
         price: "0",
         priceCurrency: "PHP",
-        description: "Free tier with 264+ interview questions and AI coaching",
+        description: "Free, always — 264+ interview questions, AI coaching, resume review, and practice tests",
       },
       aggregateRating: {
         "@type": "AggregateRating",
@@ -223,7 +229,7 @@ const structuredData = {
           name: "Is the platform free to use?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, we offer a free tier with access to interview questions, AI coaching, and basic features.",
+            text: "Yes, Interview Lab is 100% free — mock interviews, the question bank, AI coaching, resume review, and more, no card required. It's a free companion to Project Amazon PH Academy.",
           },
         },
       ],
