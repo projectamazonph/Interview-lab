@@ -13,12 +13,14 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-// JWT_SECRET must be configured with at least 32 characters
-const rawSecret = process.env.JWT_SECRET;
-if (!rawSecret || rawSecret.length < 32) {
-  throw new Error("JWT_SECRET must be configured with at least 32 characters");
+// Validate JWT_SECRET lazily (not at module import time) so tests can set it
+function getJwtSecret(): Uint8Array {
+  const rawSecret = process.env.JWT_SECRET;
+  if (!rawSecret || rawSecret.length < 32) {
+    throw new Error("JWT_SECRET must be configured with at least 32 characters");
+  }
+  return new TextEncoder().encode(rawSecret);
 }
-const JWT_SECRET = new TextEncoder().encode(rawSecret);
 
 const TOKEN_NAME = 'interviewlab_session';
 const TOKEN_MAX_AGE = 24 * 60 * 60; // 24 hours in seconds
@@ -41,7 +43,7 @@ export async function createSession(
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${TOKEN_MAX_AGE}s`)
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 
   const cookieOptions = {
     name: TOKEN_NAME,
@@ -69,7 +71,7 @@ export async function verifySession(request: NextRequest): Promise<SessionPayloa
     const token = request.cookies.get(TOKEN_NAME)?.value;
     if (!token) return null;
 
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
 
     return {
       sub: payload.sub as string,
@@ -87,7 +89,7 @@ export async function verifySession(request: NextRequest): Promise<SessionPayloa
  */
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return {
       sub: payload.sub as string,
       email: payload.email as string,
