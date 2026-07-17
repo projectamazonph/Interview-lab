@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { hashPassword } from '@/lib/password';
 import { createVerificationToken } from '@/lib/email-verification';
 import { createSession } from '@/lib/session';
-import { checkRateLimit, cleanupExpiredRateLimits } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Configurable max users (0 = unlimited). Set via AppSetting "max_users" in DB, or env MAX_USERS.
 const DEFAULT_MAX_USERS = 0;

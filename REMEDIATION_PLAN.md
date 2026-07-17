@@ -5,13 +5,19 @@
 
 ---
 
-## ✅ Completed in PR #4
+## Product context
+
+Interview Lab is a **free companion** to [Project Amazon PH Academy](https://projectamazon.ph). All features are available to all users — no paid tiers, no subscription gating.
+
+---
+
+## ✅ Completed (PR #4 + follow-up)
 
 | Finding | Fix |
 |---|---|
 | FieldButton missing `outline` variant | Added outline variant to `fieldButtonVariants` |
-| Subscription checkout bypass | Returns 503 "Paid plans not available" |
-| Subscription manage `change` action | Blocked for paid tier upgrades |
+| Subscription checkout bypass | Removed subscription API endpoints entirely |
+| Subscription manage `change` action | Removed subscription API endpoints entirely |
 | JWT fallback secret | Requires 32+ char `JWT_SECRET` at startup |
 | Questions API unauthenticated | Server-side auth + tier checks; strips premium fields for free tier |
 | Guides API unauthenticated | Server-side auth + tier checks; locks content behind entitlement |
@@ -19,10 +25,14 @@
 | Rate limiter non-atomic | Wrapped in `db.$transaction`; fail-closed |
 | Fabricated aggregate rating | Removed from structured data |
 | Pre-existing FieldBadge/Button type errors | Added missing variants |
+| Subscription tier gating | `subscription-guard.ts` always returns `allowed: true` |
+| Subscription endpoints | Removed `src/app/api/subscription/` entirely |
+| Pricing page / UpgradeModal / SubscriptionBanner | Stubbed to no-op (kept imports compiling) |
+| README pricing table | Replaced with "Free, always" notice |
 
 ---
 
-## 🔴 Phase 1 — Must fix before paid launch
+## 🔴 Phase 1 — Must fix before public launch
 
 ### P1.1 — Server AI adapter
 **Files:** `src/lib/browser-llm-integration.ts`, `src/app/api/ai/*/route.ts` (4 routes)
@@ -38,36 +48,7 @@
 - Replace all `BrowserLLMIntegration` imports in API routes
 - Add privacy/provider disclosure to UI
 
-### P1.2 — Real payment integration
-**Files:** `src/app/api/subscription/webhook/route.ts`, `src/app/api/subscription/checkout/route.ts`
-**Problem:** Webhook is a placeholder (no signature verification, no subscription sync). Price IDs are empty strings.
-**Fix:**
-- Configure Stripe price IDs in environment
-- Implement signed webhook handler
-- Add `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` events
-- Use webhook as the sole subscription activation path
-- Add `idempotencyKey` to payment records
-- Wrap billing mutations in `db.$transaction`
-
-### P1.3 — Subscription record consistency
-**Files:** `src/lib/pricing.ts`, `prisma/schema.prisma`
-**Problem:** `User.subscriptionTier` and `Subscription.tier` are dual sources of truth; mutations aren't transactional.
-**Fix:**
-- Designate `Subscription.tier` as the single source of truth
-- Derive `User.subscriptionTier` via a view or computed field
-- Wrap all billing mutations in `db.$transaction`
-- Add Prisma enums for `tier`, `status`, `billingPeriod`
-
-### P1.4 — ESLint fixes & re-enablement
-**Files:** `eslint.config.mjs`, `src/app/page.tsx`, `src/components/interview-lab/AdminPanel.tsx`, `PricingPage.tsx`, `QuestionBank.tsx`
-**Problem:** 35 rules disabled; 9 pre-existing ESLint errors block CI.
-**Fix:**
-- Fix the 9 ESLint errors across 4 files (setState in effects, hoisting, const reassignment)
-- Re-enable important rules incrementally: `no-unused-vars`, `no-console`, `react-hooks/exhaustive-deps`, `no-fallthrough`
-- Remove blanket `off` overrides
-- Add `lint-staged` pre-commit hook
-
-### P1.5 — Client auth from server session
+### P1.2 — Client auth from server session
 **Files:** `src/lib/auth-context.tsx`
 **Problem:** Auth state restored from `localStorage` (modifiable); no server validation on startup.
 **Fix:**
@@ -75,6 +56,15 @@
 - On app mount, validate session via server endpoint instead of reading localStorage
 - Keep localStorage as a cache layer with server re-validation
 - Ensure logout clears both cookie and localStorage atomically
+
+### P1.3 — ESLint fixes & re-enablement
+**Files:** `eslint.config.mjs`, `src/app/page.tsx`, `src/components/interview-lab/AdminPanel.tsx`, `PricingPage.tsx`, `QuestionBank.tsx`
+**Problem:** 35 rules disabled; 9 pre-existing ESLint errors block CI.
+**Fix:**
+- Fix the 9 ESLint errors across 4 files (setState in effects, hoisting, const reassignment)
+- Re-enable important rules incrementally: `no-unused-vars`, `no-console`, `react-hooks/exhaustive-deps`, `no-fallthrough`
+- Remove blanket `off` overrides
+- Add `lint-staged` pre-commit hook
 
 ---
 
@@ -108,7 +98,7 @@
 **Files:** `src/app/api/export/route.ts`
 **Problem:** No input size validation; PDF silently truncates at page bottom.
 **Fix:**
-- Add content length limits matching subscription tier
+- Add content length limits
 - Replace handcrafted PDF with proper pagination (e.g., `pdf-lib` or `pdfkit` with page break support)
 - Add request body size validation middleware
 
@@ -118,7 +108,7 @@
 **Fix:**
 - Set per-file coverage thresholds (e.g., 60% lines, 50% branches)
 - Remove blanket excludes for components
-- Add integration tests for auth flows, onboarding, interviews, resume gen, admin, and plan enforcement
+- Add integration tests for auth flows, onboarding, interviews, resume gen, admin
 - Add browser tests for critical user journeys
 
 ### P2.6 — Operational documentation
@@ -132,7 +122,7 @@
 
 ---
 
-## ⚪ Phase 3 — Before paid launch gate
+## ⚪ Phase 3 — Before public launch gate
 
 ### P3.1 — Privacy & legal
 - Add privacy policy page with data retention and account deletion
@@ -141,9 +131,8 @@
 - Add cookie consent banner
 - Add terms of service page
 
-### P3.2 — Honest metadata
-- Remove `offers.price: "0"` from structured data if paid tiers exist
-- Add proper pricing schema if billing is active
+### P3.2 — Honest structured data
+- Remove `offers.price: "0"` from structured data if product is truly free (or add proper "Free" offer)
 - Add real user review/rating system before claiming ratings
 
 ### P3.3 — Security hardening
@@ -167,7 +156,7 @@
 
 | Phase | Items | Estimated effort |
 |---|---|---|
-| 🔴 Phase 1 (blockers) | 5 items | 3–4 sprints |
+| 🔴 Phase 1 (blockers) | 3 items | 2–3 sprints |
 | 🟡 Phase 2 (cycle) | 6 items | 4–6 sprints |
 | ⚪ Phase 3 (launch gate) | 4 items | 2–3 sprints |
 
@@ -177,16 +166,12 @@
 
 ### Current branch state
 - `main` at commit `190b3be` with PR #4 merged
-- The PR branch `fix/critical-security-and-build-issues` can be deleted
-
-### Known CI state
-- ESLint: 9 pre-existing errors (4 files untouched by PR #4)
-- Vercel: fails on pre-existing analytics route runtime error
-- Neither is a regression from PR #4
+- Subscription system stubbed (not removed) to keep imports compiling
+- 3 stub files created: `PricingPage.tsx`, `UpgradeModal.tsx`, `SubscriptionBanner.tsx`
 
 ### Key architecture decisions to carry forward
 1. **Auth:** JWT in HttpOnly cookies with DB re-verification on every request (keep this pattern)
-2. **Tier enforcement:** Server-side `subscription-guard.ts` helpers are the right pattern — extend them, don't duplicate
+2. **Tier enforcement:** All subscription guard functions return `allowed: true` — product is free
 3. **Rate limiting:** The `db.$transaction` pattern is correct for persistent storage; middleware needs Redis/Upstash for serverless
 4. **AI:** Build a proper server adapter rather than trying to fix the client-side `BrowserLLMIntegration`
 
@@ -194,5 +179,11 @@
 - `src/lib/browser-llm-integration.ts` — will be replaced entirely by P1.1
 - `src/app/api/downloads/[id]/route.ts` — needs full decomposition (P2.3)
 - `prisma/schema.prisma` — needs migration (P2.2)
-- `eslint.config.mjs` — needs rules re-enabled (P1.4)
-- `src/lib/auth-context.tsx` — needs session endpoint (P1.5)
+- `eslint.config.mjs` — needs rules re-enabled (P1.3)
+- `src/lib/auth-context.tsx` — needs session endpoint (P1.2)
+
+### Stub files (to be removed when components are refactored)
+- `src/components/interview-lab/PricingPage.tsx`
+- `src/components/interview-lab/UpgradeModal.tsx`
+- `src/components/interview-lab/SubscriptionBanner.tsx`
+- `src/lib/use-subscription.ts`

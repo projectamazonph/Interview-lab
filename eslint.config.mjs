@@ -8,39 +8,42 @@ const __dirname = dirname(__filename);
 
 const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
   rules: {
-    // TypeScript rules
+    // TypeScript rules — keep these off (migration debt, not harmful)
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/prefer-as-const": "off",
-    "@typescript-eslint/no-unused-disable-directive": "off",
-    
-    // React rules
+
+    // Unused vars — re-enabled (catches dead code)
+    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    "no-unused-vars": "off", // handled by @typescript-eslint above
+
+    // React hooks — keep exhaustive-deps off (complex deps cause more bugs than they fix)
     "react-hooks/exhaustive-deps": "off",
-    "react-hooks/purity": "off",
-    "react/no-unescaped-entities": "off",
+    "react-hooks/set-state-in-effect": "off", // flags legitimate data-fetching patterns
+
+    // React — display-name and prop-types aren't needed with TypeScript
     "react/display-name": "off",
     "react/prop-types": "off",
-    "react-compiler/react-compiler": "off",
-    
-    // Next.js rules
+
+    // react-compiler — not adopted yet, keep off
+
+    // Next.js rules — keep off (minor concerns)
     "@next/next/no-img-element": "off",
     "@next/next/no-html-link-for-pages": "off",
-    
-    // General JavaScript rules
-    "prefer-const": "off",
-    "no-unused-vars": "off",
-    "no-console": "off",
-    "no-debugger": "off",
-    "no-empty": "off",
-    "no-irregular-whitespace": "off",
+
+    // General JavaScript — re-enabled important ones
+    "prefer-const": "warn",
+    "no-console": "off", // keep off for now (MVP logging)
+    "no-debugger": "warn",
+    "no-empty": "warn",
     "no-case-declarations": "off",
-    "no-fallthrough": "off",
+    "no-fallthrough": "warn",
+    "no-redeclare": "off", // TypeScript handles this
+    "no-undef": "off", // TypeScript handles this
+    "no-unreachable": "warn",
+    "no-irregular-whitespace": "off",
     "no-mixed-spaces-and-tabs": "off",
-    "no-redeclare": "off",
-    "no-undef": "off",
-    "no-unreachable": "off",
     "no-useless-escape": "off",
   },
 }, {

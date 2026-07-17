@@ -25,16 +25,12 @@ for aspiring Amazon Virtual Assistants.
 | **Cover Letter Studio** | Generate role-targeted cover letters with multiple tones |
 | **Practice Tests** | Timed assessments with AI-scored results |
 | **Learning Paths** | Beginner → Intermediate → Advanced guides per role |
-| **Download Center** | Templates, checklists, worksheets (tier-gated) |
+| **Download Center** | Templates, checklists, worksheets |
 | **Admin Panel** | Analytics dashboard and question management |
 
-## 💰 Pricing Tiers
+## 💰 Pricing
 
-| Tier | Price | Interviews | Resumes | Cover Letters | Practice Tests |
-|------|-------|-----------|---------|--------------|----------------|
-| **Free** | ₱0 | 1/week | 1/month | 1/month | 2/month |
-| **Starter** | ₱499/mo | 5/week | Unlimited | Unlimited | 5/month |
-| **Pro** | ₱999/mo | Unlimited | Unlimited | Unlimited | Unlimited |
+**Free, always.** Interview Lab is a free companion to [Project Amazon PH Academy](https://projectamazon.ph). All features are available to all users — no paid tiers.
 
 ## 🛠 Tech Stack
 

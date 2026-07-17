@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth-helpers';
-import { BrowserLLMIntegration } from '@/lib/browser-llm-integration';
+
+const RESUME_REVIEW_PROMPT = `You are an Amazon VA career preparation assistant. You help users prepare for Amazon marketplace virtual assistant roles.
+
+Review the provided resume text for the target role and provide constructive feedback.
+
+Respond in the following JSON format only:
+{
+  "score": <number 0-100>,
+  "missingKeywords": ["<keyword 1>", "<keyword 2>"],
+  "weakSections": ["<section 1>", "<section 2>"],
+  "improvedSummary": "<rewritten professional summary>",
+  "improvedBullets": ["<bullet 1>", "<bullet 2>"],
+  "skillsRecommendations": ["<skill 1>", "<skill 2>"],
+  "truthWarnings": ["<warning if user fabricated experience>"],
+}
+
+IMPORTANT:
+- The score should reflect the resume's fit for Amazon VA roles, not generic quality
+- Only flag truth warnings if the resume makes specific verifiable claims that seem exaggerated
+- Skills recommendations should focus on Amazon-related skills
+- Do not suggest the user has certifications or experience they haven't mentioned
+- Never guarantee job placement`;
 
 export async function POST(request: Request) {
   try {
@@ -15,25 +36,48 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Resume text is required' }, { status: 400 });
     }
 
-    // Use browser-based LLM integration
-    const browserLLM = BrowserLLMIntegration.getInstance();
-    const prompt = `Target Role: ${targetRole || 'Amazon VA'}\n\nResume Text:\n${resumeText}\n\nPlease review this resume and provide improvement suggestions in the required JSON format.`;
-    
-    const feedback = await browserLLM.generateResponse(prompt, 'resume');
+    if (resumeText.length > 20000) {
+      return NextResponse.json({ error: 'Resume is too long' }, { status: 400 });
+    }
+
+    const ZAI = (await import('z-ai-web-dev-sdk')).default;
+    const zai = await ZAI.create();
+
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: 'system', content: RESUME_REVIEW_PROMPT },
+        {
+          role: 'user',
+          content: `Target Role: ${targetRole || 'Amazon VA'}\n\nResume Text:\n${resumeText}`,
+        },
+      ],
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+
+    let feedback;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        feedback = JSON.parse(jsonMatch[0]);
+      }
+    } catch {
+      feedback = null;
+    }
+
+    if (!feedback) {
+      return NextResponse.json(
+        { error: 'Failed to parse resume review' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(feedback);
   } catch (error) {
-    console.error('Browser LLM Resume Review error:', error);
-    // Fallback to default resume feedback
-    return NextResponse.json({
-      score: 40,
-      missingKeywords: ['Seller Central', 'PPC reporting', 'ACoS', 'ROAS'],
-      weakSections: ['Professional Summary'],
-      improvedSummary: 'Amazon-focused Virtual Assistant with training in Seller Central support, Amazon Ads reporting, and client communication.',
-      improvedBullets: [],
-      skillsRecommendations: ['Amazon Seller Central', 'PPC Reporting'],
-      truthWarnings: [],
-      improvedVersion: '',
-    });
+    console.error('Resume review error:', error);
+    return NextResponse.json(
+      { error: 'Failed to review resume' },
+      { status: 500 }
+    );
   }
 }

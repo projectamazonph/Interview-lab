@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FieldCard } from "@/components/ui/glass-card";
@@ -18,7 +18,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const honeypotRef = useRef<HTMLInputElement>(null);
-  const formStartRef = useRef<number>(Date.now());
+  const formStartRef = useRef<number>(0);
+  useEffect(() => { formStartRef.current = Date.now(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -177,7 +177,7 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
             </div>
             <div className="animate-slide-up" style={{ animationDelay: "80ms" }}>
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-ink-900">
-                Training Alone Isn't Enough
+                Training Alone Isn&apos;t Enough
               </h2>
             </div>
             <div className="animate-slide-up" style={{ animationDelay: "160ms" }}>
