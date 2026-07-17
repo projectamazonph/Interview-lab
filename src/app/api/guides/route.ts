@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       const access = checkGuideAccess(userTier, guide.level as string);
       if (access.allowed) return guide;
       // Return only metadata without content
-      const { content, ...meta } = guide;
+      const { content: _content, ...meta } = guide;
       return { ...meta, content: null, locked: true };
     });
 

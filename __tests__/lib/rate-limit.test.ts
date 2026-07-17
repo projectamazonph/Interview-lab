@@ -4,9 +4,20 @@ const findUnique = vi.fn();
 const upsert = vi.fn();
 const update = vi.fn();
 const deleteMany = vi.fn();
+const transaction = vi.fn((cb: (tx: unknown) => Promise<unknown>) =>
+  cb({
+    rateLimitEntry: {
+      findUnique: (...args: unknown[]) => findUnique(...args),
+      upsert: (...args: unknown[]) => upsert(...args),
+      update: (...args: unknown[]) => update(...args),
+      deleteMany: (...args: unknown[]) => deleteMany(...args),
+    },
+  })
+);
 
 vi.mock('@/lib/db', () => ({
   db: {
+    $transaction: (...args: unknown[]) => transaction(...args),
     rateLimitEntry: {
       findUnique: (...args: unknown[]) => findUnique(...args),
       upsert: (...args: unknown[]) => upsert(...args),
@@ -24,6 +35,7 @@ describe('checkRateLimit', () => {
     upsert.mockReset();
     update.mockReset();
     deleteMany.mockReset();
+    transaction.mockClear();
   });
 
   it('allows the first request for a new key and creates an entry with count 1', async () => {
@@ -86,12 +98,12 @@ describe('checkRateLimit', () => {
     expect(findUnique).toHaveBeenCalledWith({ where: { key: 'auth-register:1.2.3.4' } });
   });
 
-  it('fails open (allows the request) if the database throws', async () => {
+  it('fails closed (denies the request) if the database throws', async () => {
     findUnique.mockRejectedValue(new Error('connection lost'));
 
     const result = await checkRateLimit('1.2.3.4', 'auth-login', 10, 60_000);
 
-    expect(result).toEqual({ allowed: true, remaining: 10 });
+    expect(result).toEqual({ allowed: false, remaining: 0 });
   });
 });
 

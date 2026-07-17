@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { verifyPassword, isLegacyHash, hashPassword } from '@/lib/password';
 import { createSession } from '@/lib/session';
-import { checkRateLimit, cleanupExpiredRateLimits } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {

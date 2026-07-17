@@ -15,7 +15,7 @@ const QUESTION_SAFE_FIELDS = {
   createdAt: true,
 } as const;
 
-const PREMIUM_FIELDS = {
+const _PREMIUM_FIELDS = {
   whyEmployersAsk: true,
   strongAnswerPoints: true,
   weakAnswerWarnings: true,

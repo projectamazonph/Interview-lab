@@ -16,6 +16,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const LS_KEY = 'interviewlab_user';
+
 const fetchUserProfile = async (userId: string, setProfile: (p: UserProfile | null) => void) => {
   try {
     const res = await fetch('/api/profile');
@@ -29,29 +31,53 @@ const fetchUserProfile = async (userId: string, setProfile: (p: UserProfile | nu
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Always initialize with null/true so server and client first render match exactly.
-  // localStorage is read inside useEffect (client-only) to avoid hydration mismatch.
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Read localStorage on mount (client-only) then mark loading done
-  /* eslint-disable react-hooks/set-state-in-effect */
+  // Validate session against server on mount.
+  // localStorage is a write-through cache only — not the source of truth.
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('interviewlab_user');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      }
-    } catch {
-      // ignore corrupt storage
-    }
-    setLoading(false);
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
+    let cancelled = false;
 
-  // Fetch profile whenever user changes (after initial mount)
+    async function restoreSession() {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user && !cancelled) {
+            setUser(data.user);
+            localStorage.setItem(LS_KEY, JSON.stringify(data.user));
+            await fetchUserProfile(data.user.id, setProfile);
+          } else if (!cancelled) {
+            // Server has no valid session — clear any stale localStorage
+            setUser(null);
+            localStorage.removeItem(LS_KEY);
+          }
+        }
+      } catch {
+        // Server unreachable — fall back to cached localStorage data as best effort
+        if (!cancelled) {
+          try {
+            const stored = localStorage.getItem(LS_KEY);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              setUser(parsed);
+            }
+          } catch {
+            // ignore corrupt storage
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    restoreSession();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Re-fetch profile whenever user changes
   useEffect(() => {
     if (user) {
       fetchUserProfile(user.id, setProfile);
@@ -68,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
-        localStorage.setItem('interviewlab_user', JSON.stringify(data));
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
         await fetchUserProfile(data.id, setProfile);
         return true;
       }
@@ -87,17 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           name,
           password,
-          // Honeypot fields for bot protection (must be empty)
           honeypot: '',
-          _formStart: Date.now() - 10000, // Fake old timestamp (real form fills in current time)
+          _formStart: Date.now() - 10000,
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        // Don't store bot trap responses
         if (data.id === 'bot-trap') return false;
         setUser(data);
-        localStorage.setItem('interviewlab_user', JSON.stringify(data));
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
         return true;
       }
       return false;
@@ -106,12 +130,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // Call logout API to clear HttpOnly JWT cookie
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // best effort — cookie will expire naturally
+    }
     setUser(null);
     setProfile(null);
-    localStorage.removeItem('interviewlab_user');
+    localStorage.removeItem(LS_KEY);
   };
 
   const updateProfile = async (data: Partial<UserProfile>): Promise<boolean> => {
@@ -119,9 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       if (res.ok) {

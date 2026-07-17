@@ -1,3 +1,4 @@
+process.env.JWT_SECRET = "ci-test-secret-that-is-at-least-32-chars-long";
 import '@testing-library/jest-dom';
 
 // Only set up browser mocks in jsdom environment

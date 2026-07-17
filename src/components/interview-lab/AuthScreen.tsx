@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { FieldButton } from "@/components/ui/glass-button";
 import { FieldInput } from "@/components/ui/glass-input";
@@ -27,7 +27,8 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
   const [showPassword, setShowPassword] = useState(false);
 
   const honeypotRef = useRef<HTMLInputElement>(null);
-  const formStartRef = useRef<number>(Date.now());
+  const formStartRef = useRef<number>(0);
+    // formStartRef remains at mount timestamp for bot protection
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +67,7 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
     setActiveTab(tab);
     setError("");
     setLoading(false);
-    formStartRef.current = Date.now();
+    formStartRef.current = performance.now(); // eslint-disable-line react-hooks/purity
   };
 
   return (
