@@ -124,14 +124,13 @@ export async function POST(request: Request) {
     });
 
     // Create email verification token
-    const verifyToken = createVerificationToken(sanitizedEmail);
+    await createVerificationToken(sanitizedEmail);
 
     // Clean up expired tokens periodically
     // cleanup handled by Prisma TTL;
 
-    // Log verification link (MVP — in production, send via email)
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
-    console.log(`[EMAIL VERIFICATION] Verify URL for ${sanitizedEmail}: ${verifyUrl}`);
+    // In production, send verification via email instead of logging
+    // Verification token is stored in the database for the verify-email endpoint
 
     // Create JWT session (HttpOnly cookie)
     const response = NextResponse.json({

@@ -172,13 +172,7 @@ const structuredData = {
         priceCurrency: "PHP",
         description: "Free, always — 264+ interview questions, AI coaching, resume review, and practice tests",
       },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.8",
-        ratingCount: "1247",
-        bestRating: "5",
-        worstRating: "1",
-      },
+
       featureList: [
         "AI Mock Interviews",
         "264+ Role-Based Interview Questions",

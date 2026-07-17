@@ -2,15 +2,18 @@ import { db } from './db';
 
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
-export function createVerificationToken(email: string): string {
+export async function createVerificationToken(email: string): Promise<string> {
   const token = cryptoRandomHex(32);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + TOKEN_EXPIRY_MS);
 
-  db.verificationToken.deleteMany({ where: { email } }).catch(() => {});
-  db.verificationToken.create({
+  // Clean up old tokens for this email first
+  await db.verificationToken.deleteMany({ where: { email } }).catch(() => {});
+
+  // Await token creation to ensure it's stored
+  await db.verificationToken.create({
     data: { token, email, expiresAt },
-  }).catch(() => {});
+  });
 
   return token;
 }

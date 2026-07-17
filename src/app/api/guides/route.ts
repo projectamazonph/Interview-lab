@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
+import { checkGuideAccess } from '@/lib/subscription-guard';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
 
@@ -8,6 +9,25 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const level = searchParams.get('level');
     const role = searchParams.get('role');
+
+    // Auth required for non-beginner guides
+    const user = await getUserFromRequest(request);
+
+    if (level && level !== 'beginner' && level !== 'all') {
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Authentication required for premium guides.' },
+          { status: 401 }
+        );
+      }
+      const access = checkGuideAccess(user.subscriptionTier, level);
+      if (!access.allowed) {
+        return NextResponse.json(
+          { error: access.reason || 'Subscription required for premium guides.' },
+          { status: 403 }
+        );
+      }
+    }
 
     const where: Record<string, unknown> = { status: 'published' };
     if (level && level !== 'all') where.level = level;
@@ -18,7 +38,17 @@ export async function GET(request: Request) {
       orderBy: [{ level: 'asc' }, { title: 'asc' }],
     });
 
-    return NextResponse.json({ guides });
+    // Strip content for guides the user doesn't have access to
+    const userTier = user?.subscriptionTier ?? 'free';
+    const sanitized = guides.map((guide: Record<string, unknown>) => {
+      const access = checkGuideAccess(userTier, guide.level as string);
+      if (access.allowed) return guide;
+      // Return only metadata without content
+      const { content, ...meta } = guide;
+      return { ...meta, content: null, locked: true };
+    });
+
+    return NextResponse.json({ guides: sanitized });
   } catch (error) {
     console.error('Guides GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch guides' }, { status: 500 });

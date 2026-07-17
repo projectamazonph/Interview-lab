@@ -165,10 +165,10 @@ export function LearningPaths() {
               </Badge>
             )}
             <Button
-              variant={isCompleted ? 'outline' : 'default'}
+              variant={isCompleted ? 'outline' : 'primary'}
               className={!isCompleted ? 'bg-green-600 hover:bg-green-700 text-white shadow-inner-highlight-sm' : ''}
               onClick={handleMarkComplete}
-              size={!isCompleted ? 'default' : 'sm'}
+              size={!isCompleted ? 'md' : 'sm'}
             >
               <CheckCircle weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
               {isCompleted ? 'Completed' : 'Mark Complete'}

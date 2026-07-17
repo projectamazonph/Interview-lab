@@ -176,102 +176,10 @@ export async function POST(request: Request) {
       }
 
       case 'change': {
-        if (!tier) {
-          return NextResponse.json(
-            { error: 'Must specify a tier to change to.' },
-            { status: 400 }
-          );
-        }
-
-        if (!['starter', 'pro'].includes(tier)) {
-          return NextResponse.json(
-            { error: 'Invalid tier. Must be "starter" or "pro".' },
-            { status: 400 }
-          );
-        }
-
-        const currentTierLevel = TIER_HIERARCHY[user.subscriptionTier as TierKey] ?? 0;
-        const newTierLevel = TIER_HIERARCHY[tier as TierKey] ?? 0;
-
-        if (currentTierLevel === newTierLevel) {
-          return NextResponse.json(
-            { error: `You are already on the ${tier} plan.` },
-            { status: 400 }
-          );
-        }
-
-        const price = getTierPrice(tier as TierKey, billing);
-        const amountInCents = Math.round(price * 100);
-
-        const now = new Date();
-        const periodEnd = new Date(now);
-        if (billing === 'monthly') {
-          periodEnd.setMonth(periodEnd.getMonth() + 1);
-        } else {
-          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-        }
-
-        // Update subscription
-        if (subscription) {
-          await db.subscription.update({
-            where: { id: subscription.id },
-            data: {
-              tier,
-              status: 'active',
-              currentPeriodStart: now,
-              currentPeriodEnd: periodEnd,
-              cancelAtPeriodEnd: false,
-              stripePriceId: billing === 'monthly'
-                ? PRICING_TIERS[tier as TierKey].priceId
-                : PRICING_TIERS[tier as TierKey].yearlyPriceId ?? PRICING_TIERS[tier as TierKey].priceId,
-            },
-          });
-        } else {
-          await db.subscription.create({
-            data: {
-              userId: user.id,
-              tier,
-              status: 'active',
-              currentPeriodStart: now,
-              currentPeriodEnd: periodEnd,
-              cancelAtPeriodEnd: false,
-              stripePriceId: billing === 'monthly'
-                ? PRICING_TIERS[tier as TierKey].priceId
-                : PRICING_TIERS[tier as TierKey].yearlyPriceId ?? PRICING_TIERS[tier as TierKey].priceId,
-            },
-          });
-        }
-
-        // Update user tier
-        await db.user.update({
-          where: { id: user.id },
-          data: { subscriptionTier: tier },
-        });
-
-        // Create payment record for plan change
-        const actionType = newTierLevel > currentTierLevel ? 'Upgrade' : 'Downgrade';
-        await db.payment.create({
-          data: {
-            userId: user.id,
-            amount: amountInCents,
-            currency: CURRENCY.code.toLowerCase(),
-            status: newTierLevel > currentTierLevel ? 'completed' : 'pending',
-            description: `${actionType} to ${PRICING_TIERS[tier as TierKey].name} plan - ${billing === 'yearly' ? 'Yearly' : 'Monthly'}`,
-            metadata: JSON.stringify({
-              tier,
-              billing,
-              action: actionType.toLowerCase(),
-              directUpgrade: true,
-            }),
-          },
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: `Successfully changed to ${PRICING_TIERS[tier as TierKey].name} plan!`,
-          tier,
-          billing,
-        });
+        return NextResponse.json(
+          { error: 'Paid plans are not currently available.' },
+          { status: 503 }
+        );
       }
 
       default:

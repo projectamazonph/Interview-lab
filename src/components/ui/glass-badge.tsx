@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface FieldBadgeProps extends React.ComponentProps<"span"> {
-  variant?: "default" | "accent" | "success" | "warning" | "danger" | "ghost";
+  variant?: "default" | "accent" | "success" | "warning" | "danger" | "ghost" | "outline" | "secondary" | "destructive" | "muted";
   size?: "sm" | "md";
 }
 
@@ -23,6 +23,10 @@ const FieldBadge = React.forwardRef<HTMLSpanElement, FieldBadgeProps>(
           variant === "warning" && "bg-warning-soft text-warning border border-warning/20",
           variant === "danger" && "bg-danger-soft text-danger border border-danger/20",
           variant === "ghost" && "text-ink-500",
+          variant === "outline" && "bg-transparent text-ink-700 border-2 border-accent",
+          variant === "secondary" && "bg-surface-1 text-ink-500 border border-border",
+          variant === "destructive" && "bg-danger-soft text-danger border border-danger/30",
+          variant === "muted" && "text-ink-400 bg-transparent border-none",
           className
         )}
         {...props}

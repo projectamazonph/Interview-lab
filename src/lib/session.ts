@@ -13,9 +13,12 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'interviewlab-dev-secret-change-in-production'
-);
+// JWT_SECRET must be configured with at least 32 characters
+const rawSecret = process.env.JWT_SECRET;
+if (!rawSecret || rawSecret.length < 32) {
+  throw new Error("JWT_SECRET must be configured with at least 32 characters");
+}
+const JWT_SECRET = new TextEncoder().encode(rawSecret);
 
 const TOKEN_NAME = 'interviewlab_session';
 const TOKEN_MAX_AGE = 24 * 60 * 60; // 24 hours in seconds
