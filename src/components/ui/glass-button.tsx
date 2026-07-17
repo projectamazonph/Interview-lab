@@ -14,6 +14,8 @@ const fieldButtonVariants = cva(
           "bg-[#FF6B35] text-white hover:bg-[#E55A2B] shadow-sm",
         secondary:
           "bg-white text-[#171717] border border-[#E5E5E0] hover:bg-[#F4F3EE] shadow-sm",
+        outline:
+          "bg-white text-[#171717] border-2 border-[#FF6B35] hover:bg-[#FFF5F0] shadow-sm",
         ghost:
           "text-[#404040] hover:bg-[#F4F3EE] border border-transparent",
         danger:

@@ -242,7 +242,7 @@ export function DownloadCenter() {
                             </div>
                             <div className="mt-3">
                               {locked ? (
-                                <Button variant="default" size="sm" className="w-full whitespace-nowrap text-xs bg-amber-500 hover:bg-amber-600 text-white" disabled>
+                                <Button variant="primary" size="sm" className="w-full whitespace-nowrap text-xs bg-amber-500 hover:bg-amber-600 text-white" disabled>
                                   <Lock weight="light" className="h-3 w-3 mr-1" aria-hidden="true" />
                                   Upgrade to {d.accessTier}
                                 </Button>
