@@ -1,6 +1,10 @@
 'use client';
 
+import { entitlement } from './subscription/entitlement';
+
 // Interview Lab is free — all features available to all users.
+// Usage/limits are sourced from the explicit EntitlementService so the values
+// are honest (null = unlimited) rather than magic -1 sentinels.
 
 export function useSubscription() {
   return {
@@ -11,12 +15,12 @@ export function useSubscription() {
       practiceTestsThisMonth: 0,
     },
     limits: {
-      interviewsPerWeek: -1,
-      resumeReviewsPerMonth: -1,
-      coverLettersPerMonth: -1,
-      practiceTestsPerMonth: -1,
+      interviewsPerWeek: entitlement.limits.interviewsPerWeek,
+      resumeReviewsPerMonth: entitlement.limits.resumeReviewsPerMonth,
+      coverLettersPerMonth: entitlement.limits.coverLettersPerMonth,
+      practiceTestsPerMonth: entitlement.limits.practiceTestsPerMonth,
     },
-    currentTier: 'free' as const,
+    currentTier: entitlement.tier,
     loading: false,
   };
 }
