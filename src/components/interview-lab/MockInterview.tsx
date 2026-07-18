@@ -259,7 +259,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
 
         <div className="flex justify-center mb-2">
           <Image
-            src="/images/illustrations/mock-interview-setup.png"
+            src="/images/illustrations/mock-interview-setup.svg"
             alt="Set up your mock interview with AI-powered coaching"
             width={500}
             height={200}
@@ -361,7 +361,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <Image
-                src="/images/illustrations/interview-complete-celebration.png"
+                src="/images/illustrations/interview-complete-celebration.svg"
                 alt="Congratulations on completing your mock interview"
                 width={300}
                 height={150}

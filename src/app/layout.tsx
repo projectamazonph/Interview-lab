@@ -95,11 +95,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/icon-32.png", sizes: "32x32" },
-      { url: "/icons/icon-192.png", sizes: "192x192" },
-      { url: "/icons/icon-512.png", sizes: "512x512" },
+      { url: "/icons/icon-32.svg", sizes: "32x32" },
+      { url: "/icons/icon-192.svg", sizes: "192x192" },
+      { url: "/icons/icon-512.svg", sizes: "512x512" },
     ],
-    apple: [{ url: "/icons/icon-180.png", sizes: "180x180" }],
+    apple: [{ url: "/icons/icon-32.svg", sizes: "180x180" }],
   },
 };
 
@@ -118,7 +118,7 @@ const structuredData = {
       },
       logo: {
         "@type": "ImageObject",
-        url: `${BASE_URL}/icons/icon-180.png`,
+        url: `${BASE_URL}/icons/icon-32.svg`,
         width: 180,
         height: 180,
       },

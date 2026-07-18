@@ -141,7 +141,7 @@ export interface DashboardData {
   recentAttempts: (QuestionAttempt & { question?: Question })[];
 }
 
-export type ActiveView = 'dashboard' | 'onboarding' | 'questions' | 'interview' | 'resume' | 'cover-letter' | 'assessments' | 'downloads' | 'guides' | 'admin' | 'pricing';
+export type ActiveView = 'dashboard' | 'onboarding' | 'questions' | 'interview' | 'resume' | 'cover-letter' | 'assessments' | 'downloads' | 'guides' | 'admin';
 
 export interface SubscriptionInfo {
   tier: string;

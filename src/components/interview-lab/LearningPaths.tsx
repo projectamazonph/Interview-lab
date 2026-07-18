@@ -255,7 +255,7 @@ export function LearningPaths() {
 
       <div className="flex justify-center">
         <Image
-          src="/images/illustrations/learning-levels.png"
+          src="/images/illustrations/learning-levels.svg"
           alt="Learning paths from beginner to intermediate to advanced level"
           width={500}
           height={180}

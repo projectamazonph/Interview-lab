@@ -92,7 +92,7 @@ export function QuestionBank() {
 
       <div className="flex justify-center">
         <Image
-          src="/images/illustrations/question-bank-library.png"
+          src="/images/illustrations/question-bank-library.svg"
           alt="Browse hundreds of Amazon VA interview questions organized by role and skill"
           width={500}
           height={180}

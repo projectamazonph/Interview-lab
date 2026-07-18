@@ -134,7 +134,7 @@ export function PracticeTests() {
                   <div className="p-4 space-y-3">
                     <div className="flex justify-center mb-2">
                       <Image
-                        src="/images/illustrations/ai-feedback-score.png"
+                        src="/images/illustrations/ai-feedback-score.svg"
                         alt="AI-powered scoring and feedback for your practice test"
                         width={300}
                         height={120}
@@ -249,7 +249,7 @@ export function PracticeTests() {
 
       <div className="flex justify-center">
         <Image
-          src="/images/illustrations/practice-test-analysis.png"
+          src="/images/illustrations/practice-test-analysis.svg"
           alt="Practice tests and assessments for Amazon VA skills"
           width={500}
           height={180}

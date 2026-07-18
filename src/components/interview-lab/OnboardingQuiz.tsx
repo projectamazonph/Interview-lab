@@ -98,7 +98,7 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
             <div className="space-y-3">
               <div className="flex justify-center mb-2">
                 <Image
-                  src="/images/illustrations/onboarding-role-selection.png"
+                  src="/images/illustrations/onboarding-role-selection.svg"
                   alt="Choose your target Amazon VA role for personalized interview prep"
                   width={400}
                   height={150}
