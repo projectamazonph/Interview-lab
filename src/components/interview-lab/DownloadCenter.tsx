@@ -129,7 +129,7 @@ export function DownloadCenter() {
 
       <div className="flex justify-center">
         <Image
-          src="/images/illustrations/download-center.png"
+          src="/images/illustrations/download-center.svg"
           alt="Download templates, worksheets, and guides for your Amazon VA job search"
           width={500}
           height={180}

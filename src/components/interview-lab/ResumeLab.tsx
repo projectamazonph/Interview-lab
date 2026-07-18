@@ -357,7 +357,7 @@ export function ResumeLab() {
           ) : (
             <FieldCard className="p-8 text-center">
               <Image
-                src="/images/illustrations/resume-transformation.png"
+                src="/images/illustrations/resume-transformation.svg"
                 alt="See how your resume transforms with AI-powered review"
                 width={300}
                 height={200}

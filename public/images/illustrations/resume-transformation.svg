@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#FF6B35" opacity="0.1"/>
+  <rect x="50" y="50" width="300" height="200" rx="8" fill="#FAFAF7" stroke="#FF6B35" stroke-width="2"/>
+  <text x="200" y="140" text-anchor="middle" font-family="system-ui" font-size="16" fill="#171717">Resume</text>
+  <text x="200" y="165" text-anchor="middle" font-family="system-ui" font-size="14" fill="#737373">AI-Powered Review</text>
+  <path d="M 150 190 L 180 210 L 250 140" stroke="#FF6B35" stroke-width="3" fill="none"/>
+</svg>

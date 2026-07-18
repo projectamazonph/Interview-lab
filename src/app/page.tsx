@@ -16,7 +16,6 @@ import { PracticeTests } from "@/components/interview-lab/PracticeTests";
 import { DownloadCenter } from "@/components/interview-lab/DownloadCenter";
 import { LearningPaths } from "@/components/interview-lab/LearningPaths";
 import { AdminPanel } from "@/components/interview-lab/AdminPanel";
-import { PricingPage } from "@/components/interview-lab/PricingPage";
 
 type PreAuthView = "landing" | "auth";
 
@@ -89,8 +88,6 @@ function AppContent() {
         return <LearningPaths />;
       case "admin":
         return <AdminPanel />;
-      case "pricing":
-        return <PricingPage onUpgradeSuccess={() => refreshProfile()} />;
       default:
         return <DashboardView onViewChange={setActiveView} />;
     }

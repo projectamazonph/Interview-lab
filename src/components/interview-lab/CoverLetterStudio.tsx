@@ -344,7 +344,7 @@ export function CoverLetterStudio() {
             <FieldCard>
               <FieldCardContent className="p-8 text-center text-[#737373]">
                 <Image
-                  src="/images/illustrations/cover-letter-transformation.png"
+                  src="/images/illustrations/cover-letter-transformation.svg"
                   alt="Transform your job applications with AI-generated cover letters"
                   width={300}
                   height={200}

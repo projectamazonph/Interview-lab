@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#10B981" opacity="0.1"/>
+  <rect x="50" y="50" width="300" height="200" rx="8" fill="#FAFAF7" stroke="#10B981" stroke-width="2"/>
+  <text x="200" y="140" text-anchor="middle" font-family="system-ui" font-size="16" fill="#171717">Cover Letter</text>
+  <text x="200" y="165" text-anchor="middle" font-family="system-ui" font-size="14" fill="#737373">Tailored for Each Role</text>
+  <circle cx="200" cy="200" r="25" fill="none" stroke="#10B981" stroke-width="2"/>
+  <path d="M 190 200 L 200 210 L 215 190" stroke="#10B981" stroke-width="2" fill="none"/>
+</svg>

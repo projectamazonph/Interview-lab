@@ -16,7 +16,6 @@ import {
   ClipboardText,
   ArrowDown,
   BookOpen,
-  CurrencyDollar,
   GearSix,
   SignOut,
   List,
@@ -38,7 +37,6 @@ const navItems: { id: ActiveView; label: string; icon: React.ReactNode; badge?: 
   { id: "assessments", label: "Practice Tests", icon: <ClipboardText className="w-5 h-5" weight="light" /> },
   { id: "downloads", label: "Downloads", icon: <ArrowDown className="w-5 h-5" weight="light" /> },
   { id: "guides", label: "Learning Paths", icon: <BookOpen className="w-5 h-5" weight="light" /> },
-  { id: "pricing", label: "Pricing", icon: <CurrencyDollar className="w-5 h-5" weight="light" /> },
 ];
 
 export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps) {
@@ -118,7 +116,6 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
 
         <SubscriptionBanner
           tier={user?.subscriptionTier || "free"}
-          onUpgrade={() => { onViewChange("pricing"); setSidebarOpen(false); }}
         />
 
         <div className="p-3 border-t border-[#E5E5E0]">
@@ -164,7 +161,6 @@ export function AppLayout({ activeView, onViewChange, children }: AppLayoutProps
 
             <SubscriptionBanner
               tier={user?.subscriptionTier || "free"}
-              onUpgrade={() => { onViewChange("pricing"); setSidebarOpen(false); }}
             />
 
             <div className="p-3 border-t border-[#E5E5E0]">
