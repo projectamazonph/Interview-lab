@@ -17,9 +17,9 @@
 |-------|-----------|-------|
 | **Framework** | Next.js 16.1.1 (App Router) | Standalone output |
 | **Runtime** | Bun | Package management + scripts |
-| **Database** | Prisma v6 + SQLite (dev) / PostgreSQL (prod) | Local dev uses SQLite |
+| **Database** | Prisma v6 + PostgreSQL | PostgreSQL only (no SQLite) |
 | **Auth** | JWT (jose v6) + HttpOnly cookies + localStorage client cache | Custom |
-| **UI** | Tailwind CSS v4 | Custom glass design system |
+| **UI** | Tailwind CSS v4 | "Field Manual" light design system |
 | **Icons** | Phosphor Icons (light weight) | No thick-stroked icons |
 | **Animation** | Framer Motion v12 | Scroll reveals, stagger, hover physics |
 | **Fonts** | Space Grotesk (headings) + Plus Jakarta Sans (body) | No Inter/Roboto |
@@ -27,15 +27,18 @@
 | **Export** | docx, PDF (pdfkit), Excel (exceljs) | Resource downloads |
 | **Testing** | Vitest | unit + API + component tests |
 
-## Design System — Ethereal Glass
+## Design System — "Field Manual" (light theme)
+
+> NOTE: The "Ethereal Glass" dark design previously described here was reverted. The live app uses the light "Field Manual" system below.
 
 | Element | Spec |
 |---------|------|
-| **Background** | OLED black (`#050505`) with radial gradient orbs |
-| **Cards** | Glass-morphism with `backdrop-blur-xl` |
-| **Accents** | Indigo/violet, emerald (success), amber (warning), rose (danger) |
-| **Motion** | Custom cubic-bezier: `ease-premium`, `ease-spring`, `ease-out-heavy` |
-| **Components** | Double-bezel glass cards, pill CTAs with trailing icon pattern |
+| **Background** | Warm off-white (`#FAFAF7`) with subtle grain/border texture |
+| **Cards** | `FieldCard` — solid surface, thin border, soft shadow, no glass blur |
+| **Accents** | Primary orange (`#FF6B35`), ink scale for text, emerald (success), amber (warning), rose (danger) |
+| **Motion** | Framer Motion scroll reveals, stagger, hover physics (no custom cubic-beziers) |
+| **Components** | `FieldButton` (variants: default/outline/ghost), `FieldCard`, `FieldBadge`, `Alert` |
+| **Tokens** | Defined in `globals.css` + Tailwind config (CSS variables, not arbitrary values) |
 
 ## Code Organization
 

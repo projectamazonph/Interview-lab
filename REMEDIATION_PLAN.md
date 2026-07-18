@@ -87,8 +87,8 @@ Interview Lab is a **free companion** to [Project Amazon PH Academy](https://pro
 - Model assessment attempts properly (user, timestamps, answers, score, rubrics, status, AI version)
 
 ### P2.3 — Download route decomposition
-**Files:** `src/app/api/downloads/[id]/route.ts` (879 lines)
-**Problem:** Monolithic route handles auth, tier checks, 4 document formats, database access, and analytics.
+**Files:** `src/app/api/downloads/[id]/route.ts` (53 lines — earlier "879-line" estimate was inaccurate)
+**Problem:** Route handles auth, tier checks, multiple document formats, database access, and analytics.
 **Fix:**
 - Extract document builders: `src/lib/documents/pdf.ts`, `docx.ts`, `xlsx.ts`, `text.ts`
 - Extract template renderers: `src/lib/templates/amazon-training.ts`
@@ -112,7 +112,7 @@ Interview Lab is a **free companion** to [Project Amazon PH Academy](https://pro
 - Add browser tests for critical user journeys
 
 ### P2.6 — Operational documentation
-**Problem:** README documents Bun runtime but CI uses npm; describes SQLite but schema is PostgreSQL; no standalone output config.
+**Problem:** README previously documented Bun runtime but CI uses npm; described SQLite but schema is PostgreSQL. (README corrected 2026-07-19; standalone output already in `next.config.ts`.)
 **Fix:**
 - Standardize on one package manager (npm, given CI/Vercel use it)
 - Update README to reflect PostgreSQL-only schema

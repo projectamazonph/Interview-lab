@@ -1,6 +1,6 @@
 # Redesign Plan — Interview Lab
 
-> **Status:** All phases implemented. See git history for details.
+> **Status:** SUPERSEDED. The "Ethereal Glass" dark design described here was reverted in favor of the live light "Field Manual" design system (see `AGENTS.md` Design System section). Kept for historical reference only.
 
 ## Design System — Ethereal Glass
 
