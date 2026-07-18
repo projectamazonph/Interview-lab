@@ -37,14 +37,14 @@ for aspiring Amazon Virtual Assistants.
 | Layer | Technology |
 |-------|-----------|
 | **Framework** | Next.js 16.1.1 (App Router, standalone) |
-| **Runtime** | Bun |
-| **Database** | Prisma v6 + SQLite (dev) / PostgreSQL (prod) |
+| **Runtime** | Bun (CI uses npm) |
+| **Database** | Prisma v6 + PostgreSQL (PostgreSQL only) |
 | **Auth** | Custom JWT sessions (jose) + HttpOnly cookies |
-| **UI** | Tailwind CSS v4 + custom glass design system |
+| **UI** | Tailwind CSS v4 + "Field Manual" light design system |
 | **Icons** | Phosphor Icons (light weight) |
 | **Fonts** | Space Grotesk (headings) + Plus Jakarta Sans (body) |
 | **AI** | Z AI Web Dev SDK for coaching, scoring, content generation |
-| **Export** | docx, PDF (pdfkit), Excel (exceljs) |
+| **Export** | docx, PDF (manual builder / pdfkit), Excel (exceljs) |
 
 ## 🚀 Getting Started
 
@@ -90,7 +90,7 @@ src/
 │   │   ├── assessments/        # Practice test assessments
 │   │   ├── profile/            # User profile (GET/PUT)
 │   │   ├── dashboard/          # Dashboard aggregation
-│   │   ├── subscription/       # Checkout, status, usage, webhook
+│   │   ├── subscription/       # Removed (product is free)
 │   │   ├── resume/             # Resume upload + AI review
 │   │   ├── cover-letter/       # Cover letter generation
 │   │   ├── ai/                 # AI endpoints (coach, scoring, resume, cover)
@@ -100,17 +100,17 @@ src/
 │   │   └── export/             # DOCX/PDF/Excel export
 │   └── [pages]/                # Page routes
 ├── components/
-│   ├── interview-lab/          # Page components (glass design system)
-│   └── ui/                     # Shared primitives (glass-card, glass-button, etc.)
+│   ├── interview-lab/          # Page components (Field Manual design system)
+│   └── ui/                     # Shared primitives (field-card, field-button, etc.)
 ├── lib/
 │   ├── auth-helpers.ts         # Server-side JWT + header auth
-│   ├── pricing.ts              # Tier configs (Free/Starter/Pro) and limits
-│   ├── subscription-guard.ts   # Feature access checks per tier
+│   ├── pricing.ts              # Tier configs (currently unused — product is free)
+│   ├── subscription-guard.ts   # Feature access checks (returns allowed: true)
 │   ├── types.ts                # TypeScript interfaces
 │   └── utils.ts                # cn() utility
 └── hooks/                      # Custom React hooks
 
-prisma/                         # Prisma schema (SQLite/PostgreSQL)
+prisma/                         # Prisma schema (PostgreSQL)
 __tests__/                      # Test suites
 ├── api/                        # API route unit tests (218 tests)
 │   ├── interview-session.test.ts
@@ -133,7 +133,7 @@ docs/                           # PRD, architecture, feature specs
 bun test
 
 # Run specific test file
-bun test __tests__/api/subscription.test.ts
+bun test __tests__/api/resume-coverletter.test.ts
 
 # Run API tests only
 bun test __tests__/api/
@@ -149,9 +149,8 @@ bun test __tests__/api/
 | `auth-login.test.ts` | 26 | Login flow, rate limiting, session, email sanitization |
 | `assessments.test.ts` | 20 | Assessment list/get/submit, answer key stripping |
 | `profile-dashboard.test.ts` | 23 | Profile whitelisting, sanitization, dashboard stats |
-| `subscription.test.ts` | 31 | Pricing logic, checkout, tier validation, payments |
 | `resume-coverletter.test.ts` | 25 | Resume CRUD, cover-letter tones, truth flags |
-| **Total** | **218** | **All API routes, all green** |
+| **Total** | **187** | **All API routes, all green** |
 
 Tests use in-memory stubs — no database or server required.
 
@@ -161,19 +160,19 @@ Tests use in-memory stubs — no database or server required.
 |---------|-------------|
 | `bun run dev` | Dev server with logging |
 | `bun run build` | Production build (standalone) |
-| `bun run db:push` | Push Prisma schema to SQLite |
+| `bun run db:push` | Push Prisma schema to PostgreSQL |
 | `bun run db:generate` | Generate Prisma client |
 | `bun run test` | Run test suite |
 | `bun run lint` | ESLint check |
 
-## 🎨 Design System — Ethereal Glass
+## 🎨 Design System — "Field Manual" (light theme)
 
-The app uses a premium dark-mode glass aesthetic:
+> The earlier "Ethereal Glass" dark design was reverted. The live app uses a clean light "Field Manual" system.
 
-- **Palette:** OLED black (`#050505`) with radial gradient orbs, glass-morphism cards, `backdrop-blur-xl`
-- **Colors:** Indigo/violet accents, emerald success, amber warnings, rose danger
-- **Motion:** Custom cubic-bezier curves, Framer Motion scroll reveals, staggered animations
-- **Components:** Double-bezel glass cards, pill CTAs, glass inputs/badges
+- **Palette:** Warm off-white (`#FAFAF7`) with subtle grain/border texture, primary orange (`#FF6B35`) accents
+- **Colors:** Ink scale for text, emerald success, amber warnings, rose danger
+- **Motion:** Framer Motion scroll reveals, stagger, hover physics (no custom cubic-beziers)
+- **Components:** `FieldCard` (solid surface, thin border, soft shadow), `FieldButton` (default/outline/ghost), `FieldBadge`, `Alert`
 - **Icons:** Phosphor Icons in `weight="light"` — no thick-stroked icons
 - **Typography:** Space Grotesk for headings, Plus Jakarta Sans for body
 
@@ -181,7 +180,7 @@ The app uses a premium dark-mode glass aesthetic:
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | SQLite connection string (`file:./dev.db`) or PostgreSQL URL |
+| `DATABASE_URL` | PostgreSQL connection URL |
 | `JWT_SECRET` | Secret for signing JWT session tokens |
 | `NEXT_PUBLIC_APP_URL` | App base URL |
 
