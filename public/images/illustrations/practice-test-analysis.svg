@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="500" height="180" viewBox="0 0 500 180">
-  <rect width="500" height="180" fill="#8B5CF6" opacity="0.1"/>
-  <rect x="30" y="30" width="440" height="120" rx="8" fill="#FAFAF7" stroke="#8B5CF6" stroke-width="2"/>
-  <text x="250" y="60" text-anchor="middle" font-family="system-ui" font-size="14" fill="#171717">Practice Test Analysis</text>
-  <rect x="60" y="80" width="80" height="30" rx="4" fill="#FF6B35" opacity="0.8"/>
-  <rect x="160" y="90" width="60" height="20" rx="4" fill="#10B981" opacity="0.8"/>
-  <rect x="240" y="85" width="70" height="25" rx="4" fill="#F59E0B" opacity="0.8"/>
-  <rect x="330" y="95" width="50" height="15" rx="4" fill="#EF4444" opacity="0.8"/>
-  <text x="250" y="140" text-anchor="middle" font-family="system-ui" font-size="12" fill="#737373">AI-Scored Results with Rubric Breakdown</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 180" width="500" height="180"><rect width="500" height="180" fill="#8B5CF6" opacity="0.08"/><rect x="150" y="30" width="200" height="100" rx="8" fill="#FAFAF7" stroke="#171717" stroke-width="2"/><text x="250" y="58" text-anchor="middle" font-family="system-ui" font-size="12" fill="#171717">Assessment Score</text><text x="250" y="82" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="700" fill="#FF6B35">78/100</text><rect x="180" y="95" width="140" height="10" rx="5" fill="#E5E5E0"/><rect x="180" y="95" width="110" height="10" rx="5" fill="#10B981"/><rect x="50" y="145" width="70" height="14" rx="4" fill="#FF6B35" opacity="0.2"/><text x="185" y="157" text-anchor="middle" font-family="system-ui" font-size="9" fill="#FF6B35">ACoS</text><rect x="130" y="145" width="70" height="14" rx="4" fill="#10B981" opacity="0.2"/><text x="265" y="157" text-anchor="middle" font-family="system-ui" font-size="9" fill="#10B981">ROAS</text><rect x="210" y="145" width="70" height="14" rx="4" fill="#F59E0B" opacity="0.2"/><text x="345" y="157" text-anchor="middle" font-family="system-ui" font-size="9" fill="#F59E0B">Listing</text><rect x="290" y="145" width="70" height="14" rx="4" fill="#8B5CF6" opacity="0.2"/><text x="425" y="157" text-anchor="middle" font-family="system-ui" font-size="9" fill="#8B5CF6">SOP</text></svg>
