@@ -42,35 +42,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v1
         with:
-          node-version: 22
-          cache: 'npm'
+          bun-version: "1.3.4"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: TypeScript check
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
 
       - name: ESLint
-        run: npx eslint .
+        run: bun run lint
 
       - name: Push database schema
-        run: npx prisma db push --accept-data-loss
+        run: bun run db:push
 
       - name: Seed database
-        run: npm run db:seed
+        run: bun run db:seed
 
       - name: Unit tests
-        run: CI=true npx vitest run
+        run: CI=true bun run test
 
       - name: Build
-        run: npm run build
+        run: bun run build
 
       - name: Start server
         run: |
-          npm run start -- -p 3000 &
+          nohup bun run start -- -p 3000 &
           echo $! > server.pid
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3000 >/dev/null 2>&1; then
@@ -83,7 +82,7 @@ jobs:
           exit 1
 
       - name: Integration tests (live server)
-        run: CI=true TEST_BASE_URL=http://localhost:3000 npx vitest run __tests__/api/auth.test.ts __tests__/api/resources.test.ts __tests__/api/questions-interview-ai.test.ts __tests__/api/user-paths.test.ts
+        run: CI=true TEST_BASE_URL=http://localhost:3000 bun run test -- __tests__/api/auth.test.ts __tests__/api/resources.test.ts __tests__/api/questions-interview-ai.test.ts __tests__/api/user-paths.test.ts
 
       - name: Stop server
         if: always()

@@ -35,6 +35,14 @@ export interface AIHandlerConfig<TBody, TResult> {
   onParseFailure: (body: TBody) => { ok: true; value: TResult } | { ok: false; status: number; error: string };
   /** Optional post-parse normalization/validation of the model output. */
   normalize?: (result: TResult, body: TBody) => TResult;
+  /**
+   * What to return when the provider call throws (e.g. missing API key,
+   * network/outage, or timeout). Returning a value degrades gracefully to 200
+   * instead of surfacing a 500; returning an error responds with `status`.
+   */
+  onProviderError?: (
+    body: TBody,
+  ) => { ok: true; value: TResult } | { ok: false; status: number; error: string };
   /** Optional timeout (ms) for the model call. */
   timeoutMs?: number;
 }
@@ -90,6 +98,13 @@ export function createAIHandler<TBody = Record<string, unknown>, TResult = unkno
       return NextResponse.json(result);
     } catch (error) {
       console.error('AI handler error:', error);
+      if (config.onProviderError) {
+        const fallback = config.onProviderError(body);
+        if (fallback.ok) {
+          return NextResponse.json(fallback.value);
+        }
+        return NextResponse.json({ error: fallback.error }, { status: fallback.status });
+      }
       return NextResponse.json({ error: 'AI request failed' }, { status: 500 });
     }
   };

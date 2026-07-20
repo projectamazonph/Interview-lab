@@ -148,7 +148,7 @@ describe('User Path: Resume Review Flow', () => {
     expect(status).toBe(200);
     expect(body).toHaveProperty('score');
     expect(body).toHaveProperty('missingKeywords');
-    expect(body).toHaveProperty('improvedVersion');
+    expect(body).toHaveProperty('improvedSummary');
   });
 
   testIfServer('Step 3: Update resume with AI feedback', async () => {

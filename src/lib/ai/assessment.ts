@@ -54,4 +54,17 @@ export const assessmentScoreConfig: AIHandlerConfig<AssessmentBody, AssessmentRe
   buildUserPrompt: (body) =>
     `Assessment: ${body.assessmentTitle}\n\nAssessment Data: ${body.assessmentData ? JSON.stringify(body.assessmentData).substring(0, 5000) : 'N/A'}\n\nUser's Answers: ${body.userAnswers}`,
   onParseFailure: () => ({ ok: false, status: 500, error: 'Failed to score assessment' }),
+  // Graceful degradation when the AI provider is unavailable (missing key, outage).
+  onProviderError: () => ({
+    ok: true,
+    value: {
+      score: 0,
+      correctDecisions: [],
+      incorrectDecisions: [],
+      missedOpportunities: [],
+      recommendedNextStep:
+        'The AI assessment scoring service is currently unavailable. Please try again shortly.',
+      modelAnswer: 'The AI assessment scoring service is currently unavailable. Please try again shortly.',
+    },
+  }),
 };
