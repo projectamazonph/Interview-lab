@@ -59,4 +59,6 @@ export const coverLetterConfig: AIHandlerConfig<CoverLetterBody, CoverLetterResu
     `Target Role: ${body.targetRole || 'Amazon VA'}\nTone: ${body.tone || 'formal'}\nApplicant Name: ${body.userName || '[Your Name]'}\n\nJob Description:\n${body.jobDescription}`,
   // Original route returned a graceful partial object (200) on parse failure.
   onParseFailure: () => ({ ok: true, value: EMPTY_RESULT }),
+  // Graceful degradation when the AI provider is unavailable (missing key, outage).
+  onProviderError: () => ({ ok: true, value: EMPTY_RESULT }),
 };

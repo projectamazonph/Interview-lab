@@ -122,6 +122,8 @@ export const coachConfig: AIHandlerConfig<CoachBody, CoachResult> = {
     }
     return result;
   },
+  // Graceful degradation when the AI provider is unavailable (missing key, outage).
+  onProviderError: () => ({ ok: true, value: errorFeedback() }),
 };
 
 export { errorFeedback };

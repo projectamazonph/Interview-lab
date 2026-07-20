@@ -53,4 +53,18 @@ export const resumeReviewConfig: AIHandlerConfig<ResumeReviewBody, ResumeReviewR
   buildUserPrompt: (body) =>
     `Target Role: ${body.targetRole || 'Amazon VA'}\n\nResume Text:\n${body.resumeText}`,
   onParseFailure: () => ({ ok: false, status: 500, error: 'Failed to parse resume review' }),
+  // Graceful degradation when the AI provider is unavailable (missing key, outage).
+  onProviderError: () => ({
+    ok: true,
+    value: {
+      score: 0,
+      missingKeywords: [],
+      weakSections: ['The AI resume review service is currently unavailable. Please try again shortly.'],
+      improvedSummary:
+        'The AI resume review service is currently unavailable. Please try again shortly.',
+      improvedBullets: [],
+      skillsRecommendations: [],
+      truthWarnings: [],
+    },
+  }),
 };
