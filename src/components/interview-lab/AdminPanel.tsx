@@ -3,16 +3,49 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Question, ROLES, DIFFICULTIES, QUESTION_TYPES, SKILL_AREAS } from '@/lib/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { FieldBadge } from '@/components/ui/glass-badge';
-import { FieldButton } from '@/components/ui/glass-button';
-import { FieldCard, FieldCardContent, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@astryxdesign/core/Card';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { TabList, Tab } from '@astryxdesign/core/TabList';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 
 type AdminTab = 'questions' | 'guides' | 'downloads' | 'analytics';
+
+type StatVariant = 'orange' | 'green';
+
+function StatCard({ value, label, variant }: { value: React.ReactNode; label: string; variant: StatVariant }) {
+  return (
+    <Card>
+      <VStack gap={0.5} hAlign="center">
+        <Text type="display-2" color={variant === 'orange' ? 'accent' : 'primary'}>{value}</Text>
+        <Text type="supporting" size="sm">{label}</Text>
+      </VStack>
+    </Card>
+  );
+}
+
+function BreakdownBar({ label, count, total }: { label: string; count: number; total: number }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <HStack gap={3} vAlign="center">
+      <VStack width={112}>
+        <Text type="body" size="sm" maxLines={1}>{label}</Text>
+      </VStack>
+      <ProgressBar label={`${label}: ${count} (${pct}%)`} isLabelHidden value={pct} />
+      <Text type="supporting" size="sm">{`${count} (${pct}%)`}</Text>
+    </HStack>
+  );
+}
+
+type BadgeVariant = 'success' | 'warning' | 'error' | 'neutral' | 'orange';
 
 export function AdminPanel() {
   const { user } = useAuth();
@@ -46,12 +79,6 @@ export function AdminPanel() {
   // Analytics state
   const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
 
-  const BAR_COLORS: Record<string, string> = {
-    usersByTier: 'bg-teal-500',
-    questionsByRole: 'bg-sky-500',
-    questionsByDifficulty: 'bg-amber-500',
-    questionsByStatus: 'bg-rose-500',
-  };
   // ===== QUESTIONS =====
   const fetchQuestions = async () => {
     if (!user?.isAdmin) return;
@@ -87,13 +114,13 @@ export function AdminPanel() {
       if (editingId) {
         await fetch(`/api/admin/questions`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: editingId, ...body }),
         });
       } else {
         await fetch('/api/admin/questions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
       }
@@ -134,7 +161,7 @@ export function AdminPanel() {
     try {
       await fetch('/api/admin/questions', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'archived' }),
       });
       fetchQuestions();
@@ -165,13 +192,13 @@ export function AdminPanel() {
       if (editingGuideId) {
         await fetch(`/api/guides/${editingGuideId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(guideForm),
         });
       } else {
         await fetch('/api/guides', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(guideForm),
         });
       }
@@ -215,7 +242,7 @@ export function AdminPanel() {
     try {
       await fetch('/api/downloads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(downloadForm),
       });
       setShowDownloadForm(false);
@@ -264,575 +291,382 @@ export function AdminPanel() {
 
   if (!user?.isAdmin) {
     return (
-      <div className="text-center py-12">
-        <p className="text-[#737373]">You don&apos;t have admin access.</p>
-      </div>
+      <HStack hAlign="center">
+        <Text type="supporting">You don&apos;t have admin access.</Text>
+      </HStack>
     );
   }
 
+  const stats = (analytics?.stats as Record<string, number>) || {};
+  const breakdowns = (analytics?.breakdowns as Record<string, Record<string, number>>) || {};
+  const topDownloaded = (analytics?.topDownloaded as Array<{ id: string; title: string; downloadCount: number; fileType: string; category: string }>) || [];
+  const recentUsers = (analytics?.recentUsers as Array<{ id: string; email: string; name: string | null; subscriptionTier: string; isAdmin: boolean; createdAt: string }>) || [];
+
+  const getStatusVariant = (status: string): BadgeVariant => {
+    if (status === 'published') return 'success';
+    if (status === 'archived') return 'error';
+    return 'neutral';
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Admin Panel</h2>
-        <p className="text-[#737373] mt-1 text-sm sm:text-base">Manage questions, guides, downloads, and analytics</p>
-      </div>
+    <VStack gap={6}>
+      <VStack gap={1}>
+        <Heading level={2}>Admin Panel</Heading>
+        <Text type="supporting">Manage questions, guides, downloads, and analytics</Text>
+      </VStack>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminTab)}>
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:max-w-lg">
-          <TabsTrigger value="questions" className="text-xs sm:text-sm truncate">Questions</TabsTrigger>
-          <TabsTrigger value="guides" className="text-xs sm:text-sm truncate">Guides</TabsTrigger>
-          <TabsTrigger value="downloads" className="text-xs sm:text-sm truncate">Downloads</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs sm:text-sm truncate">Analytics</TabsTrigger>
-        </TabsList>
+      <TabList value={activeTab} onChange={(v) => setActiveTab(v as AdminTab)} hasDivider>
+        <Tab value="questions" label="Questions" />
+        <Tab value="guides" label="Guides" />
+        <Tab value="downloads" label="Downloads" />
+        <Tab value="analytics" label="Analytics" />
+      </TabList>
 
-        {/* ===== QUESTIONS TAB ===== */}
-        <TabsContent value="questions" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex flex-wrap gap-2 sm:gap-3 min-w-0">
-              <Select value={filterRole} onValueChange={setFilterRole}>
-                <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Role" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <FieldButton variant="outline" size="sm" onClick={() => handleExportContent('json')} className="whitespace-nowrap">
-                Export JSON
-              </FieldButton>
-            </div>
-            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap shrink-0" onClick={() => { resetQuestionForm(); setShowForm(!showForm); }}>
-              {showForm && !editingId ? 'Cancel' : (editingId ? 'Cancel Edit' : 'Add Question')}
-            </FieldButton>
-          </div>
+      {activeTab === 'questions' && (
+        <VStack gap={4}>
+          <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
+            <HStack gap={2} wrap="wrap">
+              <Selector
+                label="Role"
+                value={filterRole}
+                onChange={setFilterRole}
+                options={[{ value: 'all', label: 'All Roles' }, ...ROLES.map((r) => ({ value: r, label: r }))]}
+              />
+              <Selector
+                label="Status"
+                value={filterStatus}
+                onChange={setFilterStatus}
+                options={[
+                  { value: 'all', label: 'All Status' },
+                  { value: 'published', label: 'Published' },
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'archived', label: 'Archived' },
+                ]}
+              />
+              <Button label="Export JSON" variant="secondary" size="sm" onClick={() => handleExportContent('json')} />
+            </HStack>
+            <Button
+              label={showForm && !editingId ? 'Cancel' : (editingId ? 'Cancel Edit' : 'Add Question')}
+              variant="primary"
+              onClick={() => { resetQuestionForm(); setShowForm(!showForm); }}
+            />
+          </HStack>
 
           {showForm && (
-            <FieldCard>
-              <FieldCardHeader>
-                <FieldCardTitle>{editingId ? 'Edit Question' : 'Create New Question'}</FieldCardTitle>
-              </FieldCardHeader>
-              <FieldCardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={form.role} onValueChange={(v) => setForm(f => ({ ...f, role: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Difficulty</Label>
-                    <Select value={form.difficulty} onValueChange={(v) => setForm(f => ({ ...f, difficulty: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{DIFFICULTIES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{QUESTION_TYPES.map(t => <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Skill Area</Label>
-                    <Select value={form.skillArea} onValueChange={(v) => setForm(f => ({ ...f, skillArea: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{SKILL_AREAS.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Answer Format</Label>
-                    <Select value={form.answerFormat} onValueChange={(v) => setForm(f => ({ ...f, answerFormat: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="STAR">STAR</SelectItem>
-                        <SelectItem value="bullet">Bullet</SelectItem>
-                        <SelectItem value="case_response">Case Response</SelectItem>
-                        <SelectItem value="calculation">Calculation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select value={form.status} onValueChange={(v) => setForm(f => ({ ...f, status: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Question</Label>
-                  <Textarea value={form.question} onChange={(e) => setForm(f => ({ ...f, question: e.target.value }))} rows={2} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Why Employers Ask This</Label>
-                  <Input value={form.whyEmployersAsk} onChange={(e) => setForm(f => ({ ...f, whyEmployersAsk: e.target.value }))} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Strong Answer Points (one per line)</Label>
-                    <Textarea value={form.strongAnswerPoints} onChange={(e) => setForm(f => ({ ...f, strongAnswerPoints: e.target.value }))} rows={3} className="text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Weak Answer Warnings (one per line)</Label>
-                    <Textarea value={form.weakAnswerWarnings} onChange={(e) => setForm(f => ({ ...f, weakAnswerWarnings: e.target.value }))} rows={3} className="text-sm" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Sample Answer</Label>
-                  <Textarea value={form.sampleAnswer} onChange={(e) => setForm(f => ({ ...f, sampleAnswer: e.target.value }))} rows={3} />
-                </div>
-                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleSaveQuestion}>
-                  {editingId ? 'Update Question' : 'Create Question'}
-                </FieldButton>
-              </FieldCardContent>
-            </FieldCard>
+            <Card>
+              <VStack gap={4}>
+                <Heading level={4}>{editingId ? 'Edit Question' : 'Create New Question'}</Heading>
+                <Grid columns={{ minWidth: 200, repeat: 'fit' }} gap={3}>
+                  <Selector label="Role" value={form.role} onChange={(v) => setForm(f => ({ ...f, role: v }))} options={ROLES.map((r) => ({ value: r, label: r }))} />
+                  <Selector label="Difficulty" value={form.difficulty} onChange={(v) => setForm(f => ({ ...f, difficulty: v }))} options={DIFFICULTIES.map((d) => ({ value: d, label: d }))} />
+                  <Selector label="Type" value={form.type} onChange={(v) => setForm(f => ({ ...f, type: v }))} options={QUESTION_TYPES.map((t) => ({ value: t, label: t.replace(/_/g, ' ') }))} />
+                  <Selector label="Skill Area" value={form.skillArea} onChange={(v) => setForm(f => ({ ...f, skillArea: v }))} options={SKILL_AREAS.map((s) => ({ value: s, label: s.replace(/_/g, ' ') }))} />
+                  <Selector
+                    label="Answer Format"
+                    value={form.answerFormat}
+                    onChange={(v) => setForm(f => ({ ...f, answerFormat: v }))}
+                    options={[
+                      { value: 'STAR', label: 'STAR' },
+                      { value: 'bullet', label: 'Bullet' },
+                      { value: 'case_response', label: 'Case Response' },
+                      { value: 'calculation', label: 'Calculation' },
+                    ]}
+                  />
+                  <Selector
+                    label="Status"
+                    value={form.status}
+                    onChange={(v) => setForm(f => ({ ...f, status: v }))}
+                    options={[
+                      { value: 'draft', label: 'Draft' },
+                      { value: 'published', label: 'Published' },
+                      { value: 'archived', label: 'Archived' },
+                    ]}
+                  />
+                </Grid>
+                <TextArea label="Question" value={form.question} onChange={(v) => setForm(f => ({ ...f, question: v }))} rows={2} />
+                <TextInput label="Why Employers Ask This" value={form.whyEmployersAsk} onChange={(v) => setForm(f => ({ ...f, whyEmployersAsk: v }))} />
+                <Grid columns={{ minWidth: 260, repeat: 'fit' }} gap={3}>
+                  <TextArea label="Strong Answer Points (one per line)" value={form.strongAnswerPoints} onChange={(v) => setForm(f => ({ ...f, strongAnswerPoints: v }))} rows={3} />
+                  <TextArea label="Weak Answer Warnings (one per line)" value={form.weakAnswerWarnings} onChange={(v) => setForm(f => ({ ...f, weakAnswerWarnings: v }))} rows={3} />
+                </Grid>
+                <TextArea label="Sample Answer" value={form.sampleAnswer} onChange={(v) => setForm(f => ({ ...f, sampleAnswer: v }))} rows={3} />
+                <Button label={editingId ? 'Update Question' : 'Create Question'} variant="primary" width="100%" onClick={handleSaveQuestion} />
+              </VStack>
+            </Card>
           )}
 
-          <FieldCard>
-            <FieldCardHeader>
-              <FieldCardTitle className="text-lg">Question Database ({total} total)</FieldCardTitle>
-            </FieldCardHeader>
-            <FieldCardContent>
+          <Card padding={0}>
+            <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">{`Question Database (${total} total)`}</Text></VStack>} hasDividers>
               {loading ? (
-                <div className="animate-pulse space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-12 bg-[#E5E5E0]/30 rounded" />)}</div>
+                <VStack gap={2} padding={4}>
+                  {[1, 2, 3].map(i => <Skeleton key={i} height={48} index={i} />)}
+                </VStack>
               ) : (
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {questions.map(q => (
-                    <div key={q.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-[#F4F3EE]/40 rounded-lg hover:bg-[#E5E5E0]/30 gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#171717] line-clamp-2">{q.question}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <FieldBadge variant="outline" className="text-xs">{q.role}</FieldBadge>
-                          <FieldBadge variant="outline" className="text-xs">{q.difficulty}</FieldBadge>
-                          <FieldBadge variant="outline" className="text-xs">{q.type}</FieldBadge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <FieldBadge variant={q.status === 'published' ? 'default' : (q.status === 'archived' ? 'destructive' : 'secondary')} className="text-xs whitespace-nowrap">
-                          {q.status}
-                        </FieldBadge>
-                        <FieldButton variant="ghost" size="sm" className="whitespace-nowrap" onClick={() => handleEditQuestion(q)}>Edit</FieldButton>
+                questions.map(q => (
+                  <ListItem
+                    key={q.id}
+                    label={q.question}
+                    description={
+                      <HStack gap={1.5} wrap="wrap">
+                        <Badge label={q.role} variant="neutral" />
+                        <Badge label={q.difficulty} variant="neutral" />
+                        <Badge label={q.type} variant="neutral" />
+                      </HStack>
+                    }
+                    endContent={
+                      <HStack gap={2} vAlign="center">
+                        <Badge label={q.status} variant={getStatusVariant(q.status)} />
+                        <Button label="Edit" variant="ghost" size="sm" onClick={() => handleEditQuestion(q)} />
                         {q.status !== 'archived' && (
-                          <FieldButton variant="ghost" size="sm" className="text-red-500 whitespace-nowrap" onClick={() => handleArchiveQuestion(q.id)}>Archive</FieldButton>
+                          <Button label="Archive" variant="ghost" size="sm" onClick={() => handleArchiveQuestion(q.id)} />
                         )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      </HStack>
+                    }
+                  />
+                ))
               )}
-            </FieldCardContent>
-          </FieldCard>
-        </TabsContent>
+            </List>
+          </Card>
+        </VStack>
+      )}
 
-        {/* ===== GUIDES TAB ===== */}
-        <TabsContent value="guides" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap" onClick={() => { resetGuideForm(); setShowGuideForm(!showGuideForm); }}>
-              {showGuideForm ? 'Cancel' : 'Add Guide'}
-            </FieldButton>
-          </div>
+      {activeTab === 'guides' && (
+        <VStack gap={4}>
+          <HStack hAlign="end">
+            <Button label={showGuideForm ? 'Cancel' : 'Add Guide'} variant="primary" onClick={() => { resetGuideForm(); setShowGuideForm(!showGuideForm); }} />
+          </HStack>
 
           {showGuideForm && (
-            <FieldCard>
-              <FieldCardHeader>
-                <FieldCardTitle>{editingGuideId ? 'Edit Guide' : 'Create New Guide'}</FieldCardTitle>
-              </FieldCardHeader>
-              <FieldCardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Title</Label>
-                    <Input value={guideForm.title} onChange={(e) => setGuideForm(f => ({ ...f, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }))} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Slug</Label>
-                    <Input value={guideForm.slug} onChange={(e) => setGuideForm(f => ({ ...f, slug: e.target.value }))} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Level</Label>
-                    <Select value={guideForm.level} onValueChange={(v) => setGuideForm(f => ({ ...f, level: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={guideForm.role} onValueChange={(v) => setGuideForm(f => ({ ...f, role: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Content (Markdown)</Label>
-                  <Textarea value={guideForm.content} onChange={(e) => setGuideForm(f => ({ ...f, content: e.target.value }))} rows={10} placeholder="# Title\n\nContent goes here..." />
-                </div>
-                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleSaveGuide}>
-                  {editingGuideId ? 'Update Guide' : 'Create Guide'}
-                </FieldButton>
-              </FieldCardContent>
-            </FieldCard>
+            <Card>
+              <VStack gap={4}>
+                <Heading level={4}>{editingGuideId ? 'Edit Guide' : 'Create New Guide'}</Heading>
+                <Grid columns={{ minWidth: 220, repeat: 'fit' }} gap={3}>
+                  <TextInput
+                    label="Title"
+                    value={guideForm.title}
+                    onChange={(v) => setGuideForm(f => ({ ...f, title: v, slug: v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }))}
+                  />
+                  <TextInput label="Slug" value={guideForm.slug} onChange={(v) => setGuideForm(f => ({ ...f, slug: v }))} />
+                  <Selector
+                    label="Level"
+                    value={guideForm.level}
+                    onChange={(v) => setGuideForm(f => ({ ...f, level: v }))}
+                    options={[
+                      { value: 'beginner', label: 'Beginner' },
+                      { value: 'intermediate', label: 'Intermediate' },
+                      { value: 'advanced', label: 'Advanced' },
+                    ]}
+                  />
+                  <Selector label="Role" value={guideForm.role} onChange={(v) => setGuideForm(f => ({ ...f, role: v }))} options={ROLES.map((r) => ({ value: r, label: r }))} />
+                </Grid>
+                <TextArea label="Content (Markdown)" value={guideForm.content} onChange={(v) => setGuideForm(f => ({ ...f, content: v }))} rows={10} placeholder={'# Title\n\nContent goes here...'} />
+                <Button label={editingGuideId ? 'Update Guide' : 'Create Guide'} variant="primary" width="100%" onClick={handleSaveGuide} />
+              </VStack>
+            </Card>
           )}
 
-          <FieldCard>
-            <FieldCardHeader>
-              <FieldCardTitle className="text-lg">Guide Articles ({guides.length})</FieldCardTitle>
-            </FieldCardHeader>
-            <FieldCardContent>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {guides.map(g => (
-                  <div key={g.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-[#F4F3EE]/40 rounded-lg hover:bg-[#E5E5E0]/30 gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#171717]">{g.title}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        <FieldBadge variant="outline" className="text-xs">{g.level}</FieldBadge>
-                        <FieldBadge variant="outline" className="text-xs">{g.role}</FieldBadge>
-                        <FieldBadge variant={g.status === 'published' ? 'default' : 'secondary'} className="text-xs">{g.status}</FieldBadge>
-                      </div>
-                    </div>
-                    <FieldButton variant="ghost" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => handleEditGuide(g)}>Edit</FieldButton>
-                  </div>
-                ))}
-              </div>
-            </FieldCardContent>
-          </FieldCard>
-        </TabsContent>
+          <Card padding={0}>
+            <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">{`Guide Articles (${guides.length})`}</Text></VStack>} hasDividers>
+              {guides.map(g => (
+                <ListItem
+                  key={g.id}
+                  label={g.title}
+                  description={
+                    <HStack gap={1.5} wrap="wrap">
+                      <Badge label={g.level} variant="neutral" />
+                      <Badge label={g.role} variant="neutral" />
+                      <Badge label={g.status} variant={getStatusVariant(g.status)} />
+                    </HStack>
+                  }
+                  endContent={<Button label="Edit" variant="ghost" size="sm" onClick={() => handleEditGuide(g)} />}
+                />
+              ))}
+            </List>
+          </Card>
+        </VStack>
+      )}
 
-        {/* ===== DOWNLOADS TAB ===== */}
-        <TabsContent value="downloads" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-            <FieldButton className="bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap" onClick={() => setShowDownloadForm(!showDownloadForm)}>
-              {showDownloadForm ? 'Cancel' : 'Add Download'}
-            </FieldButton>
-          </div>
+      {activeTab === 'downloads' && (
+        <VStack gap={4}>
+          <HStack hAlign="end">
+            <Button label={showDownloadForm ? 'Cancel' : 'Add Download'} variant="primary" onClick={() => setShowDownloadForm(!showDownloadForm)} />
+          </HStack>
 
           {showDownloadForm && (
-            <FieldCard>
-              <FieldCardHeader>
-                <FieldCardTitle>Add Downloadable Resource</FieldCardTitle>
-              </FieldCardHeader>
-              <FieldCardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Title</Label>
-                    <Input value={downloadForm.title} onChange={(e) => setDownloadForm(f => ({ ...f, title: e.target.value }))} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>File Name</Label>
-                    <Input value={downloadForm.fileName} onChange={(e) => setDownloadForm(f => ({ ...f, fileName: e.target.value }))} placeholder="example.pdf" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>File Type</Label>
-                    <Select value={downloadForm.fileType} onValueChange={(v) => setDownloadForm(f => ({ ...f, fileType: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PDF">PDF</SelectItem>
-                        <SelectItem value="DOCX">DOCX</SelectItem>
-                        <SelectItem value="XLSX">XLSX</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={downloadForm.role} onValueChange={(v) => setDownloadForm(f => ({ ...f, role: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Category</Label>
-                    <Select value={downloadForm.category} onValueChange={(v) => setDownloadForm(f => ({ ...f, category: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Resume Templates">Resume Templates</SelectItem>
-                        <SelectItem value="Cover Letters">Cover Letters</SelectItem>
-                        <SelectItem value="Cheat Sheets">Cheat Sheets</SelectItem>
-                        <SelectItem value="Calculators">Calculators</SelectItem>
-                        <SelectItem value="Checklists">Checklists</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input value={downloadForm.description} onChange={(e) => setDownloadForm(f => ({ ...f, description: e.target.value }))} />
-                </div>
-                <FieldButton className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]" onClick={handleCreateDownload}>Add Download</FieldButton>
-              </FieldCardContent>
-            </FieldCard>
+            <Card>
+              <VStack gap={4}>
+                <Heading level={4}>Add Downloadable Resource</Heading>
+                <Grid columns={{ minWidth: 220, repeat: 'fit' }} gap={3}>
+                  <TextInput label="Title" value={downloadForm.title} onChange={(v) => setDownloadForm(f => ({ ...f, title: v }))} />
+                  <TextInput label="File Name" value={downloadForm.fileName} onChange={(v) => setDownloadForm(f => ({ ...f, fileName: v }))} placeholder="example.pdf" />
+                  <Selector
+                    label="File Type"
+                    value={downloadForm.fileType}
+                    onChange={(v) => setDownloadForm(f => ({ ...f, fileType: v }))}
+                    options={[{ value: 'PDF', label: 'PDF' }, { value: 'DOCX', label: 'DOCX' }, { value: 'XLSX', label: 'XLSX' }]}
+                  />
+                  <Selector label="Role" value={downloadForm.role} onChange={(v) => setDownloadForm(f => ({ ...f, role: v }))} options={ROLES.map((r) => ({ value: r, label: r }))} />
+                  <Selector
+                    label="Category"
+                    value={downloadForm.category}
+                    onChange={(v) => setDownloadForm(f => ({ ...f, category: v }))}
+                    options={[
+                      { value: 'Resume Templates', label: 'Resume Templates' },
+                      { value: 'Cover Letters', label: 'Cover Letters' },
+                      { value: 'Cheat Sheets', label: 'Cheat Sheets' },
+                      { value: 'Calculators', label: 'Calculators' },
+                      { value: 'Checklists', label: 'Checklists' },
+                    ]}
+                  />
+                </Grid>
+                <TextInput label="Description" value={downloadForm.description} onChange={(v) => setDownloadForm(f => ({ ...f, description: v }))} />
+                <Button label="Add Download" variant="primary" width="100%" onClick={handleCreateDownload} />
+              </VStack>
+            </Card>
           )}
 
-          <FieldCard>
-            <FieldCardHeader>
-              <FieldCardTitle className="text-lg">Downloadable Resources ({downloads.length})</FieldCardTitle>
-            </FieldCardHeader>
-            <FieldCardContent>
-              <div className="space-y-2 max-h-96 sm:max-h-[500px] overflow-y-auto">
-                {downloads.map(d => (
-                  <div key={d.id} className="flex items-center justify-between p-3 bg-[#F4F3EE]/40 rounded-lg gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#171717] truncate">{d.title}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        <FieldBadge variant="outline" className="text-xs">{d.fileType}</FieldBadge>
-                        <FieldBadge variant="outline" className="text-xs">{d.role}</FieldBadge>
-                        <FieldBadge variant="outline" className="text-xs">{d.category}</FieldBadge>
-                        <FieldBadge variant="outline" className="text-xs">{d.accessTier}</FieldBadge>
-                        <FieldBadge variant="outline" className="text-xs">{d.downloadCount} downloads</FieldBadge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </FieldCardContent>
-          </FieldCard>
-        </TabsContent>
+          <Card padding={0}>
+            <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">{`Downloadable Resources (${downloads.length})`}</Text></VStack>} hasDividers>
+              {downloads.map(d => (
+                <ListItem
+                  key={d.id}
+                  label={d.title}
+                  description={
+                    <HStack gap={1.5} wrap="wrap">
+                      <Badge label={d.fileType} variant="neutral" />
+                      <Badge label={d.role} variant="neutral" />
+                      <Badge label={d.category} variant="neutral" />
+                      <Badge label={d.accessTier} variant="neutral" />
+                      <Badge label={`${d.downloadCount} downloads`} variant="neutral" />
+                    </HStack>
+                  }
+                />
+              ))}
+            </List>
+          </Card>
+        </VStack>
+      )}
 
-        {/* ===== ANALYTICS TAB ===== */}
-        <TabsContent value="analytics" className="space-y-4">
+      {activeTab === 'analytics' && (
+        <VStack gap={4}>
           {analytics ? (
             <>
-              {/* Platform Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalUsers as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Total Users</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalSessions as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Interview Sessions</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalAttempts as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Practice Attempts</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-[#FF6B35] font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.avgScore as number ?? 0}/10</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Platform Avg Score</p>
-                  </FieldCardContent>
-                </FieldCard>
-              </div>
+              <Grid columns={{ minWidth: 160, repeat: 'fit' }} gap={4}>
+                <StatCard value={stats.totalUsers ?? 0} label="Total Users" variant="orange" />
+                <StatCard value={stats.totalSessions ?? 0} label="Interview Sessions" variant="orange" />
+                <StatCard value={stats.totalAttempts ?? 0} label="Practice Attempts" variant="orange" />
+                <StatCard value={`${stats.avgScore ?? 0}/10`} label="Platform Avg Score" variant="orange" />
+              </Grid>
 
-              {/* Secondary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Total Questions</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalGuides as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Total Guides</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalDownloads as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Download Resources</p>
-                  </FieldCardContent>
-                </FieldCard>
-                <FieldCard>
-                  <FieldCardContent className="p-3 sm:p-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-green-700 font-mono">{((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.sessionsLast30Days as number ?? 0}</p>
-                    <p className="text-xs sm:text-sm text-[#737373]">Sessions (30d)</p>
-                  </FieldCardContent>
-                </FieldCard>
-              </div>
+              <Grid columns={{ minWidth: 160, repeat: 'fit' }} gap={4}>
+                <StatCard value={stats.totalQuestions ?? 0} label="Total Questions" variant="green" />
+                <StatCard value={stats.totalGuides ?? 0} label="Total Guides" variant="green" />
+                <StatCard value={stats.totalDownloads ?? 0} label="Download Resources" variant="green" />
+                <StatCard value={stats.sessionsLast30Days ?? 0} label="Sessions (30d)" variant="green" />
+              </Grid>
 
-              {/* Users by Subscription Tier */}
-              {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.usersByTier && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Users by Subscription Tier</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-3">
-                      {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).usersByTier).map(([tier, count]) => {
-                        const totalUsers = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalUsers as number || 1;
-                        const pct = Math.round((count / totalUsers) * 100);
-                        return (
-                          <div key={tier} className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-sm w-20 sm:w-28 truncate capitalize">{tier}</span>
-                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
-                              <div className={`${BAR_COLORS.usersByTier ?? 'bg-[#FF6B35]'} h-3 sm:h-4 rounded-md transition-all`} style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {/* Questions by Role (from API) */}
-              {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByRole && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Questions by Role</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-3">
-                      {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByRole).map(([role, count]) => {
-                        const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
-                        const pct = Math.round((count / totalQ) * 100);
-                        return (
-                          <div key={role} className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-sm w-20 sm:w-28 truncate">{role}</span>
-                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
-                              <div className="bg-sky-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {/* Questions by Difficulty (from API) */}
-              {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByDifficulty && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Questions by Difficulty</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-3">
-                      {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByDifficulty).map(([diff, count]) => {
-                        const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
-                        const pct = Math.round((count / totalQ) * 100);
-                        return (
-                          <div key={diff} className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-sm w-20 sm:w-28 truncate capitalize">{diff}</span>
-                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
-                              <div className="bg-amber-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {/* Questions by Status */}
-              {((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>)?.questionsByStatus && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Questions by Status</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-3">
-                      {Object.entries(((analytics as Record<string, unknown>).breakdowns as Record<string, Record<string, number>>).questionsByStatus).map(([status, count]) => {
-                        const totalQ = ((analytics as Record<string, unknown>).stats as Record<string, unknown>)?.totalQuestions as number || 1;
-                        const pct = Math.round((count / totalQ) * 100);
-                        return (
-                          <div key={status} className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-sm w-20 sm:w-28 truncate capitalize">{status}</span>
-                            <div className="flex-1 min-w-0 bg-[#E5E5E0]/20 rounded-md h-3 sm:h-4">
-                              <div className="bg-rose-500 h-3 sm:h-4 rounded-md transition-all" style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-xs sm:text-sm text-[#737373] whitespace-nowrap">{count} ({pct}%)</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {/* Top Downloaded Resources */}
-              {((analytics as Record<string, unknown>).topDownloaded as Array<{ id: string; title: string; downloadCount: number; fileType: string; category: string }>) && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Top Downloaded Resources</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-2">
-                      {((analytics as Record<string, unknown>).topDownloaded as Array<{ id: string; title: string; downloadCount: number; fileType: string; category: string }>).map((d, i) => (
-                        <div key={d.id} className="flex items-center justify-between gap-2 p-2 bg-[#F4F3EE]/40 rounded">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-[#737373]">{i + 1}.</span>
-                            <span className="text-sm truncate">{d.title}</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <FieldBadge variant="outline" className="text-xs">{d.category}</FieldBadge>
-                            <FieldBadge variant="outline" className="whitespace-nowrap">{d.downloadCount} downloads</FieldBadge>
-                          </div>
-                        </div>
+              {breakdowns.usersByTier && (
+                <Card>
+                  <VStack gap={4}>
+                    <Heading level={4}>Users by Subscription Tier</Heading>
+                    <VStack gap={3}>
+                      {Object.entries(breakdowns.usersByTier).map(([tier, count]) => (
+                        <BreakdownBar key={tier} label={tier} count={count} total={stats.totalUsers || 1} />
                       ))}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
+                    </VStack>
+                  </VStack>
+                </Card>
               )}
 
-              {/* Recent Users */}
-              {((analytics as Record<string, unknown>).recentUsers as Array<{ id: string; email: string; name: string | null; subscriptionTier: string; isAdmin: boolean; createdAt: string }>) && (
-                <FieldCard>
-                  <FieldCardHeader>
-                    <FieldCardTitle className="text-lg">Recent Users</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {((analytics as Record<string, unknown>).recentUsers as Array<{ id: string; email: string; name: string | null; subscriptionTier: string; isAdmin: boolean; createdAt: string }>).map(u => (
-                        <div key={u.id} className="flex items-center justify-between gap-2 p-2 bg-[#F4F3EE]/40 rounded">
-                          <div className="min-w-0">
-                            <p className="text-sm truncate">{u.name || u.email}</p>
-                            <p className="text-xs text-[#737373] truncate">{u.email}</p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <FieldBadge variant="outline" className="text-xs capitalize">{u.subscriptionTier}</FieldBadge>
-                            {u.isAdmin && <FieldBadge className="bg-[#FF6B35]/15 text-[#FF6B35] text-xs">Admin</FieldBadge>}
-                            <span className="text-xs text-[#737373] whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</span>
-                          </div>
-                        </div>
+              {breakdowns.questionsByRole && (
+                <Card>
+                  <VStack gap={4}>
+                    <Heading level={4}>Questions by Role</Heading>
+                    <VStack gap={3}>
+                      {Object.entries(breakdowns.questionsByRole).map(([role, count]) => (
+                        <BreakdownBar key={role} label={role} count={count} total={stats.totalQuestions || 1} />
                       ))}
-                    </div>
-                  </FieldCardContent>
-                </FieldCard>
+                    </VStack>
+                  </VStack>
+                </Card>
+              )}
+
+              {breakdowns.questionsByDifficulty && (
+                <Card>
+                  <VStack gap={4}>
+                    <Heading level={4}>Questions by Difficulty</Heading>
+                    <VStack gap={3}>
+                      {Object.entries(breakdowns.questionsByDifficulty).map(([diff, count]) => (
+                        <BreakdownBar key={diff} label={diff} count={count} total={stats.totalQuestions || 1} />
+                      ))}
+                    </VStack>
+                  </VStack>
+                </Card>
+              )}
+
+              {breakdowns.questionsByStatus && (
+                <Card>
+                  <VStack gap={4}>
+                    <Heading level={4}>Questions by Status</Heading>
+                    <VStack gap={3}>
+                      {Object.entries(breakdowns.questionsByStatus).map(([status, count]) => (
+                        <BreakdownBar key={status} label={status} count={count} total={stats.totalQuestions || 1} />
+                      ))}
+                    </VStack>
+                  </VStack>
+                </Card>
+              )}
+
+              {topDownloaded.length > 0 && (
+                <Card padding={0}>
+                  <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">Top Downloaded Resources</Text></VStack>} hasDividers>
+                    {topDownloaded.map((d, i) => (
+                      <ListItem
+                        key={d.id}
+                        label={`${i + 1}. ${d.title}`}
+                        endContent={
+                          <HStack gap={2} vAlign="center">
+                            <Badge label={d.category} variant="neutral" />
+                            <Badge label={`${d.downloadCount} downloads`} variant="neutral" />
+                          </HStack>
+                        }
+                      />
+                    ))}
+                  </List>
+                </Card>
+              )}
+
+              {recentUsers.length > 0 && (
+                <Card padding={0}>
+                  <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">Recent Users</Text></VStack>} hasDividers>
+                    {recentUsers.map((u) => (
+                      <ListItem
+                        key={u.id}
+                        label={u.name || u.email}
+                        description={u.email}
+                        endContent={
+                          <HStack gap={2} vAlign="center">
+                            <Badge label={u.subscriptionTier} variant="neutral" />
+                            {u.isAdmin && <Badge label="Admin" variant="orange" />}
+                            <Text type="supporting" size="xsm">{new Date(u.createdAt).toLocaleDateString()}</Text>
+                          </HStack>
+                        }
+                      />
+                    ))}
+                  </List>
+                </Card>
               )}
             </>
           ) : (
-            <div className="animate-pulse space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#E5E5E0]/30 rounded-lg" />)}
-              </div>
-              {[1, 2, 3].map(i => <div key={i} className="h-40 bg-[#E5E5E0]/30 rounded-lg" />)}
-            </div>
+            <VStack gap={4}>
+              <Grid columns={{ minWidth: 160, repeat: 'fit' }} gap={4}>
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} height={80} index={i} />)}
+              </Grid>
+              {[1, 2, 3].map(i => <Skeleton key={i} height={160} index={i + 4} />)}
+            </VStack>
           )}
-        </TabsContent>
-      </Tabs>
-    </div>
+        </VStack>
+      )}
+    </VStack>
   );
 }
