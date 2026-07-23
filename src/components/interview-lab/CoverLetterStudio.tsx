@@ -4,13 +4,17 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { CoverLetter, ROLES } from '@/lib/types';
-import { FieldCard, FieldCardContent, FieldCardDescription, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
-import { FieldButton } from '@/components/ui/glass-button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FieldBadge } from '@/components/ui/glass-badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card } from '@astryxdesign/core/Card';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { Banner } from '@astryxdesign/core/Banner';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { FileArrowDown, FileText, Clock, ArrowClockwise } from '@phosphor-icons/react';
 
 const TONE_OPTIONS = [
@@ -24,6 +28,23 @@ const TONE_OPTIONS = [
   { value: 'professional', label: 'Professional / Corporate', desc: 'Polished and business-formal' },
 ];
 
+const STRUCTURE_STEPS = [
+  '1. Role-specific opening',
+  '2. Relevant Amazon/VA skills',
+  '3. Proof of process discipline',
+  '4. Tool familiarity',
+  '5. Practical value proposition',
+  '6. Confident close',
+];
+
+type CoverLetterResult = {
+  draftLetter?: string;
+  shorterVersion?: string;
+  subjectLine?: string;
+  customizationTips?: string[];
+  claimsToVerify?: string[];
+};
+
 export function CoverLetterStudio() {
   const { user } = useAuth();
   const [jobDescription, setJobDescription] = useState('');
@@ -31,7 +52,7 @@ export function CoverLetterStudio() {
   const [targetRole, setTargetRole] = useState('');
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [result, setResult] = useState<CoverLetterResult | null>(null);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -64,13 +85,12 @@ export function CoverLetterStudio() {
 
       await fetch('/api/cover-letter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobDescription, tone, generatedLetter: data.draftLetter, truthFlags: data.claimsToVerify }),
       });
 
       setResult(data);
 
-      // Refresh history
       const histRes = await fetch('/api/cover-letter');
       const histData = await histRes.json();
       setCoverLetters(histData.coverLetters || []);
@@ -82,15 +102,15 @@ export function CoverLetterStudio() {
   };
 
   const handleExport = async (format: 'docx' | 'pdf') => {
-    if (!result || !(result as Record<string, unknown>).draftLetter || !user) return;
+    if (!result?.draftLetter || !user) return;
     setExporting(true);
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: format,
-          content: (result as Record<string, unknown>).draftLetter as string,
+          content: result.draftLetter,
           title: `Cover Letter - ${targetRole || 'Amazon VA'} - ${tone}`,
         }),
       });
@@ -113,249 +133,229 @@ export function CoverLetterStudio() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Cover Letter Studio</h2>
-          <p className="text-[#737373] mt-1 text-sm sm:text-base">Generate tailored cover letters with truthfulness guardrails</p>
-        </div>
-        <FieldButton variant="outline" onClick={() => setShowHistory(!showHistory)} className="shrink-0 whitespace-nowrap focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1" aria-label={showHistory ? 'Hide history' : 'Show history'}>
-          <Clock weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
-          {showHistory ? 'Hide History' : 'History'} ({coverLetters.length})
-        </FieldButton>
-      </div>
+    <VStack gap={6}>
+      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
+        <VStack gap={1}>
+          <Heading level={2}>Cover Letter Studio</Heading>
+          <Text type="supporting">Generate tailored cover letters with truthfulness guardrails</Text>
+        </VStack>
+        <Button
+          label={`${showHistory ? 'Hide History' : 'History'} (${coverLetters.length})`}
+          variant="secondary"
+          icon={<Clock weight="light" />}
+          onClick={() => setShowHistory(!showHistory)}
+        />
+      </HStack>
 
-      {/* Cover Letter History */}
       {showHistory && coverLetters.length > 0 && (
-        <FieldCard>
-          <FieldCardHeader className="pb-2">
-            <FieldCardTitle className="text-sm">Previous Cover Letters</FieldCardTitle>
-          </FieldCardHeader>
-          <FieldCardContent>
-            <div className="space-y-2">
-              {coverLetters.map((cl) => (
-                <div key={cl.id} className="flex items-center justify-between p-3 bg-[#F4F3EE]/40 rounded-lg gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{cl.tone || 'Formal'} Cover Letter</p>
-                    <p className="text-xs text-[#737373]">{new Date(cl.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FieldBadge variant="outline">{cl.tone}</FieldBadge>
-                    <FieldButton size="sm" variant="ghost" className="text-xs"
+        <Card padding={0}>
+          <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">Previous Cover Letters</Text></VStack>} hasDividers>
+            {coverLetters.map((cl) => (
+              <ListItem
+                key={cl.id}
+                label={`${cl.tone || 'Formal'} Cover Letter`}
+                description={new Date(cl.createdAt).toLocaleDateString()}
+                endContent={
+                  <HStack gap={2} vAlign="center">
+                    <Badge label={cl.tone} variant="neutral" />
+                    <Button
+                      label="Load"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         if (cl.generatedLetter) {
-                          setResult({ draftLetter: cl.generatedLetter, claimsToVerify: cl.truthFlags ? (() => { try { return JSON.parse(cl.truthFlags); } catch { return []; } })() : [] });
+                          setResult({
+                            draftLetter: cl.generatedLetter,
+                            claimsToVerify: cl.truthFlags ? (() => { try { return JSON.parse(cl.truthFlags); } catch { return []; } })() : [],
+                          });
                         }
                         if (cl.jobDescription) setJobDescription(cl.jobDescription);
                         if (cl.tone) setTone(cl.tone);
                         setShowHistory(false);
-                      }}>
-                      Load
-                    </FieldButton>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </FieldCardContent>
-        </FieldCard>
+                      }}
+                    />
+                  </HStack>
+                }
+              />
+            ))}
+          </List>
+        </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <FieldCard>
-          <FieldCardHeader>
-            <FieldCardTitle>Job Description</FieldCardTitle>
-            <FieldCardDescription>Paste the job description to generate a tailored cover letter</FieldCardDescription>
-          </FieldCardHeader>
-          <FieldCardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Target Role</Label>
-              <Select value={targetRole} onValueChange={setTargetRole}>
-                <SelectTrigger><SelectValue placeholder="Select target role" /></SelectTrigger>
-                <SelectContent>
-                  {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Tone</Label>
-              <Select value={tone} onValueChange={setTone}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TONE_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      <span>{opt.label}</span>
-                      <span className="text-[#737373] text-xs ml-1">— {opt.desc}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-[#737373]">{TONE_OPTIONS.find(o => o.value === tone)?.desc}</p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Job Description</Label>
-                <span className="text-xs text-[#737373] tabular-nums font-mono">{jobDescription.length} chars</span>
-              </div>
-              <Textarea
+      <Grid columns={{ minWidth: 360, repeat: 'fit' }} gap={6}>
+        <Card>
+          <VStack gap={4}>
+            <VStack gap={1}>
+              <Heading level={4}>Job Description</Heading>
+              <Text type="supporting" size="sm">Paste the job description to generate a tailored cover letter</Text>
+            </VStack>
+            <Selector
+              label="Target Role"
+              placeholder="Select target role"
+              value={targetRole || null}
+              onChange={(v) => setTargetRole(v || '')}
+              hasClear
+              options={ROLES.map((r) => ({ value: r, label: r }))}
+            />
+            <Selector
+              label="Tone"
+              value={tone}
+              onChange={setTone}
+              description={TONE_OPTIONS.find((o) => o.value === tone)?.desc}
+              options={TONE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+            />
+            <VStack gap={1}>
+              <HStack hAlign="between">
+                <Text type="body" size="sm" weight="medium">Job Description</Text>
+                <Text type="supporting" size="xsm">{`${jobDescription.length} chars`}</Text>
+              </HStack>
+              <TextArea
+                label="Job description"
+                isLabelHidden
                 placeholder="Paste the job description here..."
                 value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+                onChange={setJobDescription}
                 rows={10}
               />
-            </div>
-            <div className="flex gap-3">
-              <FieldButton
-                className="flex-1 bg-[#FF6B35] hover:bg-[#FF6B35] whitespace-nowrap text-sm"
+            </VStack>
+            <HStack gap={3}>
+              <Button
+                label={loading ? 'Generating...' : 'Generate Letter'}
+                variant="primary"
+                width="100%"
+                isLoading={loading}
+                isDisabled={!jobDescription.trim()}
                 onClick={handleGenerate}
-                disabled={!jobDescription.trim() || loading}
-              >
-                {loading ? 'Generating...' : 'Generate Letter'}
-              </FieldButton>
+              />
               {result && (
-                <FieldButton
-                  variant="outline"
+                <IconButton
+                  label="Regenerate cover letter"
+                  icon={<ArrowClockwise weight="light" />}
+                  variant="secondary"
                   onClick={handleGenerate}
-                  disabled={!jobDescription.trim() || loading}
-                  title="Regenerate with same settings"
-                  aria-label="Regenerate cover letter"
-                  className="shrink-0"
-                >
-                  <ArrowClockwise weight="light" className="h-4 w-4" aria-hidden="true" />
-                </FieldButton>
+                  isDisabled={!jobDescription.trim() || loading}
+                />
               )}
-            </div>
-          </FieldCardContent>
-        </FieldCard>
+            </HStack>
+          </VStack>
+        </Card>
 
-        <div className="space-y-4">
+        <VStack gap={4}>
           {result ? (
             <>
-              <FieldCard>
-                <FieldCardHeader className="pb-2">
-                  <FieldCardTitle className="text-sm flex items-center gap-2">
-                    <FieldBadge variant="secondary" className="bg-[#FF6B35]/15 text-[#FF6B35]">{tone}</FieldBadge>
-                    Generated Cover Letter
-                  </FieldCardTitle>
-                </FieldCardHeader>
-                <FieldCardContent>
-                  <div className="bg-[#F4F3EE]/40 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(result as Record<string, unknown>).draftLetter as string}</p>
-                  </div>
-                </FieldCardContent>
-              </FieldCard>
-
-              {(result as Record<string, unknown>).shorterVersion && (
-                <FieldCard>
-                  <FieldCardHeader className="pb-2">
-                    <FieldCardTitle className="text-sm">Shorter Version</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(result as Record<string, unknown>).shorterVersion as string}</p>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {(result as Record<string, unknown>).subjectLine && (
-                <FieldCard>
-                  <FieldCardHeader className="pb-2">
-                    <FieldCardTitle className="text-sm">Subject Line / Proposal Opener</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <p className="text-sm text-[#404040]">{(result as Record<string, unknown>).subjectLine as string}</p>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {(result as Record<string, unknown>).customizationTips && ((result as Record<string, unknown>).customizationTips as string[]).length > 0 && (
-                <FieldCard>
-                  <FieldCardHeader className="pb-2">
-                    <FieldCardTitle className="text-sm">Customization Tips</FieldCardTitle>
-                  </FieldCardHeader>
-                  <FieldCardContent>
-                    <ul className="space-y-1">
-                      {((result as Record<string, unknown>).customizationTips as string[]).map((tip: string, i: number) => (
-                        <li key={i} className="text-sm text-[#404040] flex gap-2">
-                          <span className="text-[#FF6B35]">•</span>{tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </FieldCardContent>
-                </FieldCard>
-              )}
-
-              {(result as Record<string, unknown>).claimsToVerify && ((result as Record<string, unknown>).claimsToVerify as string[]).length > 0 && (
-                <Alert className="border-amber-200 bg-amber-50">
-                  <AlertDescription>
-                    <p className="font-medium text-amber-700 mb-1">Claims to Verify Before Sending</p>
-                    {((result as Record<string, unknown>).claimsToVerify as string[]).map((c: string, i: number) => (
-                      <p key={i} className="text-sm text-amber-600">{c}</p>
-                    ))}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Export Buttons */}
-              {(result as Record<string, unknown>).draftLetter && (
-                <FieldCard>
-                  <FieldCardContent className="p-4">
-                    <p className="text-sm font-medium mb-3">Export Cover Letter</p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <FieldButton
-                        variant="outline"
-                        className="flex-1 whitespace-nowrap"
-                        onClick={() => handleExport('docx')}
-                        disabled={exporting}
-                      >
-                        <FileArrowDown weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
-                        {exporting ? 'Exporting...' : 'Download DOCX'}
-                      </FieldButton>
-                      <FieldButton
-                        variant="outline"
-                        className="flex-1 whitespace-nowrap"
-                        onClick={() => handleExport('pdf')}
-                        disabled={exporting}
-                      >
-                        <FileText weight="light" className="h-4 w-4 mr-2" aria-hidden="true" />
-                        {exporting ? 'Exporting...' : 'Download PDF'}
-                      </FieldButton>
+              <Card>
+                <VStack gap={3}>
+                  <HStack gap={2} vAlign="center">
+                    <Badge label={tone} variant="orange" />
+                    <Text type="body" weight="semibold" size="sm">Generated Cover Letter</Text>
+                  </HStack>
+                  <Card variant="muted">
+                    <div style={{ maxHeight: 384, overflowY: 'auto' }}>
+                      <Text type="body" size="sm">{result.draftLetter}</Text>
                     </div>
-                  </FieldCardContent>
-                </FieldCard>
+                  </Card>
+                </VStack>
+              </Card>
+
+              {result.shorterVersion && (
+                <Card>
+                  <VStack gap={2}>
+                    <Text type="body" weight="semibold" size="sm">Shorter Version</Text>
+                    <Text type="body" size="sm">{result.shorterVersion}</Text>
+                  </VStack>
+                </Card>
+              )}
+
+              {result.subjectLine && (
+                <Card>
+                  <VStack gap={2}>
+                    <Text type="body" weight="semibold" size="sm">Subject Line / Proposal Opener</Text>
+                    <Text type="body" size="sm">{result.subjectLine}</Text>
+                  </VStack>
+                </Card>
+              )}
+
+              {result.customizationTips && result.customizationTips.length > 0 && (
+                <Card>
+                  <VStack gap={2}>
+                    <Text type="body" weight="semibold" size="sm">Customization Tips</Text>
+                    <VStack gap={1}>
+                      {result.customizationTips.map((tip, i) => (
+                        <HStack key={i} gap={2}>
+                          <Text type="body" size="sm" color="accent">•</Text>
+                          <Text type="body" size="sm">{tip}</Text>
+                        </HStack>
+                      ))}
+                    </VStack>
+                  </VStack>
+                </Card>
+              )}
+
+              {result.claimsToVerify && result.claimsToVerify.length > 0 && (
+                <Banner
+                  status="warning"
+                  title="Claims to Verify Before Sending"
+                  description={
+                    <VStack gap={1}>
+                      {result.claimsToVerify.map((c, i) => <Text key={i} type="inherit" size="sm">{c}</Text>)}
+                    </VStack>
+                  }
+                />
+              )}
+
+              {result.draftLetter && (
+                <Card>
+                  <VStack gap={3}>
+                    <Text type="body" weight="medium" size="sm">Export Cover Letter</Text>
+                    <HStack gap={3} wrap="wrap">
+                      <Button
+                        label={exporting ? 'Exporting...' : 'Download DOCX'}
+                        variant="secondary"
+                        icon={<FileArrowDown weight="light" />}
+                        isLoading={exporting}
+                        onClick={() => handleExport('docx')}
+                      />
+                      <Button
+                        label={exporting ? 'Exporting...' : 'Download PDF'}
+                        variant="secondary"
+                        icon={<FileText weight="light" />}
+                        isLoading={exporting}
+                        onClick={() => handleExport('pdf')}
+                      />
+                    </HStack>
+                  </VStack>
+                </Card>
               )}
             </>
           ) : (
-            <FieldCard>
-              <FieldCardContent className="p-8 text-center text-[#737373]">
+            <Card padding={8}>
+              <VStack gap={3} hAlign="center">
                 <Image
                   src="/images/illustrations/cover-letter-transformation.svg"
                   alt="Transform your job applications with AI-generated cover letters"
                   width={300}
                   height={200}
-                  className="w-full max-w-xs h-auto mx-auto mb-4"
+                  style={{ width: '100%', maxWidth: 288, height: 'auto' }}
                 />
-                <p>Paste a job description to generate a tailored cover letter</p>
-              </FieldCardContent>
-            </FieldCard>
+                <Text type="supporting" justify="center">Paste a job description to generate a tailored cover letter</Text>
+              </VStack>
+            </Card>
           )}
-        </div>
-      </div>
+        </VStack>
+      </Grid>
 
-      {/* Cover Letter Structure Guide */}
-      <FieldCard>
-        <FieldCardHeader>
-          <FieldCardTitle className="text-lg">Cover Letter Structure</FieldCardTitle>
-        </FieldCardHeader>
-        <FieldCardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-sm">
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">1. Role-specific opening</div>
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">2. Relevant Amazon/VA skills</div>
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">3. Proof of process discipline</div>
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">4. Tool familiarity</div>
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">5. Practical value proposition</div>
-            <div className="p-2 bg-[#F4F3EE]/40 rounded">6. Confident close</div>
-          </div>
-        </FieldCardContent>
-      </FieldCard>
-    </div>
+      <Card>
+        <VStack gap={4}>
+          <Heading level={4}>Cover Letter Structure</Heading>
+          <Grid columns={{ minWidth: 200, repeat: 'fit' }} gap={2}>
+            {STRUCTURE_STEPS.map((step) => (
+              <Card key={step} variant="muted" padding={2}>
+                <Text type="body" size="sm">{step}</Text>
+              </Card>
+            ))}
+          </Grid>
+        </VStack>
+      </Card>
+    </VStack>
   );
 }

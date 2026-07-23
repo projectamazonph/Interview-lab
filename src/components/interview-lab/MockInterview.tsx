@@ -4,17 +4,31 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { Question, InterviewSession, ROLES, INTERVIEW_MODES, ActiveView } from '@/lib/types';
-import { FieldCard } from '@/components/ui/glass-card';
-import { FieldButton } from '@/components/ui/glass-button';
-import { FieldBadge } from '@/components/ui/glass-badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
+import { Card } from '@astryxdesign/core/Card';
+import { SelectableCard } from '@astryxdesign/core/SelectableCard';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Clock, CheckCircle } from '@phosphor-icons/react';
 
 interface QuestionWithMeta extends Question {
   isFollowUp?: boolean;
   originalQuestionId?: string;
 }
+
+type FeedbackData = {
+  score?: number;
+  whatWorked?: string;
+  whatToImprove?: string;
+  strongerSampleAnswer?: string;
+  followUpQuestion?: string;
+};
 
 export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveView) => void }) {
   const { user } = useAuth();
@@ -24,7 +38,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
   const [questions, setQuestions] = useState<QuestionWithMeta[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
-  const [feedback, setFeedback] = useState<Record<string, unknown> | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [scores, setScores] = useState<number[]>([]);
   const [followUpScores, setFollowUpScores] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +49,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
   const [answeringFollowUp, setAnsweringFollowUp] = useState(false);
   const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState('');
-  const [followUpFeedback, setFollowUpFeedback] = useState<Record<string, unknown> | null>(null);
+  const [followUpFeedback, setFollowUpFeedback] = useState<FeedbackData | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
@@ -60,7 +74,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       const res = await fetch('/api/interview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, targetRole: targetRole || undefined }),
       });
       const data = await res.json();
@@ -101,7 +115,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
       const score = coachData.score || 5;
       setScores(prev => [...prev, score]);
 
-      // Add to transcript
       setTranscript(prev => [...prev, {
         q: questions[currentIndex].question,
         a: userAnswer,
@@ -109,7 +122,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
         feedback: coachData,
       }]);
 
-      // If there's a follow-up question and score < 7, offer adaptive follow-up
       if (coachData.followUpQuestion && score < 7) {
         setFollowUpQuestion(coachData.followUpQuestion as string);
       }
@@ -177,7 +189,7 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     try {
       await fetch(`/api/interview/${session.id}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transcript }),
       });
       setCompleted(true);
@@ -186,7 +198,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     }
   };
 
-  // Generate recommended practice plan
   const getRecommendations = () => {
     if (transcript.length === 0) return [];
     const weakAreas: string[] = [];
@@ -210,7 +221,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
       weakAreas.push('Consider practicing with harder scenario questions');
     }
 
-    // Check for low-scoring areas
     const lowScores = transcript.filter(t => t.score < 6);
     if (lowScores.length > 0) {
       weakAreas.push(`Review ${lowScores.length} question(s) where you scored below 6/10`);
@@ -222,93 +232,82 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
   // Interview Setup Screen
   if (!session) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[#171717] font-heading">Mock Interview</h2>
-          <p className="text-[#737373] mt-1">Practice with AI-powered interview coaching</p>
-        </div>
+      <VStack gap={6}>
+        <VStack gap={1}>
+          <Heading level={2}>Mock Interview</Heading>
+          <Text type="supporting">Practice with AI-powered interview coaching</Text>
+        </VStack>
 
-        <div className="flex justify-center mb-2">
+        <HStack hAlign="center">
           <Image
             src="/images/illustrations/mock-interview-setup.svg"
             alt="Set up your mock interview with AI-powered coaching"
             width={500}
             height={200}
-            className="w-full max-w-md h-auto"
+            style={{ width: '100%', maxWidth: 400, height: 'auto' }}
           />
-        </div>
+        </HStack>
 
-        <FieldCard className="max-w-lg">
-          <div>
-            <div className="font-heading">Start Interview</div>
-            <div>Choose your interview mode and target role</div>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Interview Mode</label>
-              {INTERVIEW_MODES.map(m => (
-                <button
-                  key={m.value}
-                  onClick={() => setMode(m.value)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1 ${
-                    mode === m.value ? 'border-[#FF6B35] bg-[#FF6B35]/8' : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
-                  }`}
-                  aria-pressed={mode === m.value}
-                  aria-label={`Select ${m.label} mode`}
-                >
-                  <p className="font-medium text-sm">{m.label}</p>
-                  <p className="text-xs text-[#737373] mt-0.5 break-words">{m.desc}</p>
-                </button>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Target Role</label>
-              <Select value={targetRole} onValueChange={setTargetRole}>
-                <SelectTrigger><SelectValue placeholder="Select role (optional)" /></SelectTrigger>
-                <SelectContent>
-                  {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <FieldButton
-              className="w-full bg-[#FF6B35] hover:bg-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1"
+        <Card maxWidth={512}>
+          <VStack gap={4}>
+            <VStack gap={1}>
+              <Heading level={4}>Start Interview</Heading>
+              <Text type="supporting" size="sm">Choose your interview mode and target role</Text>
+            </VStack>
+            <VStack gap={2}>
+              <Text type="body" size="sm" weight="medium">Interview Mode</Text>
+              <VStack gap={2}>
+                {INTERVIEW_MODES.map(m => (
+                  <SelectableCard key={m.value} label={m.label} isSelected={mode === m.value} onChange={() => setMode(m.value)}>
+                    <VStack gap={0.5}>
+                      <Text type="body" size="sm" weight="medium">{m.label}</Text>
+                      <Text type="supporting" size="sm">{m.desc}</Text>
+                    </VStack>
+                  </SelectableCard>
+                ))}
+              </VStack>
+            </VStack>
+            <Selector
+              label="Target Role"
+              placeholder="Select role (optional)"
+              value={targetRole || null}
+              onChange={(v) => setTargetRole(v || '')}
+              hasClear
+              options={ROLES.map((r) => ({ value: r, label: r }))}
+            />
+            <Button
+              label={loading ? 'Starting...' : 'Start Interview'}
+              variant="primary"
+              width="100%"
+              isLoading={loading}
+              isDisabled={!mode}
               onClick={startInterview}
-              disabled={!mode || loading}
-              aria-label="Start interview with selected mode"
-            >
-              {loading ? 'Starting...' : 'Start Interview'}
-            </FieldButton>
-          </div>
-        </FieldCard>
+            />
+          </VStack>
+        </Card>
 
         {sessions.length > 0 && (
-          <FieldCard>
-            <div>
-              <div className="text-lg">Previous Sessions</div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                {sessions.map(s => (
-                  <div key={s.id} className="flex items-center justify-between gap-2 p-3 bg-[#F4F3EE]/40 rounded-lg">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium capitalize truncate">{s.mode.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-[#737373]">{new Date(s.startedAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex gap-2 shrink-0 flex-wrap">
+          <Card padding={0}>
+            <List header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">Previous Sessions</Text></VStack>} hasDividers>
+              {sessions.map(s => (
+                <ListItem
+                  key={s.id}
+                  label={s.mode.replace(/_/g, ' ')}
+                  description={new Date(s.startedAt).toLocaleDateString()}
+                  endContent={
+                    <HStack gap={2} vAlign="center">
                       {s.overallScore !== null && s.overallScore !== undefined && (
-                        <FieldBadge variant={s.overallScore >= 7 ? 'accent' : 'default'}>
-                          {s.overallScore.toFixed(1)}/10
-                        </FieldBadge>
+                        <Badge label={`${s.overallScore.toFixed(1)}/10`} variant={s.overallScore >= 7 ? 'orange' : 'neutral'} />
                       )}
-                      <FieldBadge variant="ghost">{s.completedAt ? 'Completed' : 'In Progress'}</FieldBadge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FieldCard>
+                      <Badge label={s.completedAt ? 'Completed' : 'In Progress'} variant="neutral" />
+                    </HStack>
+                  }
+                />
+              ))}
+            </List>
+          </Card>
         )}
-      </div>
+      </VStack>
     );
   }
 
@@ -318,263 +317,273 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     const recommendations = getRecommendations();
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <FieldCard>
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
+      <HStack hAlign="center">
+      <VStack gap={6} maxWidth={640} width="100%">
+        <Card>
+          <VStack gap={5}>
+            <VStack gap={3} hAlign="center">
               <Image
                 src="/images/illustrations/interview-complete-celebration.svg"
                 alt="Congratulations on completing your mock interview"
                 width={300}
                 height={150}
-                className="w-full max-w-xs h-auto"
+                style={{ width: '100%', maxWidth: 240, height: 'auto' }}
               />
-            </div>
-            <div className="w-16 h-16 bg-[#FF6B35]/15 rounded-md flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#FF6B35]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-            <div className="text-2xl font-heading">Interview Complete!</div>
-            <div>You answered {transcript.length} questions (including follow-ups)</div>
-          </div>
-          <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-[#FF6B35] font-mono">{avgScore.toFixed(1)}/10</p>
-              <p className="text-[#737373]">Average Score</p>
-            </div>
-            <div className="space-y-2">
-              {scores.map((score, i) => (
-                <div key={`main-${i}`} className="flex items-center gap-3">
-                  <span className="text-sm text-[#737373] w-8">Q{i + 1}</span>
-                  <Progress value={score * 10} className="flex-1 min-w-0 h-2" />
-                  <span className="text-sm font-medium w-12">{score}/10</span>
-                </div>
-              ))}
-            </div>
-            {followUpScores.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium text-purple-700 mb-2">Follow-up Scores (supplementary, not included in average)</p>
-                <div className="space-y-2">
-                  {followUpScores.map((score, i) => (
-                    <div key={`followup-${i}`} className="flex items-center gap-3">
-                      <span className="text-sm text-purple-500 w-8">F{i + 1}</span>
-                      <Progress value={score * 10} className="flex-1 min-w-0 h-2" />
-                      <span className="text-sm font-medium w-12">{score}/10</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <FieldButton
-              className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
-              onClick={() => { setSession(null); setQuestions([]); setCurrentIndex(0); setScores([]); setCompleted(false); setTranscript([]); }}
-            >
-              Start New Interview
-            </FieldButton>
-          </div>
-        </FieldCard>
+              <Card variant="orange" width={64} height={64} padding={0}>
+                <VStack width="100%" height="100%" hAlign="center" vAlign="center">
+                  <Icon icon={CheckCircle} size="lg" color="accent" />
+                </VStack>
+              </Card>
+              <Heading level={2} justify="center">Interview Complete!</Heading>
+              <Text type="supporting" justify="center">You answered {transcript.length} questions (including follow-ups)</Text>
+            </VStack>
 
-        {/* Recommended Practice Plan */}
-        <FieldCard>
-          <div>
-            <div className="text-lg font-heading">Recommended Practice Plan</div>
-            <div>Based on your performance in this session</div>
-          </div>
-          <div>
-            <div className="space-y-3">
+            <VStack gap={4}>
+              <VStack gap={0} hAlign="center">
+                <Text type="display-2" color="accent">{avgScore.toFixed(1)}/10</Text>
+                <Text type="supporting">Average Score</Text>
+              </VStack>
+              <VStack gap={2}>
+                {scores.map((score, i) => (
+                  <HStack key={`main-${i}`} gap={3} vAlign="center">
+                    <Text type="supporting" size="sm">{`Q${i + 1}`}</Text>
+                    <ProgressBar label={`Question ${i + 1} score`} isLabelHidden value={score * 10} />
+                    <Text type="body" size="sm" weight="medium">{`${score}/10`}</Text>
+                  </HStack>
+                ))}
+              </VStack>
+              {followUpScores.length > 0 && (
+                <VStack gap={2}>
+                  <Text type="body" size="sm" weight="medium" color="accent">Follow-up Scores (supplementary, not included in average)</Text>
+                  {followUpScores.map((score, i) => (
+                    <HStack key={`followup-${i}`} gap={3} vAlign="center">
+                      <Text type="supporting" size="sm">{`F${i + 1}`}</Text>
+                      <ProgressBar label={`Follow-up ${i + 1} score`} isLabelHidden value={score * 10} />
+                      <Text type="body" size="sm" weight="medium">{`${score}/10`}</Text>
+                    </HStack>
+                  ))}
+                </VStack>
+              )}
+              <Button
+                label="Start New Interview"
+                variant="primary"
+                width="100%"
+                onClick={() => { setSession(null); setQuestions([]); setCurrentIndex(0); setScores([]); setCompleted(false); setTranscript([]); }}
+              />
+            </VStack>
+          </VStack>
+        </Card>
+
+        <Card>
+          <VStack gap={4}>
+            <VStack gap={1}>
+              <Heading level={4}>Recommended Practice Plan</Heading>
+              <Text type="supporting" size="sm">Based on your performance in this session</Text>
+            </VStack>
+            <VStack gap={2}>
               {recommendations.map((rec, i) => (
-                <div key={i} className="flex gap-3 p-3 bg-[#F4F3EE]/40 rounded-lg">
-                  <span className="text-[#FF6B35] font-bold shrink-0">{i + 1}.</span>
-                  <p className="text-sm text-[#404040]">{rec}</p>
-                </div>
+                <Card key={i} variant="muted">
+                  <HStack gap={3}>
+                    <Text type="body" weight="bold" color="accent">{`${i + 1}.`}</Text>
+                    <Text type="body" size="sm">{rec}</Text>
+                  </HStack>
+                </Card>
               ))}
-            </div>
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm font-medium mb-2">Quick Actions</p>
-              <div className="flex flex-wrap gap-2">
+            </VStack>
+            <VStack gap={2}>
+              <Text type="body" size="sm" weight="medium">Quick Actions</Text>
+              <HStack gap={2} wrap="wrap">
                 {avgScore < 7 && (
-                  <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('quick_drill'); }}>
-                    Try Quick Drill
-                  </FieldButton>
+                  <Button label="Try Quick Drill" variant="secondary" size="sm" onClick={() => { setSession(null); setMode('quick_drill'); }} />
                 )}
-                <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode(''); if (onViewChange) onViewChange('questions'); }}>
-                  Review Question Bank
-                </FieldButton>
-                <FieldButton variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => { setSession(null); setMode('role_interview'); }}>
-                  Practice More
-                </FieldButton>
-              </div>
-            </div>
-          </div>
-        </FieldCard>
-      </div>
+                <Button label="Review Question Bank" variant="secondary" size="sm" onClick={() => { setSession(null); setMode(''); if (onViewChange) onViewChange('questions'); }} />
+                <Button label="Practice More" variant="secondary" size="sm" onClick={() => { setSession(null); setMode('role_interview'); }} />
+              </HStack>
+            </VStack>
+          </VStack>
+        </Card>
+      </VStack>
+      </HStack>
     );
   }
 
   // Active Interview Screen
   const currentQ = questions[currentIndex];
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm text-[#737373]">Question {currentIndex + 1} of {questions.length}</p>
-          <p className="text-sm text-[#737373] capitalize truncate">{session.mode.replace(/_/g, ' ')}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <FieldBadge variant="ghost" className="font-mono tabular-nums" aria-label={`Elapsed time: ${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`}>⏱ {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}</FieldBadge>
-          <FieldBadge variant="ghost">{scores.length > 0 ? `Avg: ${(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)}` : 'No scores yet'}</FieldBadge>
-          {followUpScores.length > 0 && (
-            <FieldBadge variant="default" className="text-purple-600">{followUpScores.length} follow-up(s)</FieldBadge>
-          )}
-        </div>
-      </div>
-      <Progress value={((currentIndex + 1) / questions.length) * 100} className="h-2" />
+  const avgSoFar = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null;
 
-      <FieldCard>
-        <div>
-          <div className="flex flex-wrap gap-2 mb-2">
-            <FieldBadge variant="default" className="whitespace-nowrap">{currentQ.difficulty}</FieldBadge>
-            <FieldBadge variant="ghost" className="whitespace-nowrap">{currentQ.type.replace(/_/g, ' ')}</FieldBadge>
-            <FieldBadge variant="ghost" className="whitespace-nowrap">{currentQ.role}</FieldBadge>
-          </div>
-          <div className="text-lg leading-snug">{currentQ.question}</div>
-          {currentQ.whyEmployersAsk && (
-            <div><strong>Why employers ask:</strong> {currentQ.whyEmployersAsk}</div>
-          )}
-        </div>
-        <div className="space-y-4">
+  return (
+    <HStack hAlign="center">
+    <VStack gap={6} maxWidth={768} width="100%">
+      <VStack gap={3}>
+        <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+          <VStack gap={0}>
+            <Text type="supporting" size="sm">{`Question ${currentIndex + 1} of ${questions.length}`}</Text>
+            <Text type="supporting" size="sm">{session.mode.replace(/_/g, ' ')}</Text>
+          </VStack>
+          <HStack gap={2} wrap="wrap" vAlign="center">
+            <Badge
+              label={`${Math.floor(elapsedSeconds / 60)}:${(elapsedSeconds % 60).toString().padStart(2, '0')}`}
+              variant="neutral"
+              icon={<Clock weight="light" />}
+            />
+            <Badge label={avgSoFar ? `Avg: ${avgSoFar}` : 'No scores yet'} variant="neutral" />
+            {followUpScores.length > 0 && <Badge label={`${followUpScores.length} follow-up(s)`} variant="purple" />}
+          </HStack>
+        </HStack>
+        <ProgressBar label="Interview progress" isLabelHidden value={((currentIndex + 1) / questions.length) * 100} />
+      </VStack>
+
+      <Card>
+        <VStack gap={4}>
+          <VStack gap={2}>
+            <HStack gap={2} wrap="wrap">
+              <Badge label={currentQ.difficulty} variant="neutral" />
+              <Badge label={currentQ.type.replace(/_/g, ' ')} variant="neutral" />
+              <Badge label={currentQ.role} variant="neutral" />
+            </HStack>
+            <Text type="large">{currentQ.question}</Text>
+            {currentQ.whyEmployersAsk && (
+              <Text type="supporting" size="sm">
+                <Text as="span" type="inherit" weight="semibold">Why employers ask: </Text>
+                {currentQ.whyEmployersAsk}
+              </Text>
+            )}
+          </VStack>
+
           {!feedback ? (
-            <>
-              <Textarea
+            <VStack gap={4}>
+              <TextArea
+                label="Your answer"
+                isLabelHidden
                 placeholder="Type your answer here..."
                 value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
+                onChange={setUserAnswer}
                 rows={6}
-                autoFocus
+                hasAutoFocus
               />
-              <FieldButton
-                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
+              <Button
+                label={submitting ? 'Getting AI Feedback...' : 'Submit Answer'}
+                variant="primary"
+                width="100%"
+                isLoading={submitting}
+                isDisabled={!userAnswer.trim()}
                 onClick={submitAnswer}
-                disabled={!userAnswer.trim() || submitting}
-              >
-                {submitting ? 'Getting AI Feedback...' : 'Submit Answer'}
-              </FieldButton>
-            </>
+              />
+            </VStack>
           ) : (
-            <>
-              <div className="p-4 bg-[#F4F3EE]/40 rounded-lg overflow-hidden">
-                <p className="text-sm text-[#737373] mb-1">Your answer:</p>
-                <p className="text-sm text-[#171717] whitespace-pre-wrap break-words">{userAnswer}</p>
-              </div>
-              <FieldCard className="border-[#FF6B35]/20 bg-[#FF6B35]/8/50">
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#FF6B35] font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
-                    <span className="text-sm text-[#737373]">Score</span>
-                  </div>
-                  {Boolean((feedback as Record<string, unknown>).whatWorked) && (
-                    <div>
-                      <p className="text-sm font-medium text-green-700">What worked:</p>
-                      <p className="text-sm text-[#404040] break-words">{(feedback as Record<string, unknown>).whatWorked as string}</p>
-                    </div>
-                  )}
-                  {Boolean((feedback as Record<string, unknown>).whatToImprove) && (
-                    <div>
-                      <p className="text-sm font-medium text-amber-700">What to improve:</p>
-                      <p className="text-sm text-[#404040] break-words">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
-                    </div>
-                  )}
-                  {Boolean((feedback as Record<string, unknown>).strongerSampleAnswer) && (
-                    <div>
-                      <p className="text-sm font-medium text-[#FF6B35]">Stronger sample answer:</p>
-                      <p className="text-sm text-[#404040] whitespace-pre-wrap break-words">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
-                    </div>
-                  )}
-                </div>
-              </FieldCard>
+            <VStack gap={4}>
+              <Card variant="muted">
+                <VStack gap={1}>
+                  <Text type="supporting" size="sm">Your answer:</Text>
+                  <Text type="body" size="sm">{userAnswer}</Text>
+                </VStack>
+              </Card>
 
-              {/* Adaptive Follow-up Section */}
+              <Card variant="orange">
+                <VStack gap={3}>
+                  <HStack gap={2} vAlign="center">
+                    <Text type="display-3" color="accent">{`${feedback.score ?? 0}/10`}</Text>
+                    <Text type="supporting" size="sm">Score</Text>
+                  </HStack>
+                  {Boolean(feedback.whatWorked) && (
+                    <VStack gap={0.5}>
+                      <Text type="body" size="sm" weight="semibold" color="accent">What worked:</Text>
+                      <Text type="body" size="sm">{feedback.whatWorked}</Text>
+                    </VStack>
+                  )}
+                  {Boolean(feedback.whatToImprove) && (
+                    <VStack gap={0.5}>
+                      <Text type="body" size="sm" weight="semibold">What to improve:</Text>
+                      <Text type="body" size="sm">{feedback.whatToImprove}</Text>
+                    </VStack>
+                  )}
+                  {Boolean(feedback.strongerSampleAnswer) && (
+                    <VStack gap={0.5}>
+                      <Text type="body" size="sm" weight="semibold" color="accent">Stronger sample answer:</Text>
+                      <Text type="body" size="sm">{feedback.strongerSampleAnswer}</Text>
+                    </VStack>
+                  )}
+                </VStack>
+              </Card>
+
               {followUpQuestion && !followUpFeedback && !answeringFollowUp && (
-                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-purple-700">Follow-up Question:</p>
-                      <p className="text-sm text-[#171717] mt-1 break-words">{followUpQuestion}</p>
-                    </div>
-                    <p className="text-xs text-[#737373]">Your score was below 7. Practicing this follow-up can help you improve.</p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <FieldButton
-                        className="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700"
-                        onClick={() => setAnsweringFollowUp(true)}
-                      >
-                        Practice Follow-up
-                      </FieldButton>
-                      <FieldButton variant="secondary" onClick={handleSkipFollowUp}>
-                        Skip
-                      </FieldButton>
-                    </div>
-                  </div>
-                </FieldCard>
+                <Card variant="purple">
+                  <VStack gap={3}>
+                    <VStack gap={0.5}>
+                      <Text type="body" size="sm" weight="semibold">Follow-up Question:</Text>
+                      <Text type="body" size="sm">{followUpQuestion}</Text>
+                    </VStack>
+                    <Text type="supporting" size="xsm">Your score was below 7. Practicing this follow-up can help you improve.</Text>
+                    <HStack gap={3} wrap="wrap">
+                      <Button label="Practice Follow-up" variant="primary" onClick={() => setAnsweringFollowUp(true)} />
+                      <Button label="Skip" variant="secondary" onClick={handleSkipFollowUp} />
+                    </HStack>
+                  </VStack>
+                </Card>
               )}
 
               {answeringFollowUp && !followUpFeedback && (
-                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <div className="p-4 space-y-3">
-                    <p className="text-sm font-medium text-purple-700">Answer the follow-up:</p>
-                    <p className="text-sm text-[#171717] break-words">{followUpQuestion}</p>
-                    <Textarea
+                <Card variant="purple">
+                  <VStack gap={3}>
+                    <Text type="body" size="sm" weight="semibold">Answer the follow-up:</Text>
+                    <Text type="body" size="sm">{followUpQuestion}</Text>
+                    <TextArea
+                      label="Follow-up answer"
+                      isLabelHidden
                       placeholder="Type your answer to the follow-up..."
                       value={followUpAnswer}
-                      onChange={(e) => setFollowUpAnswer(e.target.value)}
+                      onChange={setFollowUpAnswer}
                       rows={4}
-                      autoFocus
+                      hasAutoFocus
                     />
-                    <div className="flex gap-3">
-                      <FieldButton
-                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                    <HStack gap={3}>
+                      <Button
+                        label={submitting ? 'Getting Feedback...' : 'Submit Follow-up'}
+                        variant="primary"
+                        isLoading={submitting}
+                        isDisabled={!followUpAnswer.trim()}
                         onClick={submitFollowUpAnswer}
-                        disabled={!followUpAnswer.trim() || submitting}
-                      >
-                        {submitting ? 'Getting Feedback...' : 'Submit Follow-up'}
-                      </FieldButton>
-                      <FieldButton variant="secondary" onClick={handleSkipFollowUp}>Skip</FieldButton>
-                    </div>
-                  </div>
-                </FieldCard>
+                      />
+                      <Button label="Skip" variant="secondary" onClick={handleSkipFollowUp} />
+                    </HStack>
+                  </VStack>
+                </Card>
               )}
 
               {followUpFeedback && (
-                <FieldCard className="border-purple-200 bg-purple-50/50 overflow-hidden">
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-purple-600">{(followUpFeedback as Record<string, unknown>).score as number}/10</span>
-                      <span className="text-sm text-[#737373]">Follow-up Score</span>
-                    </div>
-                    {Boolean((followUpFeedback as Record<string, unknown>).whatWorked) && (
-                      <div>
-                        <p className="text-sm font-medium text-green-700">What worked:</p>
-                        <p className="text-sm text-[#404040] break-words">{(followUpFeedback as Record<string, unknown>).whatWorked as string}</p>
-                      </div>
+                <Card variant="purple">
+                  <VStack gap={2}>
+                    <HStack gap={2} vAlign="center">
+                      <Text type="display-3" color="accent">{`${followUpFeedback.score ?? 0}/10`}</Text>
+                      <Text type="supporting" size="sm">Follow-up Score</Text>
+                    </HStack>
+                    {Boolean(followUpFeedback.whatWorked) && (
+                      <VStack gap={0.5}>
+                        <Text type="body" size="sm" weight="semibold" color="accent">What worked:</Text>
+                        <Text type="body" size="sm">{followUpFeedback.whatWorked}</Text>
+                      </VStack>
                     )}
-                    {Boolean((followUpFeedback as Record<string, unknown>).whatToImprove) && (
-                      <div>
-                        <p className="text-sm font-medium text-amber-700">What to improve:</p>
-                        <p className="text-sm text-[#404040] break-words">{(followUpFeedback as Record<string, unknown>).whatToImprove as string}</p>
-                      </div>
+                    {Boolean(followUpFeedback.whatToImprove) && (
+                      <VStack gap={0.5}>
+                        <Text type="body" size="sm" weight="semibold">What to improve:</Text>
+                        <Text type="body" size="sm">{followUpFeedback.whatToImprove}</Text>
+                      </VStack>
                     )}
-                  </div>
-                </FieldCard>
+                  </VStack>
+                </Card>
               )}
 
-              <FieldButton
-                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]"
+              <Button
+                label={currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Interview'}
+                variant="primary"
+                width="100%"
                 onClick={nextQuestion}
-              >
-                {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Interview'}
-              </FieldButton>
-            </>
+              />
+            </VStack>
           )}
-        </div>
-      </FieldCard>
-    </div>
+        </VStack>
+      </Card>
+    </VStack>
+    </HStack>
   );
 }

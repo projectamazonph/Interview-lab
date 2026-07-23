@@ -38,7 +38,7 @@ describe('MockInterview', () => {
   it('renders the interview setup screen with mode options', () => {
     render(<MockInterview />);
     expect(screen.getByText('Mock Interview')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start interview with selected mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Interview' })).toBeInTheDocument();
   });
 
   it('fetches previous sessions for the logged-in user on mount', async () => {
@@ -48,14 +48,14 @@ describe('MockInterview', () => {
 
   it('disables Start Interview until a mode is selected', () => {
     render(<MockInterview />);
-    expect(screen.getByRole('button', { name: 'Start interview with selected mode' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start Interview' })).toBeDisabled();
   });
 
   it('enables Start Interview after selecting a mode', () => {
     render(<MockInterview />);
-    const modeButton = screen.getAllByRole('button', { name: /Select .* mode/ })[0];
-    fireEvent.click(modeButton);
-    expect(screen.getByRole('button', { name: 'Start interview with selected mode' })).not.toBeDisabled();
+    const modeCheckbox = screen.getAllByRole('checkbox')[0];
+    fireEvent.click(modeCheckbox);
+    expect(screen.getByRole('button', { name: 'Start Interview' })).not.toBeDisabled();
   });
 
   it('starts an interview session and renders the first question', async () => {
@@ -74,9 +74,9 @@ describe('MockInterview', () => {
     global.fetch = fetchMock;
 
     render(<MockInterview />);
-    const modeButton = screen.getAllByRole('button', { name: /Select .* mode/ })[0];
-    fireEvent.click(modeButton);
-    fireEvent.click(screen.getByRole('button', { name: 'Start interview with selected mode' }));
+    const modeCheckbox = screen.getAllByRole('checkbox')[0];
+    fireEvent.click(modeCheckbox);
+    fireEvent.click(screen.getByRole('button', { name: 'Start Interview' }));
 
     await waitFor(() => expect(screen.getByText('What is ACoS?')).toBeInTheDocument());
     expect(screen.getByPlaceholderText('Type your answer here...')).toBeInTheDocument();
@@ -99,9 +99,9 @@ describe('MockInterview', () => {
     global.fetch = fetchMock;
 
     render(<MockInterview />);
-    const modeButton = screen.getAllByRole('button', { name: /Select .* mode/ })[0];
-    fireEvent.click(modeButton);
-    fireEvent.click(screen.getByRole('button', { name: 'Start interview with selected mode' }));
+    const modeCheckbox = screen.getAllByRole('checkbox')[0];
+    fireEvent.click(modeCheckbox);
+    fireEvent.click(screen.getByRole('button', { name: 'Start Interview' }));
 
     await waitFor(() => expect(screen.getByText('What is ACoS?')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Submit Answer' })).toBeDisabled();
