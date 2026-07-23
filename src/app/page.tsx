@@ -66,7 +66,6 @@ function AppContent() {
     }
     return (
       <>
-        <PapHeader />
         <LandingPage
           onGetStarted={() => setPreAuthView("auth")}
           onViewPrograms={() => setPreAuthView("auth")}

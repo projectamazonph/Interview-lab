@@ -13,3 +13,10 @@ export function lightIcon(PhosphorIcon: PhosphorIconType) {
     return <PhosphorIcon {...props} weight="light" />;
   };
 }
+
+/** Same wrapper pattern as lightIcon, for the rare filled-icon case (e.g. star ratings). */
+export function fillIcon(PhosphorIcon: PhosphorIconType) {
+  return function FillIcon(props: SVGProps<SVGSVGElement>) {
+    return <PhosphorIcon {...props} weight="fill" />;
+  };
+}

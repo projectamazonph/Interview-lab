@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { HStack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 
 const PAPLogo = () => (
   <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,24 +23,24 @@ const NAV_LINKS = [
 
 export function PapHeader() {
   return (
-    <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface-1 sticky top-0 z-50">
-      <Link href="/" className="flex items-center gap-2.5 no-underline">
-        <PAPLogo />
-        <span className="font-heading font-bold text-sm text-accent">
-          Project Amazon PH
-        </span>
-      </Link>
-      <nav className="flex items-center gap-1">
-        {NAV_LINKS.map(({ label, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className="px-3 py-1.5 text-sm text-ink-500 hover:text-ink-900 rounded-md transition-colors duration-150"
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+    <header className="sticky top-0 z-50 border-b border-border bg-surface">
+      <HStack hAlign="between" vAlign="center" paddingInline={6} paddingBlock={3}>
+        <Link href="/" className="no-underline">
+          <HStack gap={3} vAlign="center">
+            <PAPLogo />
+            <Text type="body" weight="bold" size="sm" color="accent">
+              Project Amazon PH
+            </Text>
+          </HStack>
+        </Link>
+        <HStack gap={1} vAlign="center" as="nav">
+          {NAV_LINKS.map(({ label, href }) => (
+            <Link key={label} href={href} className="no-underline">
+              <Text type="body" size="sm" color="secondary">{label}</Text>
+            </Link>
+          ))}
+        </HStack>
+      </HStack>
     </header>
   );
 }

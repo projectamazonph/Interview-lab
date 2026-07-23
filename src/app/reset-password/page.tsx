@@ -2,11 +2,15 @@
 
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { FieldCard } from "@/components/ui/glass-card";
-import { FieldButton } from "@/components/ui/glass-button";
-import { FieldInput } from "@/components/ui/glass-input";
 import { PapHeader } from "@/components/header";
+import { lightIcon } from "@/lib/astryx-icon";
+import { Card } from "@astryxdesign/core/Card";
+import { VStack } from "@astryxdesign/core/Stack";
+import { Text, Heading } from "@astryxdesign/core/Text";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { Icon } from "@astryxdesign/core/Icon";
 import { Lightning, LockSimple, ArrowUpRight, Eye, EyeSlash, ArrowLeft } from "@phosphor-icons/react";
 
 function ResetPasswordForm() {
@@ -59,74 +63,79 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-12 relative">
-      <Link
-        href="/"
-        className="fixed top-6 left-6 z-50 flex items-center gap-2 text-sm text-[#737373] hover:text-[#171717] transition-colors rounded-md px-3 py-2 bg-white border border-[#E5E5E0]"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="hidden sm:inline">Back</span>
-      </Link>
+    <div style={{ minHeight: "calc(100dvh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 16px" }}>
+      <div style={{ position: "fixed", top: 80, left: 24, zIndex: 50 }}>
+        <Button label="Back" variant="secondary" size="sm" icon={<ArrowLeft weight="light" />} onClick={() => router.push("/")} />
+      </div>
 
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="w-12 h-12 rounded-lg bg-[#FFE5D9] flex items-center justify-center mx-auto mb-4">
-            <Lightning className="w-6 h-6 text-[#FF6B35]" />
-          </div>
-          <h1 className="font-heading text-2xl font-bold text-[#171717]">Reset your password</h1>
-          <p className="text-[#737373] text-sm mt-1">Choose a new password for your account</p>
-        </div>
+      <VStack gap={8} width="100%" maxWidth={400}>
+        <VStack gap={3} hAlign="center">
+          <Card variant="orange" width={48} height={48} padding={0}>
+            <VStack width="100%" height="100%" hAlign="center" vAlign="center">
+              <Icon icon={Lightning} size="md" color="accent" />
+            </VStack>
+          </Card>
+          <VStack gap={1}>
+            <Heading level={1} justify="center">Reset your password</Heading>
+            <Text type="supporting" justify="center">Choose a new password for your account</Text>
+          </VStack>
+        </VStack>
 
-        <FieldCard variant="bordered" className="p-7 animate-slide-up">
+        <Card>
           {success ? (
-            <p className="text-sm text-ink-700 text-center">
-              Password reset successful. Redirecting you to sign in...
-            </p>
+            <Text type="body" justify="center">Password reset successful. Redirecting you to sign in...</Text>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <FieldInput
-                  icon={<LockSimple className="w-4 h-4" />}
+            <form onSubmit={handleSubmit}>
+              <VStack gap={4}>
+                <div style={{ position: "relative" }}>
+                  <TextInput
+                    label="New password"
+                    isLabelHidden
+                    type={showPassword ? "text" : "password"}
+                    placeholder="New password (min. 8 characters)"
+                    startIcon={lightIcon(LockSimple)}
+                    value={password}
+                    onChange={setPassword}
+                    isRequired
+                    htmlName="new-password"
+                  />
+                  <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)" }}>
+                    <IconButton
+                      label={showPassword ? "Hide password" : "Show password"}
+                      icon={showPassword ? <EyeSlash weight="light" /> : <Eye weight="light" />}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    />
+                  </div>
+                </div>
+                <TextInput
+                  label="Confirm new password"
+                  isLabelHidden
                   type={showPassword ? "text" : "password"}
-                  placeholder="New password (min. 8 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
+                  placeholder="Confirm new password"
+                  startIcon={lightIcon(LockSimple)}
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  isRequired
+                  htmlName="confirm-password"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#737373] hover:text-[#404040] transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeSlash className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <FieldInput
-                icon={<LockSimple className="w-4 h-4" />}
-                type={showPassword ? "text" : "password"}
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
 
-              {error && (
-                <p className="text-sm text-[#B91C1C] animate-fade-in">{error}</p>
-              )}
+                {error && <Text type="body" color="accent">{error}</Text>}
 
-              <FieldButton type="submit" className="w-full" disabled={loading}>
-                {loading ? "Resetting..." : "Reset Password"}
-                {!loading && <ArrowUpRight className="w-4 h-4" />}
-              </FieldButton>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  label={loading ? "Resetting..." : "Reset Password"}
+                  icon={!loading ? <ArrowUpRight weight="light" /> : undefined}
+                  isLoading={loading}
+                  width="100%"
+                />
+              </VStack>
             </form>
           )}
-        </FieldCard>
-      </div>
+        </Card>
+      </VStack>
     </div>
   );
 }
