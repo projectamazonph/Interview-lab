@@ -1,10 +1,7 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { NextRequest, NextResponse } from 'next/server';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TabStopPosition, TabStopType } from 'docx';
-
-// Access tier hierarchy: free < starter < pro
-const TIER_HIERARCHY: Record<string, number> = { free: 0, starter: 1, pro: 2 };
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 
 export async function GET(
   request: NextRequest,
@@ -24,16 +21,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid file name' }, { status: 400 });
     }
 
-    // Verify the user is authenticated and has sufficient access tier
+    // Interview Lab is free for every account — no tier gating (see
+    // src/lib/subscription-guard.ts). `accessTier` on Download is
+    // informational metadata only; it is not enforced here.
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Authentication required to download files' }, { status: 401 });
-    }
-
-    const userTierLevel = TIER_HIERARCHY[user.subscriptionTier] ?? 0;
-    const requiredTierLevel = TIER_HIERARCHY[download.accessTier] ?? 0;
-    if (userTierLevel < requiredTierLevel) {
-      return NextResponse.json({ error: `This resource requires ${download.accessTier} tier or higher` }, { status: 403 });
     }
 
     // Increment download count

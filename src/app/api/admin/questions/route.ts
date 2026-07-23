@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: Request) {
   try {
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateTag('questions', { expire: 0 });
     return NextResponse.json(question, { status: 201 });
   } catch (error) {
     console.error('Admin Questions POST error:', error);
@@ -162,6 +164,7 @@ export async function PUT(request: Request) {
       data: update,
     });
 
+    revalidateTag('questions', { expire: 0 });
     return NextResponse.json(question);
   } catch (error) {
     console.error('Admin Questions PUT error:', error);

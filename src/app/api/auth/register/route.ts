@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         { status: 429 }
       );
     }
-    // rate-limit cleanup handled by Prisma TTL
+    // Expired RateLimitEntry rows are swept by the scheduled /api/cron/cleanup route.
 
     const body = await request.json();
     const { email, name, password } = body;
@@ -126,11 +126,10 @@ export async function POST(request: Request) {
     // Create email verification token
     await createVerificationToken(sanitizedEmail);
 
-    // Clean up expired tokens periodically
-    // cleanup handled by Prisma TTL;
-
-    // In production, send verification via email instead of logging
-    // Verification token is stored in the database for the verify-email endpoint
+    // Expired VerificationToken rows are swept by the scheduled /api/cron/cleanup route.
+    // TODO: this token is only stored in the DB, not emailed — there is no
+    // outbound email integration yet, so verification is unreachable by end
+    // users until one is wired up.
 
     // Create JWT session (HttpOnly cookie)
     const response = NextResponse.json({
@@ -148,6 +147,7 @@ export async function POST(request: Request) {
       email: user.email,
       tier: user.subscriptionTier,
       isAdmin: user.isAdmin,
+      v: user.tokenVersion,
     }, response);
 
     return response;

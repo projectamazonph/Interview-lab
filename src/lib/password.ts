@@ -1,6 +1,5 @@
 /**
  * Password hashing utilities using bcryptjs.
- * Replaces the previous SHA-256 approach with proper salting and adaptive cost.
  */
 
 import bcrypt from 'bcryptjs';
@@ -16,36 +15,21 @@ export async function hashPassword(password: string): Promise<string> {
 
 /**
  * Verify a plaintext password against a bcrypt hash.
- * Also supports legacy SHA-256 hashes for backwards compatibility
- * during the migration window (auto-upgrades on next login).
+ * Returns false for any non-bcrypt hash — callers should check
+ * `isLegacyHash` first and require a password reset instead of calling this.
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // Modern bcrypt hashes start with $2a$, $2b$, or $2y$
-  if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
-    return bcrypt.compare(password, hash);
+  if (!hash.startsWith('$2a$') && !hash.startsWith('$2b$') && !hash.startsWith('$2y$')) {
+    return false;
   }
-
-  // Legacy SHA-256 fallback — compute the old-style hash for comparison
-  const legacyHash = await sha256Legacy(password);
-  if (legacyHash === hash) {
-    return true;
-  }
-  return false;
+  return bcrypt.compare(password, hash);
 }
 
 /**
- * Check if a hash is legacy SHA-256 (needs upgrade).
+ * Check if a hash predates the bcrypt migration (unsalted SHA-256).
+ * Accounts with a legacy hash cannot authenticate with a password and must
+ * go through /api/auth/reset-password.
  */
 export function isLegacyHash(hash: string): boolean {
   return !hash.startsWith('$2a$') && !hash.startsWith('$2b$') && !hash.startsWith('$2y$');
-}
-
-/**
- * Legacy SHA-256 hash — kept only for migrating existing users.
- */
-async function sha256Legacy(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }

@@ -2,6 +2,30 @@ import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { checkQuestionBankAccess } from '@/lib/subscription-guard';
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
+
+// The question bank is read on nearly every page view and changes only via
+// the admin panel, so the DB round-trip is cached and shared across
+// requests/users for a filter combination — invalidated explicitly by
+// revalidateTag('questions') in the admin routes rather than left to expire.
+// Field-stripping for free vs. premium tiers happens *after* this cache, on
+// every request, so the cache itself never leaks premium-only fields.
+const getCachedQuestionPage = unstable_cache(
+  async (where: Record<string, unknown>, limit: number, offset: number) => {
+    const [questions, total] = await Promise.all([
+      db.question.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      db.question.count({ where }),
+    ]);
+    return { questions, total };
+  },
+  ['questions-page'],
+  { tags: ['questions'], revalidate: 300 },
+);
 
 const QUESTION_SAFE_FIELDS = {
   id: true,
@@ -63,15 +87,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const [questions, total] = await Promise.all([
-      db.question.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-      db.question.count({ where }),
-    ]);
+    const { questions, total } = await getCachedQuestionPage(where, limit, offset);
 
     // Strip premium fields for free-tier users
     const userTier = user?.subscriptionTier ?? 'free';

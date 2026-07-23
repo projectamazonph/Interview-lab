@@ -29,6 +29,8 @@ jobs:
     env:
       JWT_SECRET: ci-only-do-not-use-in-prod-abcdef1234567890
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/interviewlab_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/interviewlab_test
+      CRON_SECRET: ci-only-cron-secret-abcdef1234567890
       # Auth/API rate limits are tuned tight for production; the live-server
       # integration suite below makes far more requests per minute than a
       # real user would, so we relax the limits for this job only.

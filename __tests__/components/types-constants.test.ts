@@ -263,14 +263,28 @@ describe('Security - Auth Requirements', () => {
     'api/export/route.ts',
   ];
 
+  // AI routes are thin wrappers around createAIHandler (src/lib/ai/handlers.ts),
+  // which calls getUserFromRequest internally — the route file itself won't
+  // contain that string, so it's enough to confirm they use the factory.
+  const aiHandlerRoutes = new Set([
+    'api/ai/coach/route.ts',
+    'api/ai/resume-review/route.ts',
+    'api/ai/cover-letter/route.ts',
+    'api/ai/assessment-score/route.ts',
+  ]);
+
   protectedRoutes.forEach(route => {
     testIfServer(`${route} should use getUserFromRequest (not x-user-id header)`, () => {
       const filePath = path.join(PROJECT_ROOT, 'src/app', route);
       if (!fs.existsSync(filePath)) return;
 
       const content = fs.readFileSync(filePath, 'utf-8');
-      // Must use cookie-based auth helper
-      expect(content, `${route} should use getUserFromRequest`).toContain('getUserFromRequest');
+      if (aiHandlerRoutes.has(route)) {
+        expect(content, `${route} should use createAIHandler`).toContain('createAIHandler');
+      } else {
+        // Must use cookie-based auth helper
+        expect(content, `${route} should use getUserFromRequest`).toContain('getUserFromRequest');
+      }
       // Must NOT use the old vulnerable x-user-id header pattern
       expect(content, `${route} must not read x-user-id header`).not.toContain("headers.get('x-user-id')");
     });

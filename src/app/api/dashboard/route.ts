@@ -9,7 +9,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const [dbUser, profile, interviewSessions, resumes, coverLetters, questionAttempts] = await Promise.all([
+    const [
+      dbUser,
+      profile,
+      interviewSessions,
+      resumes,
+      coverLetters,
+      questionAttempts,
+      totalSessions,
+      completedSessions,
+      totalAttempts,
+      avgScoreResult,
+    ] = await Promise.all([
       db.user.findUnique({ where: { id: user.id } }),
       db.userProfile.findUnique({ where: { userId: user.id } }),
       db.interviewSession.findMany({
@@ -33,22 +44,19 @@ export async function GET(request: Request) {
         take: 10,
         include: { question: true },
       }),
+      db.interviewSession.count({ where: { userId: user.id } }),
+      db.interviewSession.count({
+        where: { userId: user.id, completedAt: { not: null } },
+      }),
+      db.questionAttempt.count({
+        where: { session: { userId: user.id } },
+      }),
+      db.questionAttempt.aggregate({
+        where: { session: { userId: user.id }, score: { not: null } },
+        _avg: { score: true },
+      }),
     ]);
-
-    // Calculate stats
-    const totalSessions = await db.interviewSession.count({ where: { userId: user.id } });
-    const completedSessions = await db.interviewSession.count({
-      where: { userId: user.id, completedAt: { not: null } },
-    });
-    const totalAttempts = await db.questionAttempt.count({
-      where: { session: { userId: user.id } },
-    });
-    const avgScore = totalAttempts > 0
-      ? (await db.questionAttempt.aggregate({
-          where: { session: { userId: user.id }, score: { not: null } },
-          _avg: { score: true },
-        }))._avg.score || 0
-      : 0;
+    const avgScore = avgScoreResult._avg.score || 0;
 
     const latestResumeScore = resumes.length > 0 ? resumes[0].score : null;
 

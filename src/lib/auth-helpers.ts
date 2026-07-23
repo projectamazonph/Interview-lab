@@ -20,36 +20,6 @@ interface AuthUser {
 }
 
 /**
- * Verify the authenticated user from a request.
- * Uses JWT session cookie only — no header fallback.
- * Returns the user record if valid, null otherwise.
- */
-export async function verifyAuth(userId: string | null): Promise<AuthUser | null> {
-  if (!userId || typeof userId !== 'string') return null;
-
-  // Validate format - CUIDs are typically 25+ chars, alphanumeric + dashes
-  if (userId.length < 10 || userId.length > 50) return null;
-  if (!/^[a-zA-Z0-9_-]+$/.test(userId)) return null;
-
-  try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        subscriptionTier: true,
-        isAdmin: true,
-        emailVerified: true,
-      },
-    });
-    return user;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Get the authenticated user from a NextRequest.
  * Verifies JWT session cookie and returns the user record.
  *
@@ -74,9 +44,15 @@ export async function getUserFromRequest(request: NextRequest | Request): Promis
               subscriptionTier: true,
               isAdmin: true,
               emailVerified: true,
+              tokenVersion: true,
             },
           });
-          if (user) return user;
+          // tokenVersion must match: it's bumped on logout and password
+          // reset, which immediately invalidates every JWT issued before then.
+          if (user && user.tokenVersion === payload.v) {
+            const { tokenVersion: _tokenVersion, ...authUser } = user;
+            return authUser;
+          }
         }
       }
     } catch {
@@ -85,14 +61,4 @@ export async function getUserFromRequest(request: NextRequest | Request): Promis
   }
 
   return null;
-}
-
-/**
- * Verify that the requesting user is an admin.
- * Returns the user record if admin, null otherwise.
- */
-export async function verifyAdmin(userId: string | null): Promise<AuthUser | null> {
-  const user = await verifyAuth(userId);
-  if (!user || !user.isAdmin) return null;
-  return user;
 }

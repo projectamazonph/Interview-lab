@@ -30,6 +30,7 @@ export interface SessionPayload {
   email: string;
   tier: string;       // subscriptionTier
   isAdmin: boolean;
+  v: number;           // tokenVersion at issuance — must match User.tokenVersion to stay valid
 }
 
 /**
@@ -78,6 +79,9 @@ export async function verifySession(request: NextRequest): Promise<SessionPayloa
       email: payload.email as string,
       tier: payload.tier as string,
       isAdmin: payload.isAdmin as boolean,
+      // Tokens issued before tokenVersion existed carry no `v` claim — treat
+      // them as version 0, matching the column's default for existing users.
+      v: typeof payload.v === 'number' ? payload.v : 0,
     };
   } catch {
     return null;
@@ -95,6 +99,9 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
       email: payload.email as string,
       tier: payload.tier as string,
       isAdmin: payload.isAdmin as boolean,
+      // Tokens issued before tokenVersion existed carry no `v` claim — treat
+      // them as version 0, matching the column's default for existing users.
+      v: typeof payload.v === 'number' ? payload.v : 0,
     };
   } catch {
     return null;

@@ -11,6 +11,14 @@ const PAPLogo = () => (
   </svg>
 );
 
+const NAV_LINKS = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/#features' },
+  { label: 'FAQ', href: '/#faq' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+];
+
 export function PapHeader() {
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface-1 sticky top-0 z-50">
@@ -21,13 +29,13 @@ export function PapHeader() {
         </span>
       </Link>
       <nav className="flex items-center gap-1">
-        {['Home', 'Interviews', 'Resume'].map((item) => (
+        {NAV_LINKS.map(({ label, href }) => (
           <Link
-            key={item}
-            href={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+            key={label}
+            href={href}
             className="px-3 py-1.5 text-sm text-ink-500 hover:text-ink-900 rounded-md transition-colors duration-150"
           >
-            {item}
+            {label}
           </Link>
         ))}
       </nav>

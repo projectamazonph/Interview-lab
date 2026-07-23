@@ -12,9 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FieldBadge } from '@/components/ui/glass-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileArrowDown, FileText, Clock, ArrowClockwise } from '@phosphor-icons/react';
-import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
-import { checkCoverLetterAccess } from '@/lib/subscription-guard';
-import { useSubscription } from '@/lib/use-subscription';
 
 const TONE_OPTIONS = [
   { value: 'formal', label: 'Formal Job Application', desc: 'Traditional corporate application letter' },
@@ -29,8 +26,6 @@ const TONE_OPTIONS = [
 
 export function CoverLetterStudio() {
   const { user } = useAuth();
-  const { usage, currentTier } = useSubscription();
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: string; recommendedTier: string }>({ open: false, reason: '', recommendedTier: 'starter' });
   const [jobDescription, setJobDescription] = useState('');
   const [tone, setTone] = useState('formal');
   const [targetRole, setTargetRole] = useState('');
@@ -51,18 +46,6 @@ export function CoverLetterStudio() {
 
   const handleGenerate = async () => {
     if (!jobDescription.trim() || !user) return;
-
-    // Check subscription limit
-    const lettersThisMonth = usage?.coverLettersThisMonth ?? 0;
-    const accessCheck = checkCoverLetterAccess(currentTier, lettersThisMonth);
-    if (!accessCheck.allowed) {
-      setUpgradeModal({
-        open: true,
-        reason: accessCheck.reason || 'Cover letter limit reached',
-        recommendedTier: accessCheck.upgradeTo || 'starter',
-      });
-      return;
-    }
 
     setLoading(true);
     setResult(null);
@@ -373,15 +356,6 @@ export function CoverLetterStudio() {
           </div>
         </FieldCardContent>
       </FieldCard>
-
-      <UpgradeModal
-        open={upgradeModal.open}
-        onClose={() => setUpgradeModal({ open: false, reason: '', recommendedTier: 'starter' })}
-        feature="Cover Letter Studio"
-        reason={upgradeModal.reason}
-        currentTier={currentTier}
-        recommendedTier={upgradeModal.recommendedTier}
-      />
     </div>
   );
 }

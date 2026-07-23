@@ -1,8 +1,14 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { verifyPassword, isLegacyHash, hashPassword } from '@/lib/password';
+import { verifyPassword, isLegacyHash } from '@/lib/password';
 import { createSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limit';
+
+// Precomputed bcrypt hash with no matching plaintext. Compared against on the
+// "user not found" path so login takes the same time whether or not the
+// email exists — otherwise the fast-fail (no hash to check) vs. slow-fail
+// (bcrypt.compare) timing difference lets an attacker enumerate valid emails.
+const DUMMY_HASH = '$2b$12$o54VyLSoCUZmk6w3bPIIkuVkdpNV.4veaAo1.gw3SfNBIxSiYsWK6';
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +23,7 @@ export async function POST(request: Request) {
         { status: 429 }
       );
     }
-    // rate-limit cleanup handled by Prisma TTL
+    // Expired RateLimitEntry rows are swept by the scheduled /api/cron/cleanup route.
 
     const { email, password } = await request.json();
 
@@ -32,29 +38,26 @@ export async function POST(request: Request) {
       include: { profile: true },
     });
 
+    // Always run a bcrypt comparison, even when the user doesn't exist or has
+    // a legacy hash, so response time doesn't leak account state.
+    const hasBcryptHash = !!user?.passwordHash && !isLegacyHash(user.passwordHash);
+    const isValid = await verifyPassword(password, hasBcryptHash ? user!.passwordHash! : DUMMY_HASH);
+
     if (!user || !user.passwordHash) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Verify password (supports both bcrypt and legacy SHA-256)
-    const isValid = await verifyPassword(password, user.passwordHash);
-    if (!isValid) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    // Accounts still on the pre-bcrypt (unsalted SHA-256) hash can't be
+    // authenticated with a password anymore — they must reset it first.
+    if (isLegacyHash(user.passwordHash)) {
+      return NextResponse.json(
+        { error: 'Please reset your password to continue.', code: 'PASSWORD_RESET_REQUIRED' },
+        { status: 403 }
+      );
     }
 
-    // Auto-upgrade legacy SHA-256 hashes to bcrypt on successful login
-    if (isLegacyHash(user.passwordHash)) {
-      try {
-        const newHash = await hashPassword(password);
-        await db.user.update({
-          where: { id: user.id },
-          data: { passwordHash: newHash },
-        });
-        console.log(`[AUTH] Upgraded password hash for user ${user.id} from SHA-256 to bcrypt`);
-      } catch (upgradeErr) {
-        console.error(`[AUTH] Failed to upgrade hash for user ${user.id}:`, upgradeErr);
-        // Non-blocking — login still succeeds
-      }
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     // Create JWT session (HttpOnly cookie)
@@ -73,6 +76,7 @@ export async function POST(request: Request) {
       email: user.email,
       tier: user.subscriptionTier,
       isAdmin: user.isAdmin,
+      v: user.tokenVersion,
     }, response);
 
     return response;

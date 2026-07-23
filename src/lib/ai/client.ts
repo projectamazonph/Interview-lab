@@ -2,6 +2,44 @@ import { extractJson } from './json';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+/**
+ * Caps how many AI calls a single server instance runs at once. Without
+ * this, a burst of concurrent requests fires an unbounded number of
+ * simultaneous outbound calls, each holding its Vercel function (and any
+ * Prisma connection acquired earlier in the request) open for up to
+ * DEFAULT_TIMEOUT_MS. This only bounds concurrency *within one instance* —
+ * it isn't a global limiter across every serverless instance — but combined
+ * with the per-user rate limit in src/lib/ai/handlers.ts it keeps a single
+ * hot instance from amplifying a burst into a connection-pool exhaustion
+ * event.
+ */
+class Semaphore {
+  private available: number;
+  private readonly queue: Array<() => void> = [];
+
+  constructor(private readonly max: number) {
+    this.available = max;
+  }
+
+  async acquire(): Promise<() => void> {
+    if (this.available > 0) {
+      this.available--;
+      return () => this.release();
+    }
+    await new Promise<void>((resolve) => this.queue.push(resolve));
+    this.available--;
+    return () => this.release();
+  }
+
+  private release(): void {
+    this.available++;
+    const next = this.queue.shift();
+    if (next) next();
+  }
+}
+
+const aiSemaphore = new Semaphore(Number(process.env.AI_MAX_CONCURRENT_CALLS) || 10);
+
 export interface AICompletionOptions {
   /** Abort signal forwarded to the provider (enables request cancellation). */
   signal?: AbortSignal;
@@ -25,7 +63,6 @@ export class ZAIProvider implements AIProvider {
   ): Promise<string> {
     const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     // Chain an externally-provided signal so either cancellation wins.
     if (opts.signal) {
@@ -33,6 +70,8 @@ export class ZAIProvider implements AIProvider {
       else opts.signal.addEventListener('abort', () => controller.abort(), { once: true });
     }
 
+    const release = await aiSemaphore.acquire();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const ZAI = (await import('z-ai-web-dev-sdk')).default;
       const zai = await ZAI.create();
@@ -49,6 +88,7 @@ export class ZAIProvider implements AIProvider {
       return completion.choices[0]?.message?.content ?? '';
     } finally {
       clearTimeout(timer);
+      release();
     }
   }
 }

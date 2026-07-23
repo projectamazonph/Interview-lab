@@ -1,5 +1,11 @@
 # Build Specification
 
+> **Known drift:** the subscription endpoints below (`/api/subscription/status`,
+> `/api/subscription/usage`) do not exist — the product has no paid tiers.
+> `POST /api/export` only produces DOCX/PDF; Excel export lives in a separate,
+> unrelated route (`/api/downloads/[id]`). See `CLAUDE.md` at the repo root
+> for the current architecture.
+
 ## Objective
 
 Translate the product requirements for **Interview Lab** into small, testable implementation units.

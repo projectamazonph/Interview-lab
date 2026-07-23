@@ -2,6 +2,13 @@
 
 **Version:** 1.1 | **Updated:** 2026-07-16
 
+> **Known drift:** the subscription endpoints below (`/api/subscription/status`,
+> `/api/subscription/usage`) do not exist — the product has no paid tiers.
+> `POST /api/export` only produces DOCX/PDF; Excel export lives in a separate,
+> unrelated route (`/api/downloads/[id]`), not in the export pipeline
+> described here. See `CLAUDE.md` at the repo root for the current
+> architecture.
+
 ---
 
 ## System Architecture

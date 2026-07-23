@@ -16,13 +16,18 @@ export function sanitizeText(value: unknown): string | null {
     .trim() || null;
 }
 
-// Sanitize but allow basic formatting (for AI-generated content like cover letters)
+/**
+ * Sanitize AI-generated content (e.g. cover letters) that's stored and later
+ * displayed as plain text. This used to keep HTML tags in place (minus
+ * <script> and quoted event-handler attributes), intending to "allow basic
+ * formatting" for a future rich-text renderer — but a regex-based partial
+ * sanitizer can't reliably neutralize HTML (unquoted event handlers like
+ * `<img src=x onerror=...>` slipped through), and nothing in this codebase
+ * actually renders this field as HTML today (it's shown via plain JSX text
+ * interpolation and fed into docx/pdf export as plain text). Strip all tags
+ * like sanitizeText does; if a rich-text renderer is added later, use a real
+ * allowlist HTML sanitizer instead of hand-rolled regexes.
+ */
 export function sanitizeRichText(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
-  if (typeof value !== 'string') return null;
-  return value
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/javascript\s*:/gi, '')
-    .trim() || null;
+  return sanitizeText(value);
 }

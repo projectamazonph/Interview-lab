@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth-helpers';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { completeJson } from './client';
+
+// AI calls are the most expensive requests the app makes (outbound model
+// calls with up to a 30s timeout) — the generic per-IP middleware limit
+// isn't tight enough to stop a single authenticated user from hammering
+// them, so every AI endpoint gets its own per-user budget on top of it.
+const AI_RATE_LIMIT_MAX = Number(process.env.AI_RATE_LIMIT_MAX) || 20;
+const AI_RATE_LIMIT_WINDOW_MS = 10 * 60_000; // 10 minutes
 
 /**
  * Lightweight schema check (avoids adding zod as a dependency).
@@ -64,6 +72,14 @@ export function createAIHandler<TBody = Record<string, unknown>, TResult = unkno
     }
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = await checkRateLimit(user.id, 'ai', AI_RATE_LIMIT_MAX, AI_RATE_LIMIT_WINDOW_MS);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please try again in a few minutes.' },
+        { status: 429, headers: { 'Retry-After': '600' } }
+      );
     }
 
     let rawBody: unknown;

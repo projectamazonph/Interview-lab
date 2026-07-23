@@ -21,7 +21,7 @@ for aspiring Amazon Virtual Assistants.
 |---------|-------------|
 | **AI Mock Interviews** | Role-specific interview sessions with real-time AI feedback and scoring |
 | **Question Bank** | 264+ questions across 6 VA roles and 3 difficulty levels |
-| **Resume Lab** | Upload resume, get AI review with truth flags and improvement suggestions |
+| **Resume Lab** | Paste your resume text, get AI review with truth flags and improvement suggestions |
 | **Cover Letter Studio** | Generate role-targeted cover letters with multiple tones |
 | **Practice Tests** | Timed assessments with AI-scored results |
 | **Learning Paths** | Beginner → Intermediate → Advanced guides per role |
@@ -30,7 +30,7 @@ for aspiring Amazon Virtual Assistants.
 
 ## 💰 Pricing
 
-**Free, always.** Interview Lab is a free companion to [Project Amazon PH Academy](https://projectamazon.ph). All features are available to all users — no paid tiers.
+**Free, always.** Interview Lab is a free companion to [Project Amazon PH Academy](https://projectamazonph.com). All features are available to all users — no paid tiers.
 
 ## 🛠 Tech Stack
 
@@ -44,7 +44,7 @@ for aspiring Amazon Virtual Assistants.
 | **Icons** | Phosphor Icons (light weight) |
 | **Fonts** | Space Grotesk (headings) + Plus Jakarta Sans (body) |
 | **AI** | Z AI Web Dev SDK for coaching, scoring, content generation |
-| **Export** | docx, PDF (manual builder / pdfkit), Excel (exceljs) |
+| **Export** | Resume/cover-letter export: docx, PDF (pdfkit). Download Center resources: PDF, DOCX, and Excel (exceljs) — a separate, unrelated code path |
 
 ## 🚀 Getting Started
 
@@ -84,44 +84,34 @@ bash .zscripts/dev.sh
 src/
 ├── app/                        # Next.js App Router
 │   ├── api/                    # API routes
-│   │   ├── auth/               # Register, login, logout, email verify
+│   │   ├── auth/               # Register, login, logout, email verify, forgot/reset password
+│   │   ├── cron/                # Scheduled maintenance (rate-limit + token cleanup)
 │   │   ├── interview/          # Mock interview sessions
 │   │   ├── questions/          # Question bank + count
 │   │   ├── assessments/        # Practice test assessments
 │   │   ├── profile/            # User profile (GET/PUT)
 │   │   ├── dashboard/          # Dashboard aggregation
-│   │   ├── subscription/       # Removed (product is free)
-│   │   ├── resume/             # Resume upload + AI review
+│   │   ├── resume/             # Resume text review (paste, not file upload)
 │   │   ├── cover-letter/       # Cover letter generation
 │   │   ├── ai/                 # AI endpoints (coach, scoring, resume, cover)
 │   │   ├── admin/              # Admin analytics + question management
 │   │   ├── guides/             # Learning path guides
 │   │   ├── downloads/          # Download center
-│   │   └── export/             # DOCX/PDF/Excel export
-│   └── [pages]/                # Page routes
+│   │   └── export/             # DOCX/PDF export
+│   ├── page.tsx                # The app itself — a client-side SPA (landing, auth, dashboard, all feature views)
+│   └── about/, contact/, privacy/, terms/, reset-password/  # Standalone marketing/utility pages
 ├── components/
-│   ├── interview-lab/          # Page components (Field Manual design system)
+│   ├── interview-lab/          # Feature components rendered inside the SPA (Field Manual design system)
 │   └── ui/                     # Shared primitives (field-card, field-button, etc.)
 ├── lib/
-│   ├── auth-helpers.ts         # Server-side JWT + header auth
-│   ├── pricing.ts              # Tier configs (currently unused — product is free)
-│   ├── subscription-guard.ts   # Feature access checks (returns allowed: true)
+│   ├── auth-helpers.ts         # Server-side JWT session verification
+│   ├── subscription-guard.ts   # Feature access checks (product is free — always allows)
 │   ├── types.ts                # TypeScript interfaces
 │   └── utils.ts                # cn() utility
 └── hooks/                      # Custom React hooks
 
 prisma/                         # Prisma schema (PostgreSQL)
-__tests__/                      # Test suites
-├── api/                        # API route unit tests (218 tests)
-│   ├── interview-session.test.ts
-│   ├── questions.test.ts
-│   ├── auth-register.test.ts
-│   ├── auth-login.test.ts
-│   ├── assessments.test.ts
-│   ├── profile-dashboard.test.ts
-│   ├── subscription.test.ts
-│   └── resume-coverletter.test.ts
-└── components/                 # Component tests
+__tests__/                      # Test suites — api/, components/, lib/, unit/, stress/ (see docs/TESTING.md)
 docs/                           # PRD, architecture, feature specs
 .zscripts/                      # Dev/build/startup scripts
 ```
@@ -141,18 +131,9 @@ bun test __tests__/api/
 
 ### Test Coverage
 
-| Test File | Tests | What It Covers |
-|-----------|-------|----------------|
-| `interview-session.test.ts` | 21 | Session creation, answer submission, auth/authz |
-| `questions.test.ts` | 38 | Question bank filtering, role/difficulty, structure |
-| `auth-register.test.ts` | 34 | Registration validation, email/password, bot protection |
-| `auth-login.test.ts` | 26 | Login flow, rate limiting, session, email sanitization |
-| `assessments.test.ts` | 20 | Assessment list/get/submit, answer key stripping |
-| `profile-dashboard.test.ts` | 23 | Profile whitelisting, sanitization, dashboard stats |
-| `resume-coverletter.test.ts` | 25 | Resume CRUD, cover-letter tones, truth flags |
-| **Total** | **187** | **All API routes, all green** |
+Covers auth flows (register/login/logout/password reset), question bank filtering, interview session creation and server-side answer scoring, resume/cover-letter CRUD, rate limiting, and AI response parsing. See `docs/TESTING.md` for the full file breakdown.
 
-Tests use in-memory stubs — no database or server required.
+Most tests use in-memory stubs — no database or server required. A subset also runs as live-server integration tests against a real Postgres instance in CI (see `.github/workflows/ci.yml`).
 
 ## 📋 Available Scripts
 
@@ -180,9 +161,13 @@ Tests use in-memory stubs — no database or server required.
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection URL |
-| `JWT_SECRET` | Secret for signing JWT session tokens |
+| `DATABASE_URL` | PostgreSQL connection URL — must be a **pooled** connection in production (see `docs/DEPLOYMENT.md`) |
+| `DIRECT_URL` | Unpooled PostgreSQL connection, used only for `db:push`/`db:migrate` |
+| `JWT_SECRET` | Secret for signing JWT session tokens (min. 32 characters) |
 | `NEXT_PUBLIC_APP_URL` | App base URL |
+| `CRON_SECRET` | Authorizes the scheduled `/api/cron/cleanup` route |
+
+See `.env.example` for the full list, including optional rate-limit overrides.
 
 ## 📚 Documentation
 

@@ -12,6 +12,13 @@ vi.mock('@/lib/ai/client', () => ({
   completeJson: (...args: unknown[]) => completeJson(...args),
 }));
 
+// Mock the DB-backed rate limiter so tests don't need a real Postgres —
+// createAIHandler calls this before doing anything else.
+const checkRateLimit = vi.fn();
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimit(...args),
+}));
+
 import { createAIHandler, validateShape } from '@/lib/ai/handlers';
 
 interface SampleBody {
@@ -45,6 +52,14 @@ describe('createAIHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    checkRateLimit.mockResolvedValue({ allowed: true, remaining: 19 });
+  });
+
+  it('returns 429 when the per-user AI rate limit is exceeded', async () => {
+    checkRateLimit.mockResolvedValue({ allowed: false, remaining: 0 });
+    const handler = createAIHandler<SampleBody, SampleResult>(makeConfig());
+    const res = await handler(postReq({ text: 'hi' }));
+    expect(res.status).toBe(429);
   });
 
   it('returns 401 when no user', async () => {

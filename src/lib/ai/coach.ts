@@ -1,4 +1,5 @@
 import { validateShape, type AIHandlerConfig } from './handlers';
+import { completeJson } from './client';
 
 const GLOBAL_SYSTEM_PROMPT = `You are an Amazon VA career preparation assistant. Your job is to help users prepare for Amazon marketplace virtual assistant roles, especially Amazon PPC, Seller Central support, listing support, reporting, and agency operations roles. You must be practical, honest, and role-specific. Help users explain their real skills clearly without exaggerating or fabricating experience. You may coach, rewrite, score, summarize, and generate practice materials. You must not claim the user has experience, certifications, budgets managed, client results, or tool expertise unless the user explicitly provided that information. When discussing Amazon PPC, use clear operational language: campaigns, keywords, search terms, ACoS, ROAS, CTR, CPC, CVR, spend, sales, orders, listing readiness, inventory, reporting, and SOPs. When uncertain, ask for the missing detail or provide a safe beginner-friendly version. Never guarantee job placement, interview success, ranking results, ACoS improvement, or Amazon account outcomes.`;
 
@@ -46,7 +47,7 @@ interface CoachBody {
   questionContext?: string;
 }
 
-interface CoachResult {
+export interface CoachResult {
   score: number;
   whatWorked: string;
   whatToImprove: string;
@@ -91,6 +92,42 @@ function errorFeedback(): CoachResult {
       truthfulness: 6,
     },
   };
+}
+
+/**
+ * Score an interview answer directly (no HTTP round trip). Used by
+ * /api/interview/[id] to compute the authoritative, persisted score
+ * server-side — callers must never accept a pre-computed score/feedback
+ * from the client and pass it straight to the database.
+ */
+export async function scoreInterviewAnswer(
+  question: string,
+  userAnswer: string,
+  questionContext?: string,
+): Promise<CoachResult> {
+  const scoreHint = `Evaluate the answer and provide your score. If the score is below 7, make sure the followUpQuestion specifically targets the weakness in their answer to give them a chance to improve. If the score is 7 or above, ask a natural follow-up that explores the topic more deeply.`;
+  const userPrompt = `Question: ${question}\n\nQuestion Context: ${questionContext || 'General Amazon VA interview question'}\n\nUser's Answer: ${userAnswer}\n\n${scoreHint}\n\nPlease evaluate this answer and provide coaching feedback in the required JSON format.`;
+
+  let result: CoachResult | null;
+  try {
+    result = await completeJson<CoachResult>(INTERVIEW_COACH_PROMPT, userPrompt);
+  } catch (error) {
+    console.error('scoreInterviewAnswer provider error:', error);
+    return errorFeedback();
+  }
+
+  if (!result) {
+    return fallbackFeedback(question);
+  }
+
+  if (!result.followUpQuestion) {
+    const score = typeof result.score === 'number' ? result.score : 5;
+    result.followUpQuestion =
+      score < 7
+        ? `Your answer could use more detail. Can you try again, specifically focusing on the process steps and any relevant metrics for: "${question}"?`
+        : `Good answer! As a follow-up, can you explain how you would handle a more complex scenario related to this topic?`;
+  }
+  return result;
 }
 
 export const coachConfig: AIHandlerConfig<CoachBody, CoachResult> = {

@@ -25,6 +25,9 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
 
   const honeypotRef = useRef<HTMLInputElement>(null);
   const formStartRef = useRef<number>(0);
@@ -34,8 +37,10 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const success = await login(loginEmail, loginPassword);
-    if (!success) {
+    const result = await login(loginEmail, loginPassword);
+    if (result === 'PASSWORD_RESET_REQUIRED') {
+      setError("Your account needs a password reset. Use \"Forgot password?\" below.");
+    } else if (!result) {
       setError("Invalid email or password");
     }
     setLoading(false);
@@ -66,8 +71,27 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
   const switchTab = (tab: "login" | "register") => {
     setActiveTab(tab);
     setError("");
+    setForgotPasswordMode(false);
     setLoading(false);
     formStartRef.current = performance.now(); // eslint-disable-line react-hooks/purity
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setForgotMessage("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await res.json();
+      setForgotMessage(data.message || "If an account exists for that email, a password reset link has been sent.");
+    } catch {
+      setForgotMessage("Something went wrong. Please try again.");
+    }
+    setLoading(false);
   };
 
   return (
@@ -124,7 +148,38 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
             aria-hidden="true"
           />
 
-          {activeTab === "login" ? (
+          {activeTab === "login" && forgotPasswordMode ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-ink-500">
+                Enter your email and we&apos;ll send you a password reset link.
+              </p>
+              <FieldInput
+                icon={<EnvelopeSimple className="w-4 h-4" />}
+                type="email"
+                placeholder="Email address"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+
+              {forgotMessage && (
+                <p className="text-sm text-ink-700 animate-fade-in">{forgotMessage}</p>
+              )}
+
+              <FieldButton type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending..." : "Send Reset Link"}
+              </FieldButton>
+
+              <button
+                type="button"
+                onClick={() => { setForgotPasswordMode(false); setForgotMessage(""); }}
+                className="w-full text-center text-sm text-ink-500 hover:text-ink-700 transition-colors"
+              >
+                Back to sign in
+              </button>
+            </form>
+          ) : activeTab === "login" ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <FieldInput
                 icon={<EnvelopeSimple className="w-4 h-4" />}
@@ -154,6 +209,14 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
                   {showPassword ? <EyeSlash className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => { setForgotPasswordMode(true); setError(""); }}
+                className="text-sm text-ink-500 hover:text-[#FF6B35] transition-colors"
+              >
+                Forgot password?
+              </button>
 
               {error && (
                 <p className="text-sm text-[#B91C1C] animate-fade-in">{error}</p>
@@ -218,9 +281,9 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
 
           <p className="text-center text-ink-500 text-xs mt-6 leading-relaxed">
             By continuing you agree to our{" "}
-            <a href="#terms" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Terms</a>
+            <a href="/terms" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Terms</a>
             {" "}and{" "}
-            <a href="#privacy" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Privacy Policy</a>
+            <a href="/privacy" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Privacy Policy</a>
           </p>
         </FieldCard>
       </div>

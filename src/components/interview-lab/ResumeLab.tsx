@@ -12,14 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileArrowDown, FileText, Clock as ClockIcon, ArrowsLeftRight } from '@phosphor-icons/react';
-import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
-import { checkResumeAccess } from '@/lib/subscription-guard';
-import { useSubscription } from '@/lib/use-subscription';
 
 export function ResumeLab() {
   const { user } = useAuth();
-  const { usage, currentTier } = useSubscription();
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: string; recommendedTier: string }>({ open: false, reason: '', recommendedTier: 'starter' });
   const [resumeText, setResumeText] = useState('');
   const [targetRole, setTargetRole] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,17 +36,6 @@ export function ResumeLab() {
 
   const handleSubmit = async () => {
     if (!resumeText.trim() || !user) return;
-
-    const reviewsThisMonth = usage?.resumeReviewsThisMonth ?? 0;
-    const accessCheck = checkResumeAccess(currentTier, reviewsThisMonth);
-    if (!accessCheck.allowed) {
-      setUpgradeModal({
-        open: true,
-        reason: accessCheck.reason || 'Resume review limit reached',
-        recommendedTier: accessCheck.upgradeTo || 'starter',
-      });
-      return;
-    }
 
     setLoading(true);
     setFeedback(null);
@@ -380,15 +364,6 @@ export function ResumeLab() {
           <div className="flex justify-between p-2 bg-[#F4F3EE] rounded gap-2"><span className="truncate text-[#404040]">Truthfulness</span><span className="font-medium shrink-0 text-[#171717]">10%</span></div>
         </div>
       </FieldCard>
-
-      <UpgradeModal
-        open={upgradeModal.open}
-        onClose={() => setUpgradeModal({ open: false, reason: '', recommendedTier: 'starter' })}
-        feature="Resume Review"
-        reason={upgradeModal.reason}
-        currentTier={currentTier}
-        recommendedTier={upgradeModal.recommendedTier}
-      />
     </div>
   );
 }

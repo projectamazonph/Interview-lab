@@ -2,6 +2,16 @@ import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
+import { unstable_cache, revalidateTag } from 'next/cache';
+
+// Download-center listing changes only via the admin panel — cache the DB
+// round-trip and invalidate explicitly on create below.
+const getCachedDownloads = unstable_cache(
+  (where: Record<string, unknown>) =>
+    db.download.findMany({ where, orderBy: [{ category: 'asc' }, { title: 'asc' }] }),
+  ['downloads-list'],
+  { tags: ['downloads'], revalidate: 300 },
+);
 
 export async function GET(request: Request) {
   try {
@@ -15,10 +25,7 @@ export async function GET(request: Request) {
     if (category && category !== 'all') where.category = category;
     if (fileType && fileType !== 'all') where.fileType = fileType;
 
-    const downloads = await db.download.findMany({
-      where,
-      orderBy: [{ category: 'asc' }, { title: 'asc' }],
-    });
+    const downloads = await getCachedDownloads(where);
 
     return NextResponse.json({ downloads });
   } catch (error) {
@@ -54,6 +61,7 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateTag('downloads', { expire: 0 });
     return NextResponse.json(download, { status: 201 });
   } catch (error) {
     console.error('Downloads POST error:', error);

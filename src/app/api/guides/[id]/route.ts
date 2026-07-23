@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(
   request: Request,
@@ -49,6 +50,7 @@ export async function PUT(
       data: update,
     });
 
+    revalidateTag('guides', { expire: 0 });
     return NextResponse.json(guide);
   } catch (error) {
     console.error('Guide PUT error:', error);

@@ -3,6 +3,17 @@ import { getUserFromRequest } from '@/lib/auth-helpers';
 import { checkGuideAccess } from '@/lib/subscription-guard';
 import { sanitizeText } from '@/lib/sanitize';
 import { NextResponse } from 'next/server';
+import { unstable_cache, revalidateTag } from 'next/cache';
+
+// Guides change rarely (admin-authored content) and are read on every
+// learning-path page view — cache the DB round-trip and invalidate
+// explicitly from the admin create/update paths below.
+const getCachedGuides = unstable_cache(
+  (where: Record<string, unknown>) =>
+    db.guide.findMany({ where, orderBy: [{ level: 'asc' }, { title: 'asc' }] }),
+  ['guides-list'],
+  { tags: ['guides'], revalidate: 300 },
+);
 
 export async function GET(request: Request) {
   try {
@@ -33,10 +44,7 @@ export async function GET(request: Request) {
     if (level && level !== 'all') where.level = level;
     if (role && role !== 'all') where.role = { in: [role, 'General'] };
 
-    const guides = await db.guide.findMany({
-      where,
-      orderBy: [{ level: 'asc' }, { title: 'asc' }],
-    });
+    const guides = await getCachedGuides(where);
 
     // Strip content for guides the user doesn't have access to
     const userTier = user?.subscriptionTier ?? 'free';
@@ -97,6 +105,7 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateTag('guides', { expire: 0 });
     return NextResponse.json(guide, { status: 201 });
   } catch (error) {
     console.error('Guides POST error:', error);

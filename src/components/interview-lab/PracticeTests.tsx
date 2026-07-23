@@ -9,14 +9,9 @@ import { FieldButton } from '@/components/ui/glass-button';
 import { FieldCard } from '@/components/ui/glass-card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
-import { checkPracticeTestAccess } from '@/lib/subscription-guard';
-import { useSubscription } from '@/lib/use-subscription';
 
 export function PracticeTests() {
   const { user } = useAuth();
-  const { usage, currentTier } = useSubscription();
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: string; recommendedTier: string }>({ open: false, reason: '', recommendedTier: 'starter' });
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
@@ -35,18 +30,6 @@ export function PracticeTests() {
 
   const handleSubmit = async () => {
     if (!selectedAssessment || !userAnswers.trim() || !user) return;
-
-    // Check subscription limit
-    const testsThisMonth = usage?.practiceTestsThisMonth ?? 0;
-    const accessCheck = checkPracticeTestAccess(currentTier, testsThisMonth);
-    if (!accessCheck.allowed) {
-      setUpgradeModal({
-        open: true,
-        reason: accessCheck.reason || 'Practice test limit reached',
-        recommendedTier: accessCheck.upgradeTo || 'starter',
-      });
-      return;
-    }
 
     setScoring(true);
     try {
@@ -290,15 +273,6 @@ export function PracticeTests() {
           ))}
         </div>
       )}
-
-      <UpgradeModal
-        open={upgradeModal.open}
-        onClose={() => setUpgradeModal({ open: false, reason: '', recommendedTier: 'starter' })}
-        feature="Practice Tests"
-        reason={upgradeModal.reason}
-        currentTier={currentTier}
-        recommendedTier={upgradeModal.recommendedTier}
-      />
     </div>
   );
 }

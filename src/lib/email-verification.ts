@@ -1,27 +1,37 @@
 import { db } from './db';
 
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
+const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // password reset tokens expire sooner
 
-export async function createVerificationToken(email: string): Promise<string> {
+export type TokenPurpose = 'email_verification' | 'password_reset';
+
+export async function createVerificationToken(
+  email: string,
+  purpose: TokenPurpose = 'email_verification',
+): Promise<string> {
   const token = cryptoRandomHex(32);
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + TOKEN_EXPIRY_MS);
+  const expiresAt = new Date(now.getTime() + (purpose === 'password_reset' ? RESET_TOKEN_EXPIRY_MS : TOKEN_EXPIRY_MS));
 
-  // Clean up old tokens for this email first
-  await db.verificationToken.deleteMany({ where: { email } }).catch(() => {});
+  // Clean up old tokens for this email + purpose first — scoped so
+  // requesting a password reset doesn't invalidate a pending verification
+  // email, or vice versa.
+  await db.verificationToken.deleteMany({ where: { email, purpose } }).catch(() => {});
 
-  // Await token creation to ensure it's stored
   await db.verificationToken.create({
-    data: { token, email, expiresAt },
+    data: { token, email, purpose, expiresAt },
   });
 
   return token;
 }
 
-export async function validateVerificationToken(token: string): Promise<string | null> {
+export async function validateVerificationToken(
+  token: string,
+  purpose: TokenPurpose = 'email_verification',
+): Promise<string | null> {
   try {
     const entry = await db.verificationToken.findUnique({ where: { token } });
-    if (!entry) return null;
+    if (!entry || entry.purpose !== purpose) return null;
     if (new Date() > entry.expiresAt) {
       await db.verificationToken.delete({ where: { token } });
       return null;
@@ -33,10 +43,13 @@ export async function validateVerificationToken(token: string): Promise<string |
   }
 }
 
-export async function hasPendingVerification(email: string): Promise<boolean> {
+export async function hasPendingVerification(
+  email: string,
+  purpose: TokenPurpose = 'email_verification',
+): Promise<boolean> {
   try {
     const count = await db.verificationToken.count({
-      where: { email, expiresAt: { gt: new Date() } },
+      where: { email, purpose, expiresAt: { gt: new Date() } },
     });
     return count > 0;
   } catch {

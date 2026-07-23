@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean | 'PASSWORD_RESET_REQUIRED'>;
   register: (email: string, name: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean | 'PASSWORD_RESET_REQUIRED'> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -98,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await fetchUserProfile(data.id, setProfile);
         return true;
       }
+      const errorData = await res.json().catch(() => null);
+      if (errorData?.code === 'PASSWORD_RESET_REQUIRED') return 'PASSWORD_RESET_REQUIRED';
       return false;
     } catch {
       return false;

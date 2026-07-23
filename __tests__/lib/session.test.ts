@@ -13,7 +13,7 @@ import {
   TOKEN_MAX_AGE,
 } from '@/lib/session';
 
-const payload = { sub: 'user-1', email: 'demo@interviewlab.com', tier: 'free', isAdmin: false };
+const payload = { sub: 'user-1', email: 'demo@interviewlab.com', tier: 'free', isAdmin: false, v: 0 };
 
 function requestWithCookie(cookieValue?: string) {
   const headers = new Headers();

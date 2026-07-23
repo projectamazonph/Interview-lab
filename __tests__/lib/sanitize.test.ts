@@ -48,30 +48,40 @@ describe('sanitizeText', () => {
 });
 
 describe('sanitizeRichText', () => {
+  // sanitizeRichText used to preserve HTML tags (minus <script> and quoted
+  // event handlers) for a "rich formatting" use case, but a regex-based
+  // partial sanitizer can't reliably neutralize HTML — unquoted event
+  // handlers like `<img src=x onerror=...>` slipped through — and nothing
+  // in the app renders this field as HTML anyway. It now strips all tags
+  // just like sanitizeText.
   it('returns null for null, undefined, and non-strings', () => {
     expect(sanitizeRichText(null)).toBeNull();
     expect(sanitizeRichText(undefined)).toBeNull();
     expect(sanitizeRichText(99)).toBeNull();
   });
 
-  it('strips script tags but preserves other markup', () => {
-    expect(sanitizeRichText('<p>Hi</p><script>alert(1)</script>')).toBe('<p>Hi</p>');
+  it('strips all HTML tags, including script tags and their content', () => {
+    expect(sanitizeRichText('<p>Hi</p><script>alert(1)</script>')).toBe('Hi');
   });
 
-  it('removes inline event handlers while preserving the tag', () => {
-    expect(sanitizeRichText('<div onclick="alert(1)">click me</div>')).toBe('<div >click me</div>');
+  it('strips tags with unquoted event handlers (the old bypass)', () => {
+    expect(sanitizeRichText('<img src=x onerror=alert(1)>click me')).toBe('click me');
+  });
+
+  it('removes inline event handlers and the enclosing tag', () => {
+    expect(sanitizeRichText('<div onclick="alert(1)">click me</div>')).toBe('click me');
   });
 
   it('removes javascript: URLs', () => {
-    expect(sanitizeRichText('<a href="javascript:alert(1)">link</a>')).toBe('<a href="alert(1)">link</a>');
+    expect(sanitizeRichText('<a href="javascript:alert(1)">link</a>')).toBe('link');
   });
 
   it('trims whitespace and collapses to null when empty', () => {
     expect(sanitizeRichText('   ')).toBeNull();
   });
 
-  it('preserves basic formatting for AI-generated content', () => {
+  it('keeps the text content of formatted AI-generated content, dropping the tags', () => {
     const input = '<p>Dear Hiring Manager,</p><p>I am excited to apply.</p>';
-    expect(sanitizeRichText(input)).toBe(input);
+    expect(sanitizeRichText(input)).toBe('Dear Hiring Manager,I am excited to apply.');
   });
 });

@@ -1,19 +1,23 @@
 # Amazon VA Interview Lab - Technical Architecture
 
+> **This document is an early planning proposal, not a description of the built system.**
+> Several items below were never implemented as written — see the corrections in
+> each row, or `CLAUDE.md` at the repo root for the current, as-built architecture.
+
 ## 10.1 Recommended Stack
-| Layer | Recommendation |
-|-------|---------------|
-| Frontend | Next.js, React, TypeScript |
-| Styling | Tailwind CSS |
-| Backend | Next.js API routes |
-| Database | PostgreSQL (SQLite with Prisma for MVP) |
-| Vector search | pgvector or managed vector DB |
-| File storage | S3-compatible storage |
-| Auth | NextAuth.js |
-| AI orchestration | z-ai-web-dev-sdk |
-| Document generation | DOCX/PDF generation service |
-| Analytics | PostHog, Amplitude, or custom events |
-| Admin CMS | Built-in admin panel |
+| Layer | Recommendation | As built |
+|-------|---------------|----------|
+| Frontend | Next.js, React, TypeScript | Matches |
+| Styling | Tailwind CSS | Matches (v4) |
+| Backend | Next.js API routes | Matches |
+| Database | PostgreSQL (SQLite with Prisma for MVP) | **PostgreSQL only** — no SQLite path exists |
+| Vector search | pgvector or managed vector DB | **Not implemented** — no vector search anywhere in the app |
+| File storage | S3-compatible storage | **Not implemented** — resumes are pasted text, not uploaded files; no object storage is used |
+| Auth | NextAuth.js | **Custom JWT auth** (`jose`, HttpOnly cookies) — NextAuth.js is not used |
+| AI orchestration | z-ai-web-dev-sdk | Matches |
+| Document generation | DOCX/PDF generation service | Matches (`docx`, `pdfkit`, in-process) |
+| Analytics | PostHog, Amplitude, or custom events | **Not implemented** — no analytics integration exists |
+| Admin CMS | Built-in admin panel | Matches |
 
 ## 10.2 System Architecture
 

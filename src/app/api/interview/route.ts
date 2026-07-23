@@ -58,10 +58,19 @@ export async function POST(request: Request) {
         break;
     }
 
-    // Use random ordering for variety
-    const allQuestions = await db.question.findMany({ where });
-    const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-    const questions = shuffled.slice(0, questionCount);
+    // Pick a random subset without pulling every matching row's full text
+    // fields (whyEmployersAsk, strongAnswerPoints, sampleAnswer, etc.) into
+    // memory just to throw most of them away — fetch only the id pool,
+    // shuffle that, then load full rows for just the selected questions.
+    const pool = await db.question.findMany({ where, select: { id: true } });
+    const shuffledIds = pool
+      .map((q) => q.id)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, questionCount);
+
+    const selected = await db.question.findMany({ where: { id: { in: shuffledIds } } });
+    const orderById = new Map(shuffledIds.map((id, index) => [id, index]));
+    const questions = selected.sort((a, b) => (orderById.get(a.id) ?? 0) - (orderById.get(b.id) ?? 0));
 
     const session = await db.interviewSession.create({
       data: {

@@ -1,6 +1,11 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { scoreInterviewAnswer } from '@/lib/ai/coach';
 import { NextResponse } from 'next/server';
+
+const AI_RATE_LIMIT_MAX = Number(process.env.AI_RATE_LIMIT_MAX) || 20;
+const AI_RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 
 export async function GET(
   request: Request,
@@ -65,22 +70,60 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { questionId, userAnswer, aiFeedback, score, rubricBreakdown } = await request.json();
+    const rl = await checkRateLimit(user.id, 'ai', AI_RATE_LIMIT_MAX, AI_RATE_LIMIT_WINDOW_MS);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please try again in a few minutes.' },
+        { status: 429, headers: { 'Retry-After': '600' } }
+      );
+    }
+
+    const { questionId, userAnswer } = await request.json();
+    if (!questionId || typeof userAnswer !== 'string' || !userAnswer.trim()) {
+      return NextResponse.json({ error: 'questionId and userAnswer are required' }, { status: 400 });
+    }
+
+    // Question must belong to this session's assigned set — prevents
+    // recording an attempt against a question never issued in this session.
+    const assignedQuestionIds: string[] = session.transcript
+      ? (JSON.parse(session.transcript).questions ?? [])
+      : [];
+    if (!assignedQuestionIds.includes(questionId)) {
+      return NextResponse.json({ error: 'Question is not part of this session' }, { status: 400 });
+    }
+
+    const question = await db.question.findUnique({ where: { id: questionId } });
+    if (!question) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    // Score is always computed server-side from the model — never trust a
+    // client-supplied score/feedback, which would let a user forge their own
+    // interview results.
+    const coachResult = await scoreInterviewAnswer(
+      question.question,
+      userAnswer,
+      `Role: ${question.role}, Type: ${question.type}, Skill: ${question.skillArea}`,
+    );
 
     const attempt = await db.questionAttempt.create({
       data: {
         sessionId: id,
         questionId,
         userAnswer,
-        aiFeedback,
-        score,
-        rubricBreakdown: rubricBreakdown ? JSON.stringify(rubricBreakdown) : null,
+        aiFeedback: JSON.stringify(coachResult),
+        score: coachResult.score,
+        rubricBreakdown: JSON.stringify(coachResult.rubricBreakdown),
       },
     });
 
     return NextResponse.json({
       ...attempt,
-      rubricBreakdown: attempt.rubricBreakdown ? JSON.parse(attempt.rubricBreakdown) : null,
+      rubricBreakdown: coachResult.rubricBreakdown,
+      whatWorked: coachResult.whatWorked,
+      whatToImprove: coachResult.whatToImprove,
+      strongerSampleAnswer: coachResult.strongerSampleAnswer,
+      followUpQuestion: coachResult.followUpQuestion,
     }, { status: 201 });
   } catch (error) {
     console.error('Interview POST answer error:', error);

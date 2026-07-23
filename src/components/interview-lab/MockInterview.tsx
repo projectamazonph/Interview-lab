@@ -10,9 +10,6 @@ import { FieldBadge } from '@/components/ui/glass-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { UpgradeModal } from '@/components/interview-lab/UpgradeModal';
-import { checkInterviewAccess } from '@/lib/subscription-guard';
-import { useSubscription } from '@/lib/use-subscription';
 
 interface QuestionWithMeta extends Question {
   isFollowUp?: boolean;
@@ -21,8 +18,6 @@ interface QuestionWithMeta extends Question {
 
 export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveView) => void }) {
   const { user } = useAuth();
-  const { usage, currentTier } = useSubscription();
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: string; recommendedTier: string }>({ open: false, reason: '', recommendedTier: 'starter' });
   const [mode, setMode] = useState('');
   const [targetRole, setTargetRole] = useState('');
   const [session, setSession] = useState<InterviewSession | null>(null);
@@ -61,18 +56,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
   const startInterview = async () => {
     if (!mode || !user) return;
 
-    // Check subscription limit
-    const interviewsThisWeek = usage?.interviewsThisWeek ?? 0;
-    const accessCheck = checkInterviewAccess(currentTier, interviewsThisWeek);
-    if (!accessCheck.allowed) {
-      setUpgradeModal({
-        open: true,
-        reason: accessCheck.reason || 'Interview limit reached',
-        recommendedTier: accessCheck.upgradeTo || 'starter',
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch('/api/interview', {
@@ -103,16 +86,17 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
     if (!userAnswer.trim() || !questions[currentIndex] || !session || !user) return;
     setSubmitting(true);
     try {
-      const coachRes = await fetch('/api/ai/coach', {
+      // The score/feedback here are computed and persisted server-side in
+      // one step — the client never gets to supply its own score.
+      const attemptRes = await fetch(`/api/interview/${session.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question: questions[currentIndex].question,
+          questionId: questions[currentIndex].id,
           userAnswer,
-          questionContext: `Role: ${questions[currentIndex].role}, Type: ${questions[currentIndex].type}, Skill: ${questions[currentIndex].skillArea}`,
         }),
       });
-      const coachData = await coachRes.json();
+      const coachData = await attemptRes.json();
       setFeedback(coachData);
       const score = coachData.score || 5;
       setScores(prev => [...prev, score]);
@@ -124,19 +108,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
         score,
         feedback: coachData,
       }]);
-
-      // Save attempt
-      await fetch(`/api/interview/${session.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          questionId: questions[currentIndex].id,
-          userAnswer,
-          aiFeedback: JSON.stringify(coachData),
-          score,
-          rubricBreakdown: coachData.rubricBreakdown,
-        }),
-      });
 
       // If there's a follow-up question and score < 7, offer adaptive follow-up
       if (coachData.followUpQuestion && score < 7) {
@@ -337,15 +308,6 @@ export function MockInterview({ onViewChange }: { onViewChange?: (view: ActiveVi
             </div>
           </FieldCard>
         )}
-
-        <UpgradeModal
-          open={upgradeModal.open}
-          onClose={() => setUpgradeModal({ open: false, reason: '', recommendedTier: 'starter' })}
-          feature="Mock Interviews"
-          reason={upgradeModal.reason}
-          currentTier={currentTier}
-          recommendedTier={upgradeModal.recommendedTier}
-        />
       </div>
     );
   }

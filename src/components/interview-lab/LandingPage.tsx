@@ -464,8 +464,8 @@ export function LandingPage({ onGetStarted, onViewPrograms }: LandingPageProps) 
               <span className="font-heading font-bold text-sm text-ink-700">Interview Lab — Project Amazon PH Academy</span>
             </div>
             <div className="flex items-center gap-5 text-ink-500 text-xs">
-              <a href="#privacy" className="hover:text-ink-700 transition-colors duration-200">Privacy</a>
-              <a href="#terms" className="hover:text-ink-700 transition-colors duration-200">Terms</a>
+              <a href="/privacy" className="hover:text-ink-700 transition-colors duration-200">Privacy</a>
+              <a href="/terms" className="hover:text-ink-700 transition-colors duration-200">Terms</a>
               <span>&copy; {year} Project Amazon PH</span>
             </div>
           </div>
