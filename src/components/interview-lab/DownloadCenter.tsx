@@ -1,20 +1,50 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import type { SVGProps } from 'react';
 import Image from 'next/image';
 import { Download, DOWNLOAD_CATEGORIES, ROLES } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Download as DownloadIcon, MagnifyingGlass, Lock } from '@phosphor-icons/react';
+import { lightIcon } from '@/lib/astryx-icon';
+import { Card } from '@astryxdesign/core/Card';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Button } from '@astryxdesign/core/Button';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
+import {
+  Download as DownloadIcon,
+  MagnifyingGlass,
+  Lock,
+  FileDoc,
+  EnvelopeSimple,
+  NotePencil,
+  Calculator,
+  ListChecks,
+  ChartBar,
+  File as FileIcon,
+} from '@phosphor-icons/react';
 
 const CATEGORIES = DOWNLOAD_CATEGORIES;
 const FILE_TYPES = ['PDF', 'DOCX', 'XLSX'] as const;
 
 const TIER_HIERARCHY: Record<string, number> = { free: 0, starter: 1, pro: 2 };
+
+type AccessBadgeVariant = 'success' | 'orange' | 'purple';
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<SVGProps<SVGSVGElement>>> = {
+  'Resume Templates': lightIcon(FileDoc),
+  'Cover Letters': lightIcon(EnvelopeSimple),
+  'Cheat Sheets': lightIcon(NotePencil),
+  'Calculators': lightIcon(Calculator),
+  'Checklists': lightIcon(ListChecks),
+  'Plans & Reports': lightIcon(ChartBar),
+  'Other': lightIcon(FileIcon),
+};
 
 export function DownloadCenter() {
   const { user } = useAuth();
@@ -50,44 +80,26 @@ export function DownloadCenter() {
     return d.title.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q);
   });
 
-  // Group downloads by category
   const grouped = CATEGORIES.reduce((acc, cat) => {
     const items = filteredDownloads.filter(d => d.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
   }, {} as Record<string, Download[]>);
 
-  // Items that don't fit a known category
   const uncategorized = filteredDownloads.filter(d => !CATEGORIES.includes(d.category as typeof CATEGORIES[number]));
   if (uncategorized.length > 0) grouped['Other'] = uncategorized;
 
-  const getFileIcon = (type: string) => {
-    if (type === 'PDF') return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    );
-    if (type === 'DOCX') return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#FF6B35]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    );
-    if (type === 'XLSX') return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-      </svg>
-    );
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#737373]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-      </svg>
-    );
+  const getFileIconColor = (type: string) => {
+    if (type === 'PDF') return 'error';
+    if (type === 'DOCX') return 'accent';
+    if (type === 'XLSX') return 'success';
+    return 'secondary';
   };
 
-  const getAccessColor = (tier: string) => {
-    if (tier === 'free') return 'bg-green-100 text-green-700';
-    if (tier === 'starter') return 'bg-[#FF6B35]/15 text-[#FF6B35]';
-    return 'bg-purple-100 text-purple-700';
+  const getAccessVariant = (tier: string): AccessBadgeVariant => {
+    if (tier === 'free') return 'success';
+    if (tier === 'starter') return 'orange';
+    return 'purple';
   };
 
   const getAccessLabel = (tier: string) => {
@@ -99,9 +111,7 @@ export function DownloadCenter() {
   const handleDownload = async (download: Download) => {
     if (!canAccess(download.accessTier) || !user) return;
     try {
-      const res = await fetch(`/api/downloads/${download.id}`, {
-
-      });
+      const res = await fetch(`/api/downloads/${download.id}`);
       if (!res.ok) {
         console.error('Download failed:', res.statusText);
         return;
@@ -121,161 +131,133 @@ export function DownloadCenter() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-[#171717] font-heading">Download Center</h2>
-        <p className="text-[#737373] mt-1 text-sm sm:text-base">Templates, worksheets, and guides for your job search</p>
-      </div>
+    <VStack gap={6}>
+      <VStack gap={1}>
+        <Heading level={2}>Download Center</Heading>
+        <Text type="supporting">Templates, worksheets, and guides for your job search</Text>
+      </VStack>
 
-      <div className="flex justify-center">
+      <HStack hAlign="center">
         <Image
           src="/images/illustrations/download-center.svg"
           alt="Download templates, worksheets, and guides for your Amazon VA job search"
           width={500}
           height={180}
-          className="w-full max-w-lg h-auto"
+          style={{ width: '100%', maxWidth: 512, height: 'auto' }}
         />
-      </div>
+      </HStack>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[180px] max-w-sm">
-          <MagnifyingGlass weight="light" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#737373]" aria-hidden="true" />
-          <Input
-            placeholder="Search downloads..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Category" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {CATEGORIES.map(cat => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Role" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterFileType} onValueChange={setFilterFileType}>
-          <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {FILE_TYPES.map(ft => (
-              <SelectItem key={ft} value={ft}>{ft}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <span className="text-sm text-[#737373]">{filteredDownloads.length} items</span>
-      </div>
+      <HStack gap={3} wrap="wrap" vAlign="center">
+        <TextInput
+          label="Search downloads"
+          isLabelHidden
+          placeholder="Search downloads..."
+          startIcon={lightIcon(MagnifyingGlass)}
+          value={search}
+          onChange={setSearch}
+        />
+        <Selector
+          label="Category"
+          value={filterCategory}
+          onChange={setFilterCategory}
+          options={[{ value: 'all', label: 'All Categories' }, ...CATEGORIES.map((cat) => ({ value: cat, label: cat }))]}
+        />
+        <Selector
+          label="Role"
+          value={filterRole}
+          onChange={setFilterRole}
+          options={[{ value: 'all', label: 'All Roles' }, ...ROLES.map((r) => ({ value: r, label: r }))]}
+        />
+        <Selector
+          label="Type"
+          value={filterFileType}
+          onChange={setFilterFileType}
+          options={[{ value: 'all', label: 'All Types' }, ...FILE_TYPES.map((ft) => ({ value: ft, label: ft }))]}
+        />
+        <Text type="supporting" size="sm">{filteredDownloads.length} items</Text>
+      </HStack>
 
-      {/* Access tier notice */}
-      <div className="flex flex-wrap gap-3 text-xs">
-        <div className="flex items-center gap-1">
-          <Badge className="bg-green-100 text-green-700 whitespace-nowrap">Free</Badge>
-          <span className="text-[#737373]">Available to all</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Badge className="bg-[#FF6B35]/15 text-[#FF6B35] whitespace-nowrap">Starter+</Badge>
-          <span className="text-[#737373]">Requires Starter plan</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Badge className="bg-purple-100 text-purple-700 whitespace-nowrap">Pro</Badge>
-          <span className="text-[#737373]">Requires Pro plan</span>
-        </div>
-      </div>
+      <HStack gap={4} wrap="wrap">
+        <HStack gap={1.5} vAlign="center">
+          <Badge label="Free" variant="success" />
+          <Text type="supporting" size="xsm">Available to all</Text>
+        </HStack>
+        <HStack gap={1.5} vAlign="center">
+          <Badge label="Starter+" variant="orange" />
+          <Text type="supporting" size="xsm">Requires Starter plan</Text>
+        </HStack>
+        <HStack gap={1.5} vAlign="center">
+          <Badge label="Pro" variant="purple" />
+          <Text type="supporting" size="xsm">Requires Pro plan</Text>
+        </HStack>
+      </HStack>
 
-      {/* Download Groups */}
       {loading ? (
-        <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-28 bg-[#E5E5E0]/30 rounded-lg" />)}
-        </div>
+        <Grid columns={{ minWidth: 280, repeat: 'fit' }} gap={4}>
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} height={112} index={i} />)}
+        </Grid>
       ) : (
-        <div className="space-y-8">
+        <VStack gap={8}>
           {Object.entries(grouped).map(([category, items]) => (
-            <div key={category}>
-              <h3 className="text-lg font-semibold text-[#171717] mb-3 flex items-center gap-2">
-                {category === 'Resume Templates' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#FF6B35] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-                {category === 'Cover Letters' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#FF6B35] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
-                {category === 'Cheat Sheets' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>}
-                {category === 'Calculators' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>}
-                {category === 'Checklists' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>}
-                {category === 'Plans & Reports' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-                {category === 'Other' && <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#737373] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>}
-                <span className="truncate">{category}</span>
-                <Badge variant="outline" className="text-xs font-normal shrink-0">{items.length}</Badge>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <VStack key={category} gap={3}>
+              <HStack gap={2} vAlign="center">
+                <Icon icon={CATEGORY_ICONS[category] || CATEGORY_ICONS.Other} size="sm" color="accent" />
+                <Text type="body" weight="semibold" maxLines={1}>{category}</Text>
+                <Badge label={String(items.length)} variant="neutral" />
+              </HStack>
+              <Grid columns={{ minWidth: 280, repeat: 'fit' }} gap={4}>
                 {items.map(d => {
                   const locked = !canAccess(d.accessTier);
                   return (
-                    <Card key={d.id} className={`hover:shadow-md transition-shadow relative ${locked ? 'opacity-90' : ''}`}>
-                      <CardContent className="p-4">
-                        {locked && (
-                          <div className="absolute top-2 right-2">
-                            <Badge className="bg-amber-100 text-amber-700 text-xs"><Lock weight="light" className="h-3 w-3 mr-1 inline" aria-hidden="true" />Locked</Badge>
-                          </div>
+                    <Card key={d.id}>
+                      <VStack gap={3}>
+                        <HStack hAlign="between" vAlign="start" gap={2}>
+                          <Icon icon={lightIcon(getFileTypeIcon(d.fileType))} size="lg" color={getFileIconColor(d.fileType)} />
+                          {locked && <Badge label="Locked" variant="warning" icon={<Lock weight="light" />} />}
+                        </HStack>
+                        <VStack gap={1}>
+                          <Text type="body" weight="medium" maxLines={1}>{d.title}</Text>
+                          <Text type="supporting" size="sm" maxLines={2}>{d.description}</Text>
+                        </VStack>
+                        <HStack gap={1.5} wrap="wrap">
+                          <Badge label={d.fileType} variant="neutral" />
+                          <Badge label={getAccessLabel(d.accessTier)} variant={getAccessVariant(d.accessTier)} />
+                          <Badge label={d.role} variant="neutral" />
+                          {d.downloadCount > 0 && <Badge label={`${d.downloadCount} downloads`} variant="neutral" />}
+                        </HStack>
+                        {locked ? (
+                          <Button label={`Upgrade to ${d.accessTier}`} variant="secondary" width="100%" icon={<Lock weight="light" />} isDisabled />
+                        ) : (
+                          <Button
+                            label="Download"
+                            variant="primary"
+                            width="100%"
+                            icon={<DownloadIcon weight="light" />}
+                            onClick={() => handleDownload(d)}
+                          />
                         )}
-                        <div className="flex items-start gap-3">
-                          <div className="shrink-0">{getFileIcon(d.fileType)}</div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-[#171717] truncate">{d.title}</p>
-                            <p className="text-xs text-[#737373] mt-1 line-clamp-2">{d.description}</p>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              <Badge variant="outline" className="text-xs">{d.fileType}</Badge>
-                              <Badge className={`text-xs ${getAccessColor(d.accessTier)}`}>
-                                {getAccessLabel(d.accessTier)}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">{d.role}</Badge>
-                              {d.downloadCount > 0 && (
-                                <Badge variant="outline" className="text-xs text-[#737373]">
-                                  {d.downloadCount} downloads
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="mt-3">
-                              {locked ? (
-                                <Button variant="primary" size="sm" className="w-full whitespace-nowrap text-xs bg-amber-500 hover:bg-amber-600 text-white" disabled>
-                                  <Lock weight="light" className="h-3 w-3 mr-1" aria-hidden="true" />
-                                  Upgrade to {d.accessTier}
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  className="w-full bg-[#FF6B35] hover:bg-[#FF6B35] text-white whitespace-nowrap text-xs focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-1"
-                                  onClick={() => handleDownload(d)}
-                                  aria-label={`Download ${d.title}`}
-                                >
-                                  <DownloadIcon weight="light" className="h-3 w-3 mr-1" aria-hidden="true" />
-                                  Download
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
+                      </VStack>
                     </Card>
                   );
                 })}
-              </div>
-            </div>
+              </Grid>
+            </VStack>
           ))}
 
           {filteredDownloads.length === 0 && (
-            <div className="text-center py-12 text-[#737373]">
-              <p className="text-lg">No downloads found</p>
-              <p className="text-sm mt-1">Try adjusting your filters</p>
-            </div>
+            <VStack gap={1} hAlign="center">
+              <Text type="large">No downloads found</Text>
+              <Text type="supporting" size="sm">Try adjusting your filters</Text>
+            </VStack>
           )}
-        </div>
+        </VStack>
       )}
-    </div>
+    </VStack>
   );
+}
+
+function getFileTypeIcon(type: string) {
+  if (type === 'PDF' || type === 'DOCX') return FileDoc;
+  if (type === 'XLSX') return ChartBar;
+  return FileIcon;
 }

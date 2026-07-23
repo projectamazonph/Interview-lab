@@ -2,15 +2,27 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { useAuth } from '@/lib/auth-context';
 import { Question, ROLES, DIFFICULTIES, QUESTION_TYPES, SKILL_AREAS } from '@/lib/types';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card } from '@astryxdesign/core/Card';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { Selector } from '@astryxdesign/core/Selector';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { lightIcon } from '@/lib/astryx-icon';
+import { MagnifyingGlass, X } from '@phosphor-icons/react';
+
+type BadgeVariant = 'success' | 'warning' | 'error' | 'orange' | 'purple' | 'neutral';
 
 export function QuestionBank() {
-  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,8 +42,7 @@ export function QuestionBank() {
     if (filters.search) params.set('search', filters.search);
 
     try {
-      const headers: Record<string, string> = {};
-      const res = await fetch(`/api/questions?${params.toString()}`, { headers });
+      const res = await fetch(`/api/questions?${params.toString()}`);
       const data = await res.json();
       setQuestions(data.questions || []);
       setTotal(data.total || 0);
@@ -67,213 +78,219 @@ export function QuestionBank() {
     }
   };
 
-  const getDifficultyColor = (d: string) => {
-    if (d === 'beginner') return 'bg-green-100 text-green-700';
-    if (d === 'intermediate') return 'bg-yellow-100 text-yellow-700';
-    return 'bg-red-100 text-red-700';
+  const getDifficultyVariant = (d: string): BadgeVariant => {
+    if (d === 'beginner') return 'success';
+    if (d === 'intermediate') return 'warning';
+    return 'error';
   };
 
-  const getTypeColor = (t: string) => {
-    if (t === 'behavioral') return 'bg-[#FF6B35]/15 text-[#FF6B35]';
-    if (t === 'technical') return 'bg-purple-100 text-purple-700';
-    if (t === 'scenario') return 'bg-[#FF6B35]/15 text-[#FF6B35]';
-    if (t === 'trick') return 'bg-red-100 text-red-700';
-    return 'bg-[#E5E5E0]/20 text-[#404040]';
+  const getTypeVariant = (t: string): BadgeVariant => {
+    if (t === 'behavioral' || t === 'scenario') return 'orange';
+    if (t === 'technical') return 'purple';
+    if (t === 'trick') return 'error';
+    return 'neutral';
   };
+
+  const hasActiveFilters = filters.role !== 'all' || filters.difficulty !== 'all' || filters.type !== 'all' || filters.skillArea !== 'all' || !!filters.search;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-2xl font-bold text-[#171717] font-heading">Question Bank</h2>
-          <p className="text-[#737373] mt-1">{total} questions available</p>
-        </div>
-      </div>
+    <VStack gap={6}>
+      <VStack gap={1}>
+        <Heading level={2}>Question Bank</Heading>
+        <Text type="supporting">{total} questions available</Text>
+      </VStack>
 
-      <div className="flex justify-center">
+      <HStack hAlign="center">
         <Image
           src="/images/illustrations/question-bank-library.svg"
           alt="Browse hundreds of Amazon VA interview questions organized by role and skill"
           width={500}
           height={180}
-          className="w-full max-w-lg h-auto"
+          style={{ width: '100%', maxWidth: 512, height: 'auto' }}
         />
-      </div>
+      </HStack>
 
-      {/* Filters */}
-      <div className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0]">
-        <div className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              <Select value={filters.role} onValueChange={(v) => setFilters(f => ({ ...f, role: v }))}>
-                <SelectTrigger><SelectValue placeholder="Role" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filters.difficulty} onValueChange={(v) => setFilters(f => ({ ...f, difficulty: v }))}>
-                <SelectTrigger><SelectValue placeholder="Difficulty" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  {DIFFICULTIES.map(d => <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filters.type} onValueChange={(v) => setFilters(f => ({ ...f, type: v }))}>
-                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {QUESTION_TYPES.map(t => <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filters.skillArea} onValueChange={(v) => setFilters(f => ({ ...f, skillArea: v }))}>
-                <SelectTrigger><SelectValue placeholder="Skill Area" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Skills</SelectItem>
-                  {SKILL_AREAS.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Search questions by keyword..."
-                value={filters.search}
-                onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
-              />
-            </div>
-            {(filters.role !== 'all' || filters.difficulty !== 'all' || filters.type !== 'all' || filters.skillArea !== 'all' || filters.search) && (
-              <button className="text-[#737373] hover:text-[#171717] self-start text-sm py-1 px-2 rounded-md" onClick={() => setFilters({ role: 'all', difficulty: 'all', type: 'all', skillArea: 'all', search: '' })}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                Clear all filters
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Questions List */}
-      {loading ? (
-        <div className="animate-pulse space-y-3">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#E5E5E0]/30 rounded-md" />)}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {questions.map(q => (
-            <div key={q.id} className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0] hover:shadow-sm transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1" onClick={() => { setPracticeQuestion(q); setUserAnswer(''); setFeedback(null); }} tabIndex={0} role="button" aria-label={`Practice: ${q.question.slice(0, 60)}`}>
-              <div className="p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[#171717] line-clamp-2">{q.question}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getDifficultyColor(q.difficulty)} whitespace-nowrap`}>{q.difficulty}</span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getTypeColor(q.type)} whitespace-nowrap`}>{q.type.replace(/_/g, ' ')}</span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{q.role}</span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{q.skillArea.replace(/_/g, ' ')}</span>
-                    </div>
-                  </div>
-                  <button className="shrink-0 whitespace-nowrap text-sm font-medium px-3 py-1.5 rounded-md border border-[#FF6B35]/20 text-[#FF6B35] hover:bg-[#FF6B35]/10">
-                    Practice
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {questions.length === 0 && (
-            <div className="bg-[#F4F3EE] rounded-md border border-[#E5E5E0]">
-              <div className="p-8 text-center text-[#737373]">
-                No questions match your filters. Try adjusting your search criteria.
-              </div>
-            </div>
+      <Card variant="muted">
+        <VStack gap={3}>
+          <Grid columns={{ minWidth: 180, repeat: 'fit' }} gap={3}>
+            <Selector
+              label="Role"
+              value={filters.role}
+              onChange={(v) => setFilters((f) => ({ ...f, role: v }))}
+              options={[{ value: 'all', label: 'All Roles' }, ...ROLES.map((r) => ({ value: r, label: r }))]}
+            />
+            <Selector
+              label="Difficulty"
+              value={filters.difficulty}
+              onChange={(v) => setFilters((f) => ({ ...f, difficulty: v }))}
+              options={[{ value: 'all', label: 'All Levels' }, ...DIFFICULTIES.map((d) => ({ value: d, label: d.charAt(0).toUpperCase() + d.slice(1) }))]}
+            />
+            <Selector
+              label="Type"
+              value={filters.type}
+              onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
+              options={[{ value: 'all', label: 'All Types' }, ...QUESTION_TYPES.map((t) => ({ value: t, label: t.replace(/_/g, ' ') }))]}
+            />
+            <Selector
+              label="Skill Area"
+              value={filters.skillArea}
+              onChange={(v) => setFilters((f) => ({ ...f, skillArea: v }))}
+              options={[{ value: 'all', label: 'All Skills' }, ...SKILL_AREAS.map((s) => ({ value: s, label: s.replace(/_/g, ' ') }))]}
+            />
+            <TextInput
+              label="Search questions"
+              isLabelHidden
+              placeholder="Search questions by keyword..."
+              startIcon={lightIcon(MagnifyingGlass)}
+              value={filters.search}
+              onChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+            />
+          </Grid>
+          {hasActiveFilters && (
+            <Button
+              label="Clear all filters"
+              variant="ghost"
+              size="sm"
+              icon={<X weight="light" />}
+              onClick={() => setFilters({ role: 'all', difficulty: 'all', type: 'all', skillArea: 'all', search: '' })}
+            />
           )}
-        </div>
+        </VStack>
+      </Card>
+
+      {loading ? (
+        <VStack gap={3}>
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} height={80} index={i} />)}
+        </VStack>
+      ) : questions.length === 0 ? (
+        <Card>
+          <Text type="supporting" justify="center">No questions match your filters. Try adjusting your search criteria.</Text>
+        </Card>
+      ) : (
+        <Card padding={0}>
+          <List hasDividers>
+            {questions.map((q) => (
+              <ListItem
+                key={q.id}
+                label={q.question}
+                onClick={() => { setPracticeQuestion(q); setUserAnswer(''); setFeedback(null); }}
+                description={
+                  <HStack gap={1.5} wrap="wrap">
+                    <Badge label={q.difficulty} variant={getDifficultyVariant(q.difficulty)} />
+                    <Badge label={q.type.replace(/_/g, ' ')} variant={getTypeVariant(q.type)} />
+                    <Badge label={q.role} variant="neutral" />
+                    <Badge label={q.skillArea.replace(/_/g, ' ')} variant="neutral" />
+                  </HStack>
+                }
+                endContent={<Button label="Practice" variant="secondary" size="sm" />}
+              />
+            ))}
+          </List>
+        </Card>
       )}
 
-      {/* Practice Dialog */}
-      <Dialog open={!!practiceQuestion} onOpenChange={() => setPracticeQuestion(null)}>
-        <DialogContent className="w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          {practiceQuestion && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Practice Question</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getDifficultyColor(practiceQuestion.difficulty)} whitespace-nowrap`}>{practiceQuestion.difficulty}</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md ${getTypeColor(practiceQuestion.type)} whitespace-nowrap`}>{practiceQuestion.type.replace(/_/g, ' ')}</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-[#E5E5E0] text-[#404040] whitespace-nowrap">{practiceQuestion.role}</span>
-                  </div>
-                  <p className="text-lg font-medium text-[#171717]">{practiceQuestion.question}</p>
-                  {practiceQuestion.whyEmployersAsk && (
-                    <p className="text-sm text-[#737373] mt-2"><strong>Why employers ask:</strong> {practiceQuestion.whyEmployersAsk}</p>
-                  )}
-                  {practiceQuestion.strongAnswerPoints && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium text-[#404040]">Strong answer should include:</p>
-                      <ul className="list-disc list-inside text-sm text-[#404040]">
-                        {JSON.parse(practiceQuestion.strongAnswerPoints || '[]').map((point: string, i: number) => (
-                          <li key={i}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <Textarea
-                  placeholder="Type your answer here..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  rows={5}
-                />
-                <button
-                  className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/80 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handlePractice}
-                  disabled={!userAnswer.trim() || submitting}
-                >
-                  {submitting ? 'Getting AI Feedback...' : 'Submit Answer for AI Feedback'}
-                </button>
+      <Dialog
+        isOpen={!!practiceQuestion}
+        onOpenChange={(open) => { if (!open) setPracticeQuestion(null); }}
+        purpose="form"
+        width={640}
+        maxHeight="90vh"
+      >
+        {practiceQuestion && (
+          <Layout
+            header={<DialogHeader title="Practice Question" onOpenChange={() => setPracticeQuestion(null)} />}
+            content={
+              <LayoutContent isScrollable>
+                <VStack gap={4}>
+                  <VStack gap={2}>
+                    <HStack gap={1.5} wrap="wrap">
+                      <Badge label={practiceQuestion.difficulty} variant={getDifficultyVariant(practiceQuestion.difficulty)} />
+                      <Badge label={practiceQuestion.type.replace(/_/g, ' ')} variant={getTypeVariant(practiceQuestion.type)} />
+                      <Badge label={practiceQuestion.role} variant="neutral" />
+                    </HStack>
+                    <Text type="large" weight="medium">{practiceQuestion.question}</Text>
+                    {practiceQuestion.whyEmployersAsk && (
+                      <Text type="supporting" size="sm">
+                        <Text as="span" type="inherit" weight="semibold">Why employers ask: </Text>
+                        {practiceQuestion.whyEmployersAsk}
+                      </Text>
+                    )}
+                    {practiceQuestion.strongAnswerPoints && (
+                      <VStack gap={1}>
+                        <Text type="body" size="sm" weight="medium">Strong answer should include:</Text>
+                        <List listStyle="disc" density="compact">
+                          {(JSON.parse(practiceQuestion.strongAnswerPoints || '[]') as string[]).map((point, i) => (
+                            <ListItem key={i} label={point} />
+                          ))}
+                        </List>
+                      </VStack>
+                    )}
+                  </VStack>
 
-                {feedback && (
-                  <div className="bg-[#F4F3EE] rounded-md border border-[#FF6B35]/20 p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[#FF6B35] font-mono">{(feedback as Record<string, unknown>).score as number}/10</span>
-                      <span className="text-sm text-[#737373]">Overall Score</span>
-                    </div>
-                    {Boolean((feedback as Record<string, unknown>).whatWorked) && (
-                      <div>
-                        <p className="text-sm font-medium text-green-700">What worked:</p>
-                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatWorked as string}</p>
-                      </div>
-                    )}
-                    {Boolean((feedback as Record<string, unknown>).whatToImprove) && (
-                      <div>
-                        <p className="text-sm font-medium text-[#B45309]">What to improve:</p>
-                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).whatToImprove as string}</p>
-                      </div>
-                    )}
-                    {Boolean((feedback as Record<string, unknown>).strongerSampleAnswer) && (
-                      <div>
-                        <p className="text-sm font-medium text-[#FF6B35]">Stronger sample answer:</p>
-                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).strongerSampleAnswer as string}</p>
-                      </div>
-                    )}
-                    {Boolean((feedback as Record<string, unknown>).followUpQuestion) && (
-                      <div>
-                        <p className="text-sm font-medium text-purple-700">Follow-up question:</p>
-                        <p className="text-sm text-[#404040] break-words whitespace-pre-wrap">{(feedback as Record<string, unknown>).followUpQuestion as string}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  <TextArea
+                    label="Your answer"
+                    isLabelHidden
+                    placeholder="Type your answer here..."
+                    value={userAnswer}
+                    onChange={setUserAnswer}
+                    rows={5}
+                  />
 
-                {practiceQuestion.sampleAnswer && !feedback && (
-                  <details className="mt-2">
-                    <summary className="text-sm text-[#737373] cursor-pointer hover:text-[#171717]">Show sample answer</summary>
-                    <p className="text-sm text-[#404040] mt-2 whitespace-pre-wrap">{practiceQuestion.sampleAnswer}</p>
-                  </details>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
+                  <Button
+                    label={submitting ? 'Getting AI Feedback...' : 'Submit Answer for AI Feedback'}
+                    variant="primary"
+                    width="100%"
+                    isLoading={submitting}
+                    isDisabled={!userAnswer.trim()}
+                    onClick={handlePractice}
+                  />
+
+                  {feedback && (
+                    <Card variant="muted">
+                      <VStack gap={3}>
+                        <HStack gap={2} vAlign="center">
+                          <Text type="display-3" color="accent">{(feedback.score as number)}/10</Text>
+                          <Text type="supporting" size="sm">Overall Score</Text>
+                        </HStack>
+                        {Boolean(feedback.whatWorked) && (
+                          <VStack gap={0.5}>
+                            <Text type="body" size="sm" weight="semibold" color="accent">What worked:</Text>
+                            <Text type="body" size="sm">{feedback.whatWorked as string}</Text>
+                          </VStack>
+                        )}
+                        {Boolean(feedback.whatToImprove) && (
+                          <VStack gap={0.5}>
+                            <Text type="body" size="sm" weight="semibold">What to improve:</Text>
+                            <Text type="body" size="sm">{feedback.whatToImprove as string}</Text>
+                          </VStack>
+                        )}
+                        {Boolean(feedback.strongerSampleAnswer) && (
+                          <VStack gap={0.5}>
+                            <Text type="body" size="sm" weight="semibold" color="accent">Stronger sample answer:</Text>
+                            <Text type="body" size="sm">{feedback.strongerSampleAnswer as string}</Text>
+                          </VStack>
+                        )}
+                        {Boolean(feedback.followUpQuestion) && (
+                          <VStack gap={0.5}>
+                            <Text type="body" size="sm" weight="semibold">Follow-up question:</Text>
+                            <Text type="body" size="sm">{feedback.followUpQuestion as string}</Text>
+                          </VStack>
+                        )}
+                      </VStack>
+                    </Card>
+                  )}
+
+                  {practiceQuestion.sampleAnswer && !feedback && (
+                    <Collapsible trigger={<Text type="supporting" size="sm">Show sample answer</Text>} defaultIsOpen={false}>
+                      <Text type="body" size="sm">{practiceQuestion.sampleAnswer}</Text>
+                    </Collapsible>
+                  )}
+                </VStack>
+              </LayoutContent>
+            }
+          />
+        )}
       </Dialog>
-    </div>
+    </VStack>
   );
 }

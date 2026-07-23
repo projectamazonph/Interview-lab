@@ -3,10 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { DashboardData, ActiveView } from "@/lib/types";
-import { FieldCard } from "@/components/ui/glass-card";
-import { FieldButton } from "@/components/ui/glass-button";
-import { FieldBadge } from "@/components/ui/glass-badge";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@astryxdesign/core/Card";
+import { ClickableCard } from "@astryxdesign/core/ClickableCard";
+import { VStack, HStack } from "@astryxdesign/core/Stack";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Text, Heading } from "@astryxdesign/core/Text";
+import { Badge } from "@astryxdesign/core/Badge";
+import { Icon } from "@astryxdesign/core/Icon";
+import { ProgressBar } from "@astryxdesign/core/ProgressBar";
+import { Button } from "@astryxdesign/core/Button";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { Skeleton } from "@astryxdesign/core/Skeleton";
 import {
   Question,
   ChatsCircle,
@@ -45,21 +52,19 @@ export function DashboardView({ onViewChange }: DashboardViewProps) {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <div className="h-8 bg-[#E5E5E0] rounded-md w-1/4 skeleton" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-[#E5E5E0] rounded-lg skeleton" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-[#E5E5E0] rounded-lg skeleton" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <VStack gap={6}>
+        <Skeleton height={32} width="25%" />
+        <Grid columns={{ minWidth: 200, repeat: "fit" }} gap={4}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} height={96} index={i} />
+          ))}
+        </Grid>
+        <Grid columns={{ minWidth: 240, repeat: "fit" }} gap={4}>
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} height={128} index={i + 4} />
+          ))}
+        </Grid>
+      </VStack>
     );
   }
 
@@ -73,195 +78,183 @@ export function DashboardView({ onViewChange }: DashboardViewProps) {
   const profile = data?.profile;
   const isNewUser = stats.totalAttempts === 0 && stats.completedSessions === 0;
 
+  const statCards = [
+    {
+      label: "Questions Practiced",
+      value: stats.totalAttempts,
+      sub: `/${questionCount}`,
+      icon: Question,
+      variant: "orange" as const,
+    },
+    {
+      label: "Mock Interviews",
+      value: stats.completedSessions,
+      sub: "",
+      icon: ChatsCircle,
+      variant: "green" as const,
+    },
+    {
+      label: "Avg. Score",
+      value: stats.avgScore > 0 ? stats.avgScore.toFixed(1) : "—",
+      sub: "/10",
+      icon: TrendUp,
+      variant: "yellow" as const,
+    },
+    {
+      label: "Resume Score",
+      value: stats.latestResumeScore ? stats.latestResumeScore.toFixed(0) : "—",
+      sub: "/100",
+      icon: Target,
+      variant: "orange" as const,
+    },
+  ];
+
+  const quickActions = [
+    { title: "Mock Interview", desc: "AI-coached interview session", icon: ChatsCircle, action: () => onViewChange("interview") },
+    { title: "Browse Questions", desc: `${questionCount || 222}+ questions available`, icon: Question, action: () => onViewChange("questions") },
+    { title: "Practice Test", desc: "Timed skill assessment", icon: Target, action: () => onViewChange("assessments") },
+  ];
+
+  let weakAreas: string[] = [];
+  try {
+    const raw = profile?.weakAreas;
+    weakAreas = Array.isArray(raw) ? raw : typeof raw === "string" && raw ? JSON.parse(raw) : [];
+  } catch {
+    weakAreas = [];
+  }
+  weakAreas = weakAreas.filter((area) => typeof area === "string" && area.trim() && !/^[[{]/.test(area.trim()));
+
+  const readyPercent = Math.min(Math.round(stats.avgScore * 10), 100);
+
   return (
-    <div className="space-y-6">
-      {/* Welcome */}
-      <div className="animate-slide-up" style={{ animationDelay: "0ms" }}>
-        <FieldBadge variant="accent" className="mb-3">
-          <Lightning className="w-3 h-3 mr-1" weight="light" /> Your Dashboard
-        </FieldBadge>
-        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink-900">
+    <VStack gap={6}>
+      <VStack gap={3} hAlign="start">
+        <Badge label="Your Dashboard" variant="orange" icon={<Lightning weight="light" />} />
+        <Heading level={2}>
           Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
-        </h2>
-        <p className="text-ink-500 mt-1 text-sm">
+        </Heading>
+        <Text type="supporting">
           {profile?.targetRole
             ? `Preparing for ${profile.targetRole} roles`
             : "Your Amazon VA interview prep hub"}
-        </p>
-      </div>
+        </Text>
+      </VStack>
 
-      {/* Empty State */}
       {isNewUser && (
-        <div className="animate-slide-up" style={{ animationDelay: "100ms" }}>
-          <FieldCard variant="bordered" className="p-8 text-center">
-            <div className="w-16 h-16 rounded-lg bg-[#FFE5D9] flex items-center justify-center mx-auto mb-4">
-              <Target className="w-8 h-8 text-[#FF6B35]" weight="light" />
-            </div>
-            <h3 className="font-heading text-xl font-bold text-ink-900 mb-2">Ready to start your prep?</h3>
-            <p className="text-ink-500 text-sm mb-6 max-w-md mx-auto">
-              Begin with a mock interview or browse questions to see what agencies ask.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <FieldButton onClick={() => onViewChange("interview")}>
-                Start Mock Interview <ArrowUpRight className="w-4 h-4" weight="light" />
-              </FieldButton>
-              <FieldButton variant="secondary" onClick={() => onViewChange("questions")}>
-                Browse Questions
-              </FieldButton>
-            </div>
-          </FieldCard>
-        </div>
+        <Card padding={8}>
+          <VStack gap={4} hAlign="center">
+            <Card variant="orange" width={64} height={64} padding={0}>
+              <VStack width="100%" height="100%" hAlign="center" vAlign="center">
+                <Icon icon={Target} size="lg" color="accent" />
+              </VStack>
+            </Card>
+            <VStack gap={2} maxWidth={400} hAlign="center">
+              <Heading level={3} justify="center">Ready to start your prep?</Heading>
+              <Text type="supporting" justify="center">
+                Begin with a mock interview or browse questions to see what agencies ask.
+              </Text>
+            </VStack>
+            <HStack gap={3} wrap="wrap" hAlign="center">
+              <Button label="Start Mock Interview" variant="primary" icon={<ArrowUpRight weight="light" />} onClick={() => onViewChange("interview")} />
+              <Button label="Browse Questions" variant="secondary" onClick={() => onViewChange("questions")} />
+            </HStack>
+          </VStack>
+        </Card>
       )}
 
-      {/* Stats Grid */}
-      <div className="animate-slide-up grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: "200ms" }}>
-        {[
-          {
-            label: "Questions Practiced",
-            value: stats.totalAttempts,
-            sub: `/${questionCount}`,
-            icon: Question,
-            bg: "bg-[#FFE5D9]",
-            color: "text-[#FF6B35]",
-          },
-          {
-            label: "Mock Interviews",
-            value: stats.completedSessions,
-            sub: "",
-            icon: ChatsCircle,
-            bg: "bg-[#D1FAE5]",
-            color: "text-[#0E7C3A]",
-          },
-          {
-            label: "Avg. Score",
-            value: stats.avgScore > 0 ? stats.avgScore.toFixed(1) : "—",
-            sub: "/10",
-            icon: TrendUp,
-            bg: "bg-[#FEF3C7]",
-            color: "text-[#B45309]",
-          },
-          {
-            label: "Resume Score",
-            value: stats.latestResumeScore ? stats.latestResumeScore.toFixed(0) : "—",
-            sub: "/100",
-            icon: Target,
-            bg: "bg-[#FFE5D9]",
-            color: "text-[#FF6B35]",
-          },
-        ].map((stat, i) => (
-          <FieldCard key={i} variant="interactive" className="p-5">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-md ${stat.bg} flex items-center justify-center shrink-0`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} weight="light" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-ink-900 font-heading">
-                  {stat.value}
-                  <span className="text-sm font-normal text-ink-500">{stat.sub}</span>
-                </p>
-                <p className="text-xs text-ink-500 truncate">{stat.label}</p>
-              </div>
-            </div>
-          </FieldCard>
+      <Grid columns={{ minWidth: 200, repeat: "fit" }} gap={4}>
+        {statCards.map((stat, i) => (
+          <Card key={i} padding={5}>
+            <HStack gap={3} vAlign="center">
+              <Card variant={stat.variant} width={40} height={40} padding={0}>
+                <VStack width="100%" height="100%" hAlign="center" vAlign="center">
+                  <Icon icon={stat.icon} size="sm" color="accent" />
+                </VStack>
+              </Card>
+              <VStack gap={0}>
+                <HStack gap={0.5} vAlign="center">
+                  <Heading level={4}>{stat.value}</Heading>
+                  {stat.sub && <Text type="supporting" size="sm">{stat.sub}</Text>}
+                </HStack>
+                <Text type="supporting" size="sm" maxLines={1}>{stat.label}</Text>
+              </VStack>
+            </HStack>
+          </Card>
         ))}
-      </div>
+      </Grid>
 
-      {/* Quick Actions */}
-      <div className="animate-slide-up" style={{ animationDelay: "300ms" }}>
-        <h3 className="font-heading font-semibold text-ink-900 text-lg mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { title: "Mock Interview", desc: "AI-coached interview session", icon: ChatsCircle, action: () => onViewChange("interview") },
-            { title: "Browse Questions", desc: `${questionCount || 222}+ questions available`, icon: Question, action: () => onViewChange("questions") },
-            { title: "Practice Test", desc: "Timed skill assessment", icon: Target, action: () => onViewChange("assessments") },
-          ].map((item, i) => (
-            <FieldCard key={i} variant="interactive" className="p-6 cursor-pointer" onClick={item.action}>
-              <div className="w-10 h-10 rounded-md bg-[#E5E5E0] flex items-center justify-center mb-3">
-                <item.icon className="w-5 h-5 text-[#FF6B35]" weight="light" />
-              </div>
-              <h4 className="font-heading font-semibold text-ink-900 text-sm mb-1">{item.title}</h4>
-              <p className="text-ink-500 text-xs">{item.desc}</p>
-            </FieldCard>
+      <VStack gap={4}>
+        <Heading level={3}>Quick Actions</Heading>
+        <Grid columns={{ minWidth: 240, repeat: "fit" }} gap={4}>
+          {quickActions.map((item, i) => (
+            <ClickableCard key={i} label={item.title} padding={6} onClick={item.action}>
+              <VStack gap={3}>
+                <Card variant="muted" width={40} height={40} padding={0}>
+                  <VStack width="100%" height="100%" hAlign="center" vAlign="center">
+                    <Icon icon={item.icon} size="sm" color="accent" />
+                  </VStack>
+                </Card>
+                <VStack gap={1}>
+                  <Text type="body" weight="semibold">{item.title}</Text>
+                  <Text type="supporting" size="sm">{item.desc}</Text>
+                </VStack>
+              </VStack>
+            </ClickableCard>
           ))}
-        </div>
-      </div>
+        </Grid>
+      </VStack>
 
-      {/* Learning Path Progress */}
       {profile?.targetRole && (
-        <div className="animate-slide-up" style={{ animationDelay: "400ms" }}>
-          <FieldCard className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-heading font-semibold text-ink-900">Your Learning Path</h3>
-                <p className="text-ink-500 text-sm">{profile.targetRole}</p>
-              </div>
-              <FieldBadge variant="accent">
-                {Math.min(Math.round(stats.avgScore * 10), 100)}% Ready
-              </FieldBadge>
-            </div>
-            <Progress
-              value={Math.min(Math.round(stats.avgScore * 10), 100)}
-              className="h-2 bg-[#E5E5E0]"
-            />
-            {profile.weakAreas && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                <span className="text-ink-500 text-xs">Focus areas:</span>
-                {(() => {
-                  let areas: string[] = [];
-                  try {
-                    const raw = profile.weakAreas;
-                    areas = Array.isArray(raw) ? raw : typeof raw === "string" ? JSON.parse(raw) : [];
-                  } catch { areas = []; }
-                  return areas.map((area: string, i: number) => (
-                    <FieldBadge key={i} variant="warning" className="text-[10px]">{area}</FieldBadge>
-                  ));
-                })()}
-              </div>
+        <Card padding={6}>
+          <VStack gap={4}>
+            <HStack hAlign="between" vAlign="start">
+              <VStack gap={1}>
+                <Heading level={4}>Your Learning Path</Heading>
+                <Text type="supporting">{profile.targetRole}</Text>
+              </VStack>
+              <Badge label={`${readyPercent}% Ready`} variant="orange" />
+            </HStack>
+            <ProgressBar label="Learning path readiness" isLabelHidden value={readyPercent} />
+            {weakAreas.length > 0 && (
+              <HStack gap={2} wrap="wrap" vAlign="center">
+                <Text type="supporting" size="sm">Focus areas:</Text>
+                {weakAreas.map((area, i) => (
+                  <Badge key={i} label={area} variant="warning" />
+                ))}
+              </HStack>
             )}
-          </FieldCard>
-        </div>
+          </VStack>
+        </Card>
       )}
 
-      {/* Recent Sessions */}
       {(data?.recentSessions?.length || 0) > 0 && (
-        <div className="animate-slide-up" style={{ animationDelay: "500ms" }}>
-          <FieldCard className="p-6">
-            <h3 className="font-heading font-semibold text-ink-900 mb-4">Recent Sessions</h3>
-            <div className="space-y-3">
-              {data?.recentSessions?.slice(0, 5).map((session) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-4 rounded-md bg-[#F4F3EE] border border-[#E5E5E0] gap-2"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Clock className="w-4 h-4 text-ink-500 shrink-0" weight="light" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-ink-900 capitalize truncate">
-                        {session.mode.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-xs text-ink-500">
-                        {new Date(session.startedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+        <Card padding={0}>
+          <List
+            header={<VStack paddingInline={4} paddingBlock={3}><Text type="body" weight="semibold">Recent Sessions</Text></VStack>}
+            hasDividers
+          >
+            {data?.recentSessions?.slice(0, 5).map((session) => (
+              <ListItem
+                key={session.id}
+                label={session.mode.replace(/_/g, " ")}
+                description={new Date(session.startedAt).toLocaleDateString()}
+                startContent={<Icon icon={Clock} size="sm" color="secondary" />}
+                endContent={
+                  <HStack gap={2} vAlign="center">
                     {session.overallScore !== null && session.overallScore !== undefined && (
-                      <FieldBadge
-                        variant={session.overallScore >= 7 ? "success" : session.overallScore >= 5 ? "warning" : "danger"}
-                      >
-                        {session.overallScore.toFixed(1)}/10
-                      </FieldBadge>
+                      <Badge
+                        label={`${session.overallScore.toFixed(1)}/10`}
+                        variant={session.overallScore >= 7 ? "success" : session.overallScore >= 5 ? "warning" : "error"}
+                      />
                     )}
-                    <FieldBadge variant={session.completedAt ? "accent" : "muted"}>
-                      {session.completedAt ? "Done" : "Active"}
-                    </FieldBadge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </FieldCard>
-        </div>
+                    <Badge label={session.completedAt ? "Done" : "Active"} variant={session.completedAt ? "orange" : "neutral"} />
+                  </HStack>
+                }
+              />
+            ))}
+          </List>
+        </Card>
       )}
-    </div>
+    </VStack>
   );
 }
