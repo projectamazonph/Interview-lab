@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PapHeader } from "@/components/header";
 
 export const metadata: Metadata = {
   title: "Contact — Interview Lab",
@@ -8,6 +9,8 @@ export const metadata: Metadata = {
 // Contact page - updated for cache refresh
 export default function ContactPage() {
   return (
+    <>
+    <PapHeader />
     <div className="min-h-[100dvh] flex items-center justify-center bg-pa-navy relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-[-10%] right-[-15%] w-[50vw] h-[50vw] bg-[#FF6B35]/5 rounded-full blur-[100px]" />
@@ -41,5 +44,6 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

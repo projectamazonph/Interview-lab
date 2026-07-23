@@ -1,6 +1,17 @@
-/* ─── Interview Lab — amph-v2 "Field Manual" Design System ─── */
+/* ─── Interview Lab — Astryx migration ───
+   Layer order + import structure per `astryx docs styling`: Tailwind's
+   theme/preflight/utilities are split into their own layers so Astryx's
+   StyleX-generated component styles (which live outside the Tailwind
+   cascade layers) aren't zeroed out by Tailwind's own reset. */
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
 
-@import "tailwindcss";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "../themes/field-manual.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));

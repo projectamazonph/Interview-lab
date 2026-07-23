@@ -4,20 +4,24 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { ROLES, DIFFICULTIES, TOOLS_LIST } from '@/lib/types';
-import { FieldCard, FieldCardContent, FieldCardDescription, FieldCardHeader, FieldCardTitle } from '@/components/ui/glass-card';
-import { FieldButton } from '@/components/ui/glass-button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FieldBadge } from '@/components/ui/glass-badge';
+import { Card } from '@astryxdesign/core/Card';
+import { SelectableCard } from '@astryxdesign/core/SelectableCard';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Text, Heading } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { Button } from '@astryxdesign/core/Button';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { DateInput } from '@astryxdesign/core/DateInput';
+import type { ISODateString } from '@astryxdesign/core/Calendar';
+import { Selector } from '@astryxdesign/core/Selector';
 
 interface OnboardingQuizProps {
   onComplete: () => void;
 }
 
 export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
-  const { user, updateProfile } = useAuth();
+  const { updateProfile } = useAuth();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -82,192 +86,188 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
 
   const weakAreaOptions = ['PPC fundamentals', 'Search term reports', 'Keyword research', 'Client communication', 'Resume writing', 'Cover letters', 'Seller Central navigation', 'Listing optimization', 'ACoS/ROAS calculations', 'SOP discipline'];
 
+  const roleDescriptions: Record<string, string> = {
+    'PPC VA': 'Campaign setup, keyword research, ACoS/ROAS, bid adjustments, reporting',
+    'Account VA': 'Seller Central tasks, catalog support, inventory checks, case logs',
+    'Listing VA': 'Titles, bullets, A+ content, indexing, keyword placement',
+    'Reporting VA': 'Search term reports, campaign reports, KPI summaries',
+    'Agency VA': 'SOP execution, ClickUp tasks, client updates, changelogs',
+    'Senior PPC Assistant': 'Account audits, launch sequencing, optimization logic, budget pacing',
+    'General': 'General Amazon VA preparation across multiple areas',
+  };
+
+  const levelDescriptions: Record<string, string> = {
+    beginner: 'New to Amazon operations, need foundational knowledge',
+    intermediate: 'Know the basics, need structured practice and stronger answers',
+    advanced: 'Experienced, need advanced case studies and optimization skills',
+  };
+
+  const progressPercent = Math.round(((step + 1) / steps.length) * 100);
+
   return (
-    <div className="max-w-2xl mx-auto px-1 sm:px-0">
-      <FieldCard>
-        <FieldCardHeader>
-          <div className="flex items-center justify-between mb-2">
-            <FieldBadge variant="secondary">Step {step + 1} of {steps.length}</FieldBadge>
-            <span className="text-sm text-[#737373] whitespace-nowrap">{Math.round(((step + 1) / steps.length) * 100)}% complete</span>
-          </div>
-          <FieldCardTitle className="text-xl sm:text-2xl font-heading">{steps[step].title}</FieldCardTitle>
-          <FieldCardDescription>{steps[step].description}</FieldCardDescription>
-        </FieldCardHeader>
-        <FieldCardContent className="space-y-6">
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      <Card>
+        <VStack gap={5}>
+          <VStack gap={3}>
+            <HStack style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <Badge label={`Step ${step + 1} of ${steps.length}`} variant="neutral" />
+              <Text type="supporting" size="sm">{progressPercent}% complete</Text>
+            </HStack>
+            <ProgressBar label="Onboarding progress" isLabelHidden value={progressPercent} />
+            <VStack gap={1}>
+              <Heading level={3}>{steps[step].title}</Heading>
+              <Text type="supporting">{steps[step].description}</Text>
+            </VStack>
+          </VStack>
+
           {step === 0 && (
-            <div className="space-y-3">
-              <div className="flex justify-center mb-2">
+            <VStack gap={3}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
                 <Image
                   src="/images/illustrations/onboarding-role-selection.svg"
                   alt="Choose your target Amazon VA role for personalized interview prep"
                   width={400}
                   height={150}
-                  className="w-full max-w-sm h-auto"
+                  style={{ width: '100%', maxWidth: 384, height: 'auto' }}
                 />
               </div>
               {ROLES.map(role => (
-                <button
+                <SelectableCard
                   key={role}
-                  onClick={() => setFormData(prev => ({ ...prev, targetRole: role }))}
-                  className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-colors ${
-                    formData.targetRole === role
-                      ? 'border-[#FF6B35] bg-[#FF6B35]/8'
-                      : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
-                  }`}
+                  label={role}
+                  isSelected={formData.targetRole === role}
+                  onChange={() => setFormData(prev => ({ ...prev, targetRole: role }))}
                 >
-                  <p className="font-medium truncate">{role}</p>
-                  <p className="text-xs sm:text-sm text-[#737373] mt-1">
-                    {role === 'PPC VA' && 'Campaign setup, keyword research, ACoS/ROAS, bid adjustments, reporting'}
-                    {role === 'Account VA' && 'Seller Central tasks, catalog support, inventory checks, case logs'}
-                    {role === 'Listing VA' && 'Titles, bullets, A+ content, indexing, keyword placement'}
-                    {role === 'Reporting VA' && 'Search term reports, campaign reports, KPI summaries'}
-                    {role === 'Agency VA' && 'SOP execution, ClickUp tasks, client updates, changelogs'}
-                    {role === 'Senior PPC Assistant' && 'Account audits, launch sequencing, optimization logic, budget pacing'}
-                    {role === 'General' && 'General Amazon VA preparation across multiple areas'}
-                  </p>
-                </button>
+                  <VStack gap={1}>
+                    <Text type="body" weight="medium">{role}</Text>
+                    <Text type="supporting" size="sm">{roleDescriptions[role]}</Text>
+                  </VStack>
+                </SelectableCard>
               ))}
-            </div>
+            </VStack>
           )}
 
           {step === 1 && (
-            <div className="space-y-3">
+            <VStack gap={3}>
               {DIFFICULTIES.map(level => (
-                <button
+                <SelectableCard
                   key={level}
-                  onClick={() => setFormData(prev => ({ ...prev, experienceLevel: level }))}
-                  className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-colors ${
-                    formData.experienceLevel === level
-                      ? 'border-[#FF6B35] bg-[#FF6B35]/8'
-                      : 'border-[#E5E5E0] hover:border-[#D4D4D4]'
-                  }`}
+                  label={level}
+                  isSelected={formData.experienceLevel === level}
+                  onChange={() => setFormData(prev => ({ ...prev, experienceLevel: level }))}
                 >
-                  <p className="font-medium capitalize">{level}</p>
-                  <p className="text-xs sm:text-sm text-[#737373] mt-1">
-                    {level === 'beginner' && 'New to Amazon operations, need foundational knowledge'}
-                    {level === 'intermediate' && 'Know the basics, need structured practice and stronger answers'}
-                    {level === 'advanced' && 'Experienced, need advanced case studies and optimization skills'}
-                  </p>
-                </button>
+                  <VStack gap={1}>
+                    <Text type="body" weight="medium" style={{ textTransform: 'capitalize' }}>{level}</Text>
+                    <Text type="supporting" size="sm">{levelDescriptions[level]}</Text>
+                  </VStack>
+                </SelectableCard>
               ))}
-            </div>
+            </VStack>
           )}
 
           {step === 2 && (
-            <div>
-              <Label className="mb-3 block">Select tools you are familiar with:</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <VStack gap={3}>
+              <Text type="body" weight="medium">Select tools you are familiar with:</Text>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
                 {TOOLS_LIST.map(tool => (
-                  <button
+                  <SelectableCard
                     key={tool}
-                    onClick={() => toggleTool(tool)}
-                    className={`p-2 sm:p-3 rounded-lg border-2 text-xs sm:text-sm transition-colors min-h-[44px] ${
-                      formData.toolsKnown.includes(tool)
-                        ? 'border-[#FF6B35] bg-[#FF6B35]/8 text-[#FF6B35]'
-                        : 'border-[#E5E5E0] text-[#404040] hover:border-[#D4D4D4]'
-                    }`}
+                    label={tool}
+                    isSelected={formData.toolsKnown.includes(tool)}
+                    onChange={() => toggleTool(tool)}
+                    padding={2}
                   >
-                    <span className="break-words">{tool}</span>
-                  </button>
+                    <Text type="body" size="sm">{tool}</Text>
+                  </SelectableCard>
                 ))}
               </div>
-            </div>
+            </VStack>
           )}
 
           {step === 3 && (
-            <div>
-              <Label className="mb-3 block">Select areas you need the most practice in:</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <VStack gap={3}>
+              <Text type="body" weight="medium">Select areas you need the most practice in:</Text>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
                 {weakAreaOptions.map(area => (
-                  <button
+                  <SelectableCard
                     key={area}
-                    onClick={() => toggleWeakArea(area)}
-                    className={`p-2 sm:p-3 rounded-lg border-2 text-xs sm:text-sm text-left transition-colors min-h-[44px] ${
-                      formData.weakAreas.includes(area)
-                        ? 'border-[#FF6B35] bg-[#FF6B35]/8 text-[#FF6B35]'
-                        : 'border-[#E5E5E0] text-[#404040] hover:border-[#D4D4D4]'
-                    }`}
+                    label={area}
+                    isSelected={formData.weakAreas.includes(area)}
+                    onChange={() => toggleWeakArea(area)}
+                    padding={2}
                   >
-                    <span className="break-words">{area}</span>
-                  </button>
+                    <Text type="body" size="sm">{area}</Text>
+                  </SelectableCard>
                 ))}
               </div>
-            </div>
+            </VStack>
           )}
 
           {step === 4 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>When is your interview?</Label>
-                <Input
-                  type="date"
-                  value={formData.interviewDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, interviewDate: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Confidence Level</Label>
-                <Select value={formData.confidenceLevel} onValueChange={(v) => setFormData(prev => ({ ...prev, confidenceLevel: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select confidence level" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low - I need a lot of preparation</SelectItem>
-                    <SelectItem value="medium">Medium - I know some basics</SelectItem>
-                    <SelectItem value="high">High - I just need practice and polish</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Current Resume Status</Label>
-                <Select value={formData.resumeStatus} onValueChange={(v) => setFormData(prev => ({ ...prev, resumeStatus: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select resume status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no_resume">No resume yet</SelectItem>
-                    <SelectItem value="generic_va">Generic VA resume</SelectItem>
-                    <SelectItem value="amazon_specific">Amazon-specific resume</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Country</Label>
-                <Input
-                  placeholder="e.g., Philippines, India, USA"
-                  value={formData.country}
-                  onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-                />
-              </div>
-            </div>
+            <VStack gap={4}>
+              <DateInput
+                label="When is your interview?"
+                value={formData.interviewDate ? (formData.interviewDate as ISODateString) : undefined}
+                onChange={(value) => setFormData(prev => ({ ...prev, interviewDate: value || '' }))}
+                hasClear
+              />
+              <Selector
+                label="Confidence Level"
+                placeholder="Select confidence level"
+                value={formData.confidenceLevel || undefined}
+                onChange={(v) => setFormData(prev => ({ ...prev, confidenceLevel: v }))}
+                options={[
+                  { value: 'low', label: 'Low - I need a lot of preparation' },
+                  { value: 'medium', label: 'Medium - I know some basics' },
+                  { value: 'high', label: 'High - I just need practice and polish' },
+                ]}
+              />
+              <Selector
+                label="Current Resume Status"
+                placeholder="Select resume status"
+                value={formData.resumeStatus || undefined}
+                onChange={(v) => setFormData(prev => ({ ...prev, resumeStatus: v }))}
+                options={[
+                  { value: 'no_resume', label: 'No resume yet' },
+                  { value: 'generic_va', label: 'Generic VA resume' },
+                  { value: 'amazon_specific', label: 'Amazon-specific resume' },
+                ]}
+              />
+              <TextInput
+                label="Country"
+                placeholder="e.g., Philippines, India, USA"
+                value={formData.country}
+                onChange={(v) => setFormData(prev => ({ ...prev, country: v }))}
+              />
+            </VStack>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between pt-4">
-            <FieldButton
-              variant="outline"
+          <HStack style={{ justifyContent: 'space-between', paddingTop: 16 }}>
+            <Button
+              label="Previous"
+              variant="secondary"
               onClick={() => setStep(s => Math.max(0, s - 1))}
-              disabled={step === 0}
-            >
-              Previous
-            </FieldButton>
+              isDisabled={step === 0}
+            />
             {step < steps.length - 1 ? (
-              <FieldButton
-                className="bg-[#FF6B35] hover:bg-[#FF6B35] min-w-[80px]"
+              <Button
+                label="Next"
+                variant="primary"
                 onClick={() => setStep(s => s + 1)}
-                disabled={step === 0 && !formData.targetRole}
-              >
-                Next
-              </FieldButton>
+                isDisabled={step === 0 && !formData.targetRole}
+              />
             ) : (
-              <FieldButton
-                className="bg-[#FF6B35] hover:bg-[#FF6B35] min-w-[80px]"
+              <Button
+                label={submitting ? 'Saving...' : 'Complete Onboarding'}
+                variant="primary"
+                isLoading={submitting}
                 onClick={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? 'Saving...' : 'Complete Onboarding'}
-              </FieldButton>
+              />
             )}
-          </div>
-          {error && <p className="text-sm text-red-500 text-center pt-2">{error}</p>}
-        </FieldCardContent>
-      </FieldCard>
+          </HStack>
+          {error && <Text type="body" color="accent" style={{ textAlign: 'center' }}>{error}</Text>}
+        </VStack>
+      </Card>
     </div>
   );
 }

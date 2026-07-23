@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { FieldButton } from "@/components/ui/glass-button";
-import { FieldInput } from "@/components/ui/glass-input";
-import { FieldCard } from "@/components/ui/glass-card";
+import { lightIcon } from "@/lib/astryx-icon";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { Card } from "@astryxdesign/core/Card";
+import { VStack, HStack } from "@astryxdesign/core/Stack";
+import { Text, Heading } from "@astryxdesign/core/Text";
+import { ToggleButtonGroup, ToggleButton } from "@astryxdesign/core/ToggleButton";
 import {
   Lightning, ArrowLeft, EnvelopeSimple, LockSimple, User,
   ArrowUpRight, Eye, EyeSlash,
@@ -73,7 +78,7 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
     setError("");
     setForgotPasswordMode(false);
     setLoading(false);
-    formStartRef.current = performance.now(); // eslint-disable-line react-hooks/purity
+    formStartRef.current = performance.now();
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -95,197 +100,171 @@ export function AuthScreen({ onBack }: AuthScreenProps = {}) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-12 relative">
-      {/* Back button */}
+    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 16px", position: "relative" }}>
       {onBack && (
-        <button
-          onClick={onBack}
-          className="fixed top-6 left-6 z-50 flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900 transition-colors rounded-md px-3 py-2 bg-white border border-[#E5E5E0]"
-          aria-label="Back to Home"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back</span>
-        </button>
+        <div style={{ position: "fixed", top: 24, left: 24, zIndex: 50 }}>
+          <Button label="Back" icon={<ArrowLeft weight="light" />} variant="secondary" size="sm" onClick={onBack} />
+        </div>
       )}
 
-      <div className="w-full max-w-md relative">
-        {/* Logo */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="w-12 h-12 rounded-lg bg-[#FFE5D9] flex items-center justify-center mx-auto mb-4">
-            <Lightning className="w-6 h-6 text-[#FF6B35]" />
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <VStack gap={4} style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--color-accent-muted)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+            <Lightning size={24} weight="light" color="var(--color-accent)" />
           </div>
-          <h1 className="font-heading text-2xl font-bold text-ink-900">Welcome back</h1>
-          <p className="text-ink-500 text-sm mt-1">Sign in or create your account</p>
-        </div>
+          <Heading level={2}>Welcome back</Heading>
+          <Text type="supporting">Sign in or create your account</Text>
+        </VStack>
 
-        {/* Auth Card */}
-        <FieldCard variant="bordered" className="p-7 animate-slide-up">
-          {/* Tab switcher */}
-          <div className="flex gap-1 p-1 rounded-md bg-[#F4F3EE] mb-6">
-            {(["login", "register"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => switchTab(tab)}
-                className={`flex-1 py-2 rounded-md text-sm font-heading font-semibold transition-all duration-200 ${
-                  activeTab === tab
-                    ? "bg-[#FF6B35] text-white shadow-sm"
-                    : "text-ink-500 hover:text-ink-700"
-                }`}
-              >
-                {tab === "login" ? "Sign In" : "Create Account"}
-              </button>
-            ))}
-          </div>
+        <Card>
+          <VStack gap={5}>
+            <ToggleButtonGroup
+              type="single"
+              label="Sign in or create account"
+              value={activeTab}
+              onChange={(value) => switchTab(value as "login" | "register")}
+            >
+              <ToggleButton value="login" label="Sign In" style={{ flex: 1 }} />
+              <ToggleButton value="register" label="Create Account" style={{ flex: 1 }} />
+            </ToggleButtonGroup>
 
-          {/* Honeypot */}
-          <input
-            ref={honeypotRef}
-            type="text"
-            name="website"
-            tabIndex={-1}
-            autoComplete="off"
-            className="absolute opacity-0 pointer-events-none h-0 w-0"
-            aria-hidden="true"
-          />
+            <input
+              ref={honeypotRef}
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ position: "absolute", opacity: 0, pointerEvents: "none", height: 0, width: 0 }}
+              aria-hidden="true"
+            />
 
-          {activeTab === "login" && forgotPasswordMode ? (
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <p className="text-sm text-ink-500">
-                Enter your email and we&apos;ll send you a password reset link.
-              </p>
-              <FieldInput
-                icon={<EnvelopeSimple className="w-4 h-4" />}
-                type="email"
-                placeholder="Email address"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+            {activeTab === "login" && forgotPasswordMode ? (
+              <form onSubmit={handleForgotPassword}>
+                <VStack gap={4}>
+                  <Text type="supporting">Enter your email and we&apos;ll send you a password reset link.</Text>
+                  <TextInput
+                    label="Email address"
+                    isLabelHidden
+                    type="email"
+                    placeholder="Email address"
+                    startIcon={lightIcon(EnvelopeSimple)}
+                    value={forgotEmail}
+                    onChange={setForgotEmail}
+                    isRequired
+                    htmlName="email"
+                  />
+                  {forgotMessage && <Text type="body">{forgotMessage}</Text>}
+                  <Button type="submit" variant="primary" label={loading ? "Sending..." : "Send Reset Link"} isLoading={loading} width="100%" />
+                  <Button label="Back to sign in" variant="ghost" width="100%" onClick={() => { setForgotPasswordMode(false); setForgotMessage(""); }} />
+                </VStack>
+              </form>
+            ) : activeTab === "login" ? (
+              <form onSubmit={handleLogin}>
+                <VStack gap={4}>
+                  <TextInput
+                    label="Email address"
+                    isLabelHidden
+                    type="email"
+                    placeholder="Email address"
+                    startIcon={lightIcon(EnvelopeSimple)}
+                    value={loginEmail}
+                    onChange={setLoginEmail}
+                    isRequired
+                    htmlName="email"
+                  />
+                  <div style={{ position: "relative" }}>
+                    <TextInput
+                      label="Password"
+                      isLabelHidden
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      startIcon={lightIcon(LockSimple)}
+                      value={loginPassword}
+                      onChange={setLoginPassword}
+                      isRequired
+                      htmlName="current-password"
+                    />
+                    <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)" }}>
+                      <IconButton
+                        label={showPassword ? "Hide password" : "Show password"}
+                        icon={showPassword ? <EyeSlash weight="light" /> : <Eye weight="light" />}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                      />
+                    </div>
+                  </div>
 
-              {forgotMessage && (
-                <p className="text-sm text-ink-700 animate-fade-in">{forgotMessage}</p>
-              )}
+                  <Button label="Forgot password?" variant="ghost" size="sm" onClick={() => { setForgotPasswordMode(true); setError(""); }} />
 
-              <FieldButton type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
-              </FieldButton>
+                  {error && <Text type="body" color="accent">{error}</Text>}
 
-              <button
-                type="button"
-                onClick={() => { setForgotPasswordMode(false); setForgotMessage(""); }}
-                className="w-full text-center text-sm text-ink-500 hover:text-ink-700 transition-colors"
-              >
-                Back to sign in
-              </button>
-            </form>
-          ) : activeTab === "login" ? (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <FieldInput
-                icon={<EnvelopeSimple className="w-4 h-4" />}
-                type="email"
-                placeholder="Email address"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-              <div className="relative">
-                <FieldInput
-                  icon={<LockSimple className="w-4 h-4" />}
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-700 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeSlash className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+                  <Button type="submit" variant="primary" label={loading ? "Signing in..." : "Sign In"} icon={!loading ? <ArrowUpRight weight="light" /> : undefined} isLoading={loading} width="100%" />
+                </VStack>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister}>
+                <VStack gap={4}>
+                  <TextInput
+                    label="Full name"
+                    isLabelHidden
+                    type="text"
+                    placeholder="Full name"
+                    startIcon={lightIcon(User)}
+                    value={registerName}
+                    onChange={setRegisterName}
+                    isRequired
+                    htmlName="name"
+                  />
+                  <TextInput
+                    label="Email address"
+                    isLabelHidden
+                    type="email"
+                    placeholder="Email address"
+                    startIcon={lightIcon(EnvelopeSimple)}
+                    value={registerEmail}
+                    onChange={setRegisterEmail}
+                    isRequired
+                    htmlName="email"
+                  />
+                  <div style={{ position: "relative" }}>
+                    <TextInput
+                      label="Password"
+                      isLabelHidden
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password (min. 8 characters)"
+                      startIcon={lightIcon(LockSimple)}
+                      value={registerPassword}
+                      onChange={setRegisterPassword}
+                      isRequired
+                      htmlName="new-password"
+                    />
+                    <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)" }}>
+                      <IconButton
+                        label={showPassword ? "Hide password" : "Show password"}
+                        icon={showPassword ? <EyeSlash weight="light" /> : <Eye weight="light" />}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                      />
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => { setForgotPasswordMode(true); setError(""); }}
-                className="text-sm text-ink-500 hover:text-[#FF6B35] transition-colors"
-              >
-                Forgot password?
-              </button>
+                  {error && <Text type="body" color="accent">{error}</Text>}
 
-              {error && (
-                <p className="text-sm text-[#B91C1C] animate-fade-in">{error}</p>
-              )}
+                  <Button type="submit" variant="primary" label={loading ? "Creating account..." : "Create Account"} icon={!loading ? <ArrowUpRight weight="light" /> : undefined} isLoading={loading} width="100%" />
+                </VStack>
+              </form>
+            )}
 
-              <FieldButton type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-                {!loading && <ArrowUpRight className="w-4 h-4" />}
-              </FieldButton>
-            </form>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <FieldInput
-                icon={<User className="w-4 h-4" />}
-                type="text"
-                placeholder="Full name"
-                value={registerName}
-                onChange={(e) => setRegisterName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-              <FieldInput
-                icon={<EnvelopeSimple className="w-4 h-4" />}
-                type="email"
-                placeholder="Email address"
-                value={registerEmail}
-                onChange={(e) => setRegisterEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-              <div className="relative">
-                <FieldInput
-                  icon={<LockSimple className="w-4 h-4" />}
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password (min. 8 characters)"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-700 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeSlash className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {error && (
-                <p className="text-sm text-[#B91C1C] animate-fade-in">{error}</p>
-              )}
-
-              <FieldButton type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account..." : "Create Account"}
-                {!loading && <ArrowUpRight className="w-4 h-4" />}
-              </FieldButton>
-            </form>
-          )}
-
-          <p className="text-center text-ink-500 text-xs mt-6 leading-relaxed">
-            By continuing you agree to our{" "}
-            <a href="/terms" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Terms</a>
-            {" "}and{" "}
-            <a href="/privacy" className="text-ink-700 hover:text-[#FF6B35] transition-colors">Privacy Policy</a>
-          </p>
-        </FieldCard>
+            <HStack gap={1} style={{ justifyContent: "center", flexWrap: "wrap" }}>
+              <Text type="supporting" size="xsm">By continuing you agree to our</Text>
+              <a href="/terms"><Text type="supporting" size="xsm" color="accent">Terms</Text></a>
+              <Text type="supporting" size="xsm">and</Text>
+              <a href="/privacy"><Text type="supporting" size="xsm" color="accent">Privacy Policy</Text></a>
+            </HStack>
+          </VStack>
+        </Card>
       </div>
     </div>
   );

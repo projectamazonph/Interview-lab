@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FieldCard } from "@/components/ui/glass-card";
 import { FieldButton } from "@/components/ui/glass-button";
 import { FieldInput } from "@/components/ui/glass-input";
+import { PapHeader } from "@/components/header";
 import { Lightning, LockSimple, ArrowUpRight, Eye, EyeSlash, ArrowLeft } from "@phosphor-icons/react";
 
 function ResetPasswordForm() {
@@ -132,8 +133,11 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
-      <ResetPasswordForm />
-    </Suspense>
+    <>
+      <PapHeader />
+      <Suspense fallback={null}>
+        <ResetPasswordForm />
+      </Suspense>
+    </>
   );
 }

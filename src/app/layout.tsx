@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { PapHeader } from "@/components/header";
+import { AstryxThemeProvider } from "@/components/AstryxThemeProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -241,9 +241,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontVariables} font-body antialiased`}>
-        <PapHeader />
-        {children}
-        <Toaster />
+        <AstryxThemeProvider>
+          {children}
+          <Toaster />
+        </AstryxThemeProvider>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PapHeader } from "@/components/header";
 
 export const metadata: Metadata = {
   title: "Terms of Use — Interview Lab",
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
+    <>
+    <PapHeader />
     <div className="min-h-[100dvh] bg-background px-6 py-16">
       <div className="max-w-2xl mx-auto prose prose-neutral">
         <h1 className="text-3xl font-heading font-bold text-ink-900 mb-2">Terms of Use</h1>
@@ -58,5 +61,6 @@ export default function TermsPage() {
         </a>
       </div>
     </div>
+    </>
   );
 }

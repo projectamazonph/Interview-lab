@@ -42,6 +42,22 @@ if (typeof window !== 'undefined') {
     value: cryptoMock,
   });
 
+  // Mock matchMedia — Astryx components (Spinner/useTheme, AppShell's mobile
+  // breakpoint detection, etc.) call this via useMediaQuery; jsdom has no
+  // real implementation.
+  window.matchMedia = window.matchMedia || function (query: string) {
+    return {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    };
+  };
+
   // Mock fetch for jsdom tests
   const fetchMock = vi.fn();
   global.fetch = fetchMock;

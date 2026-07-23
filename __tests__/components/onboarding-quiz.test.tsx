@@ -25,7 +25,7 @@ describe('OnboardingQuiz', () => {
     render(<OnboardingQuiz onComplete={vi.fn()} />);
     expect(screen.getByText('Step 1 of 5')).toBeInTheDocument();
     expect(screen.getByText('Target Role')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /PPC VA/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /PPC VA/i })).toBeInTheDocument();
   });
 
   it('disables Next until a role is selected on step 1', () => {
@@ -35,7 +35,7 @@ describe('OnboardingQuiz', () => {
 
   it('advances to step 2 after selecting a role and clicking Next', () => {
     render(<OnboardingQuiz onComplete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /PPC VA/i }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /PPC VA/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
     expect(screen.getByText('Experience Level')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('OnboardingQuiz', () => {
 
   it('goes back to the previous step', () => {
     render(<OnboardingQuiz onComplete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /PPC VA/i }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /PPC VA/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
@@ -54,7 +54,7 @@ describe('OnboardingQuiz', () => {
     const onComplete = vi.fn();
     render(<OnboardingQuiz onComplete={onComplete} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /PPC VA/i }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /PPC VA/i }));
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByRole('button', { name: /Next|Complete Onboarding/ }));
     }
@@ -73,7 +73,7 @@ describe('OnboardingQuiz', () => {
     const onComplete = vi.fn();
     render(<OnboardingQuiz onComplete={onComplete} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /PPC VA/i }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /PPC VA/i }));
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByRole('button', { name: /Next|Complete Onboarding/ }));
     }
