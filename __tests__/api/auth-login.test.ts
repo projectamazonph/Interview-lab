@@ -1,284 +1,247 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+/**
+ * @vitest-environment node
+ *
+ * Exercises the real route handlers in src/app/api/auth/login and
+ * src/app/api/auth/logout with mocked db/password/rate-limit so we verify
+ * the shipped code path (sanitization, bcrypt/legacy password handling,
+ * rate limiting, session cookie creation) rather than a hand-copied
+ * reimplementation of it.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { verifyToken } from '@/lib/session';
 
-// In-memory stubs matching actual route logic
-let users: any[] = [];
-let rateLimits: any[] = [];
-let sessionCreated: any = null;
+const findUnique = vi.fn();
+const update = vi.fn();
+const verifyPassword = vi.fn();
+const isLegacyHash = vi.fn();
+const hashPassword = vi.fn();
+const checkRateLimit = vi.fn();
 
-function reset() {
-  users = [];
-  rateLimits = [];
-  sessionCreated = null;
-}
-
-// Stubs
-
-function createRequest(body: any, headers: Record<string, string> = {}) {
-  return {
-    json: async () => body,
-    headers: {
-      get: (k: string) => headers[k.toLowerCase()] ?? null,
+vi.mock('@/lib/db', () => ({
+  db: {
+    user: {
+      findUnique: (...args: unknown[]) => findUnique(...args),
+      update: (...args: unknown[]) => update(...args),
     },
-  };
+  },
+}));
+
+vi.mock('@/lib/password', () => ({
+  verifyPassword: (...args: unknown[]) => verifyPassword(...args),
+  isLegacyHash: (...args: unknown[]) => isLegacyHash(...args),
+  hashPassword: (...args: unknown[]) => hashPassword(...args),
+}));
+
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimit(...args),
+}));
+
+import { POST as login } from '@/app/api/auth/login/route';
+import { POST as logout } from '@/app/api/auth/logout/route';
+
+function req(body: unknown, headers: Record<string, string> = {}) {
+  return new Request('http://localhost/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  });
 }
 
-// Replicate route logic
-async function loginHandler(request: any) {
-  try {
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || 'unknown';
-
-    const rl = rateLimits.find(r => r.ip === clientIp && r.action === 'auth-login');
-    if (rl && rl.count >= 10) {
-      return { status: 429, body: { error: 'Too many login attempts. Please try again later.' } };
-    }
-    if (!rl) rateLimits.push({ ip: clientIp, action: 'auth-login', count: 1 });
-    else rl.count++;
-
-    const { email, password } = await request.json();
-    if (!email || !password) {
-      return { status: 400, body: { error: 'Email and password are required' } };
-    }
-
-    const sanitizedEmail = String(email).trim().toLowerCase().substring(0, 255);
-    const user = users.find(u => u.email === sanitizedEmail);
-
-    if (!user || !user.passwordHash) {
-      return { status: 401, body: { error: 'Invalid email or password' } };
-    }
-
-    // Simplified password check (always succeeds for test)
-    const isValid = password === 'correct-password';
-    if (!isValid) {
-      return { status: 401, body: { error: 'Invalid email or password' } };
-    }
-
-    sessionCreated = { sub: user.id, email: user.email, tier: user.subscriptionTier, isAdmin: user.isAdmin };
-
-    return {
-      status: 200,
-      body: {
-        id: user.id, email: user.email, name: user.name,
-        subscriptionTier: user.subscriptionTier, isAdmin: user.isAdmin,
-        emailVerified: user.emailVerified, profile: user.profile,
-      },
-    };
-  } catch (error) {
-    return { status: 500, body: { error: 'Login failed' } };
-  }
+function badJsonReq() {
+  return {
+    headers: { get: () => null },
+    json: async () => {
+      throw new Error('bad json');
+    },
+  } as unknown as Request;
 }
 
-// Logout handler
-async function logoutHandler() {
-  const response = { status: 200, body: { success: true } };
-  sessionCreated = null;
-  return response;
-}
+const baseUser = {
+  id: 'u1',
+  email: 'user@test.com',
+  name: 'Test User',
+  passwordHash: '$2b$12$hashedpassword',
+  subscriptionTier: 'free',
+  isAdmin: false,
+  emailVerified: false,
+  profile: null,
+};
 
 describe('POST /api/auth/login', () => {
-  beforeEach(() => reset());
+  beforeEach(() => {
+    findUnique.mockReset();
+    update.mockReset();
+    verifyPassword.mockReset();
+    isLegacyHash.mockReset();
+    hashPassword.mockReset();
+    checkRateLimit.mockReset();
+    checkRateLimit.mockResolvedValue({ allowed: true, remaining: 9 });
+    isLegacyHash.mockReturnValue(false);
+  });
 
   it('returns 400 when email is missing', async () => {
-    const req = createRequest({ password: 'pass' });
-    const res = await loginHandler(req);
+    const res = await login(req({ password: 'pass' }));
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('Email and password are required');
+    expect((await res.json()).error).toContain('Email and password are required');
   });
 
   it('returns 400 when password is missing', async () => {
-    const req = createRequest({ email: 'test@test.com' });
-    const res = await loginHandler(req);
+    const res = await login(req({ email: 'test@test.com' }));
     expect(res.status).toBe(400);
   });
 
   it('returns 400 when both fields are missing', async () => {
-    const req = createRequest({});
-    const res = await loginHandler(req);
+    const res = await login(req({}));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when body is empty', async () => {
-    const req = createRequest(undefined);
-    // This will throw, caught as 500
-    const res = await loginHandler(req);
+  it('returns 500 when the request body cannot be parsed', async () => {
+    const res = await login(badJsonReq());
     expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Login failed');
   });
 
   it('returns 401 for non-existent email', async () => {
-    const req = createRequest({ email: 'noone@test.com', password: 'correct-password' });
-    const res = await loginHandler(req);
+    findUnique.mockResolvedValue(null);
+    const res = await login(req({ email: 'noone@test.com', password: 'whatever' }));
     expect(res.status).toBe(401);
-    expect(res.body.error).toBe('Invalid email or password');
+    expect((await res.json()).error).toBe('Invalid email or password');
+  });
+
+  it('returns 401 for user without a passwordHash (e.g. oauth-only account)', async () => {
+    findUnique.mockResolvedValue({ ...baseUser, passwordHash: null });
+    const res = await login(req({ email: 'user@test.com', password: 'anything' }));
+    expect(res.status).toBe(401);
+    expect(verifyPassword).not.toHaveBeenCalled();
   });
 
   it('returns 401 for wrong password', async () => {
-    users.push({ id: 'u1', email: 'user@test.com', name: 'User', passwordHash: 'hashed', subscriptionTier: 'free', isAdmin: false, emailVerified: false, profile: null });
-    const req = createRequest({ email: 'user@test.com', password: 'wrong' });
-    const res = await loginHandler(req);
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(false);
+    const res = await login(req({ email: 'user@test.com', password: 'wrong' }));
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 for user without passwordHash', async () => {
-    users.push({ id: 'u2', email: 'oauth@test.com', name: 'OAuth', passwordHash: null, subscriptionTier: 'free', isAdmin: false, emailVerified: true, profile: null });
-    const req = createRequest({ email: 'oauth@test.com', password: 'anything' });
-    const res = await loginHandler(req);
-    expect(res.status).toBe(401);
+  it('calls verifyPassword with the raw password and stored hash', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    await login(req({ email: 'user@test.com', password: 'correct-password' }));
+    expect(verifyPassword).toHaveBeenCalledWith('correct-password', baseUser.passwordHash);
   });
 
-  it('returns 200 with user data on valid login', async () => {
-    users.push({ id: 'u1', email: 'user@test.com', name: 'Test User', passwordHash: 'hashed', subscriptionTier: 'starter', isAdmin: false, emailVerified: true, profile: { id: 'p1' } });
-    const req = createRequest({ email: 'user@test.com', password: 'correct-password' });
-    const res = await loginHandler(req);
+  it('returns 200 with user data (and session cookie) on valid login', async () => {
+    findUnique.mockResolvedValue({ ...baseUser, subscriptionTier: 'starter', emailVerified: true, profile: { id: 'p1' } });
+    verifyPassword.mockResolvedValue(true);
+    const res = await login(req({ email: 'user@test.com', password: 'correct-password' }));
+    const body = await res.json();
     expect(res.status).toBe(200);
-    expect(res.body.id).toBe('u1');
-    expect(res.body.email).toBe('user@test.com');
-    expect(res.body.name).toBe('Test User');
-    expect(res.body.subscriptionTier).toBe('starter');
-    expect(res.body.isAdmin).toBe(false);
-    expect(res.body.emailVerified).toBe(true);
-    expect(res.body.profile).toEqual({ id: 'p1' });
+    expect(body).toMatchObject({
+      id: 'u1', email: 'user@test.com', name: 'Test User',
+      subscriptionTier: 'starter', isAdmin: false, emailVerified: true, profile: { id: 'p1' },
+    });
+    expect(res.headers.get('set-cookie')).toContain('interviewlab_session=');
   });
 
-  it('creates a session with correct payload', async () => {
-    users.push({ id: 'u3', email: 'admin@test.com', name: 'Admin', passwordHash: 'hashed', subscriptionTier: 'pro', isAdmin: true, emailVerified: true, profile: null });
-    const req = createRequest({ email: 'admin@test.com', password: 'correct-password' });
-    await loginHandler(req);
-    expect(sessionCreated).not.toBeNull();
-    expect(sessionCreated.sub).toBe('u3');
-    expect(sessionCreated.email).toBe('admin@test.com');
-    expect(sessionCreated.tier).toBe('pro');
-    expect(sessionCreated.isAdmin).toBe(true);
+  it('does not leak passwordHash in the response', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    const res = await login(req({ email: 'user@test.com', password: 'correct-password' }));
+    expect(await res.json()).not.toHaveProperty('passwordHash');
   });
 
-  it('sanitizes email: trims whitespace and lowercases', async () => {
-    users.push({ id: 'u1', email: 'user@test.com', name: 'User', passwordHash: 'hashed', subscriptionTier: 'free', isAdmin: false, emailVerified: false, profile: null });
-    const req = createRequest({ email: '  USER@TEST.COM  ', password: 'correct-password' });
-    const res = await loginHandler(req);
+  it('creates a session cookie whose payload matches the user (sub/email/tier/isAdmin)', async () => {
+    findUnique.mockResolvedValue({ ...baseUser, id: 'u3', email: 'admin@test.com', subscriptionTier: 'pro', isAdmin: true });
+    verifyPassword.mockResolvedValue(true);
+    const res = await login(req({ email: 'admin@test.com', password: 'correct-password' }));
+    const setCookie = res.headers.get('set-cookie')!;
+    const token = setCookie.match(/interviewlab_session=([^;]+)/)![1];
+    const payload = await verifyToken(token);
+    expect(payload).toMatchObject({ sub: 'u3', email: 'admin@test.com', tier: 'pro', isAdmin: true });
+  });
+
+  it('sanitizes email: trims whitespace and lowercases before the db lookup', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    await login(req({ email: '  USER@TEST.COM  ', password: 'correct-password' }));
+    expect(findUnique).toHaveBeenCalledWith({ where: { email: 'user@test.com' }, include: { profile: true } });
+  });
+
+  it('truncates email to 255 chars before lookup', async () => {
+    findUnique.mockResolvedValue(null);
+    const longEmail = 'a'.repeat(250) + '@test.com'; // 259 chars
+    await login(req({ email: longEmail, password: 'x' }));
+    const calledWith = findUnique.mock.calls[0][0].where.email as string;
+    expect(calledWith.length).toBe(255);
+  });
+
+  it('auto-upgrades a legacy SHA-256 hash to bcrypt on successful login', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    isLegacyHash.mockReturnValue(true);
+    hashPassword.mockResolvedValue('$2b$12$newbcryptvalue');
+    await login(req({ email: 'user@test.com', password: 'correct-password' }));
+    expect(hashPassword).toHaveBeenCalledWith('correct-password');
+    expect(update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { passwordHash: '$2b$12$newbcryptvalue' } });
+  });
+
+  it('does not attempt a hash upgrade for an already-bcrypt hash', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    isLegacyHash.mockReturnValue(false);
+    await login(req({ email: 'user@test.com', password: 'correct-password' }));
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('login still succeeds even if the legacy hash upgrade write fails', async () => {
+    findUnique.mockResolvedValue(baseUser);
+    verifyPassword.mockResolvedValue(true);
+    isLegacyHash.mockReturnValue(true);
+    hashPassword.mockResolvedValue('$2b$12$newvalue');
+    update.mockRejectedValue(new Error('db write failed'));
+    const res = await login(req({ email: 'user@test.com', password: 'correct-password' }));
     expect(res.status).toBe(200);
-    expect(res.body.email).toBe('user@test.com');
   });
 
-  it('truncates email to 255 chars', async () => {
-    const longEmail = 'a'.repeat(250) + '@test.com'; // 260 chars
-    const req = createRequest({ email: longEmail, password: 'correct-password' });
-    const res = await loginHandler(req);
-    // Should not find user (email truncated)
-    expect(res.status).toBe(401);
-  });
-
-  it('returns 429 when rate limit exceeded', async () => {
-    const ip = 'test-ip';
-    rateLimits.push({ ip, action: 'auth-login', count: 10 });
-    const req = createRequest({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': ip });
-    const res = await loginHandler(req);
+  it('returns 429 when the persistent rate limiter denies the request', async () => {
+    checkRateLimit.mockResolvedValue({ allowed: false, remaining: 0 });
+    const res = await login(req({ email: 'x@x.com', password: 'p' }));
     expect(res.status).toBe(429);
-    expect(res.body.error).toContain('Too many login attempts');
+    expect((await res.json()).error).toContain('Too many login attempts');
+    expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it('increments rate limit counter on each attempt', async () => {
-    const ip = '192.168.1.1';
-    const req = createRequest({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': ip });
-    await loginHandler(req);
-    await loginHandler(req);
-    await loginHandler(req);
-    const rl = rateLimits.find(r => r.ip === ip);
-    expect(rl!.count).toBe(3);
+  it('keys the rate limiter by x-forwarded-for (first IP) when present', async () => {
+    checkRateLimit.mockResolvedValue({ allowed: true, remaining: 9 });
+    findUnique.mockResolvedValue(null);
+    await login(req({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }));
+    expect(checkRateLimit).toHaveBeenCalledWith('1.2.3.4', 'auth-login', expect.any(Number), expect.any(Number));
   });
 
-  it('uses x-real-ip when x-forwarded-for is absent', async () => {
-    const req = createRequest({ email: 'x@x.com', password: 'p' }, { 'x-real-ip': '10.0.0.1' });
-    await loginHandler(req);
-    const rl = rateLimits.find(r => r.ip === '10.0.0.1');
-    expect(rl).toBeDefined();
-  });
+  it('falls back to x-real-ip, then "unknown", for rate-limit keying', async () => {
+    findUnique.mockResolvedValue(null);
+    await login(req({ email: 'x@x.com', password: 'p' }, { 'x-real-ip': '10.0.0.1' }));
+    expect(checkRateLimit).toHaveBeenCalledWith('10.0.0.1', 'auth-login', expect.any(Number), expect.any(Number));
 
-  it('falls back to "unknown" when no IP headers', async () => {
-    const req = createRequest({ email: 'x@x.com', password: 'p' });
-    await loginHandler(req);
-    const rl = rateLimits.find(r => r.ip === 'unknown');
-    expect(rl).toBeDefined();
-  });
-
-  it('handles multiple x-forwarded-for IPs (uses first)', async () => {
-    const req = createRequest({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' });
-    await loginHandler(req);
-    const rl = rateLimits.find(r => r.ip === '1.2.3.4');
-    expect(rl).toBeDefined();
-  });
-
-  it('handles error thrown during request.json()', async () => {
-    const badReq = { json: async () => { throw new Error('bad json'); }, headers: { get: () => null } };
-    const res = await loginHandler(badReq);
-    expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Login failed');
-  });
-
-  it('returns profile data when user has a profile', async () => {
-    const profile = { id: 'p1', bio: 'I am a VA', experience: '2 years' };
-    users.push({ id: 'u5', email: 'pro@test.com', name: 'Pro', passwordHash: 'hashed', subscriptionTier: 'pro', isAdmin: false, emailVerified: true, profile });
-    const req = createRequest({ email: 'pro@test.com', password: 'correct-password' });
-    const res = await loginHandler(req);
-    expect(res.status).toBe(200);
-    expect(res.body.profile).toEqual(profile);
-  });
-
-  it('returns null profile when user has no profile', async () => {
-    users.push({ id: 'u6', email: 'noprop@test.com', name: 'NoPro', passwordHash: 'hashed', subscriptionTier: 'free', isAdmin: false, emailVerified: false, profile: null });
-    const req = createRequest({ email: 'noprop@test.com', password: 'correct-password' });
-    const res = await loginHandler(req);
-    expect(res.body.profile).toBeNull();
-  });
-
-  it('does not leak passwordHash in response', async () => {
-    users.push({ id: 'u7', email: 'secure@test.com', name: 'Secure', passwordHash: '$2b$10$hashedpassword', subscriptionTier: 'free', isAdmin: false, emailVerified: false, profile: null });
-    const req = createRequest({ email: 'secure@test.com', password: 'correct-password' });
-    const res = await loginHandler(req);
-    expect(res.body).not.toHaveProperty('passwordHash');
-  });
-
-  it('rate limit is per-IP not global', async () => {
-    rateLimits.push({ ip: '1.1.1.1', action: 'auth-login', count: 10 });
-    const req = createRequest({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': '2.2.2.2' });
-    const res = await loginHandler(req);
-    expect(res.status).not.toBe(429);
-  });
-
-  it('handles email with leading/trailing spaces', async () => {
-    users.push({ id: 'u8', email: 'space@test.com', name: 'Space', passwordHash: 'hashed', subscriptionTier: 'free', isAdmin: false, emailVerified: false, profile: null });
-    const req = createRequest({ email: ' space@test.com ', password: 'correct-password' });
-    const res = await loginHandler(req);
-    expect(res.status).toBe(200);
+    checkRateLimit.mockClear();
+    await login(req({ email: 'x@x.com', password: 'p' }));
+    expect(checkRateLimit).toHaveBeenCalledWith('unknown', 'auth-login', expect.any(Number), expect.any(Number));
   });
 });
 
 describe('POST /api/auth/logout', () => {
-  beforeEach(() => reset());
-
-  it('returns 200 with success true', async () => {
-    sessionCreated = { sub: 'u1', email: 'x@x.com' };
-    const res = await logoutHandler();
+  it('returns 200 with success true and clears the session cookie', async () => {
+    const res = await logout();
     expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
+    expect(await res.json()).toEqual({ success: true });
+    const setCookie = res.headers.get('set-cookie')!;
+    expect(setCookie).toContain('interviewlab_session=');
+    expect(setCookie).toMatch(/Max-Age=0|Expires=/i);
   });
 
-  it('clears the session', async () => {
-    sessionCreated = { sub: 'u1' };
-    await logoutHandler();
-    expect(sessionCreated).toBeNull();
-  });
-
-  it('is idempotent (safe to call twice)', async () => {
-    const r1 = await logoutHandler();
-    const r2 = await logoutHandler();
+  it('is idempotent — safe to call repeatedly', async () => {
+    const r1 = await logout();
+    const r2 = await logout();
     expect(r1.status).toBe(200);
     expect(r2.status).toBe(200);
-    expect(sessionCreated).toBeNull();
-  });
-
-  it('works even when no session exists', async () => {
-    sessionCreated = null;
-    const res = await logoutHandler();
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
   });
 });
