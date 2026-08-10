@@ -1,212 +1,206 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+/**
+ * @vitest-environment node
+ *
+ * Exercises the real handlers in src/app/api/assessments/route.ts and
+ * src/app/api/assessments/[id]/route.ts with mocked db/auth.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-let assessments: any[] = [];
-let agentRuns: any[] = [];
-let currentUser: any = null;
+const findMany = vi.fn();
+const findUnique = vi.fn();
+const agentRunCreate = vi.fn();
+const getUserFromRequest = vi.fn();
 
-function reset() {
-  assessments = [];
-  agentRuns = [];
-  currentUser = null;
+vi.mock('@/lib/db', () => ({
+  db: {
+    assessment: {
+      findMany: (...args: unknown[]) => findMany(...args),
+      findUnique: (...args: unknown[]) => findUnique(...args),
+    },
+    agentRun: {
+      create: (...args: unknown[]) => agentRunCreate(...args),
+    },
+  },
+}));
+
+vi.mock('@/lib/auth-helpers', () => ({
+  getUserFromRequest: (...args: unknown[]) => getUserFromRequest(...args),
+}));
+
+import { GET as list } from '@/app/api/assessments/route';
+import { GET as getById, POST as submit } from '@/app/api/assessments/[id]/route';
+
+function listReq(qs = '') {
+  return new Request(`http://localhost/api/assessments${qs}`);
 }
 
-function listRequest(role?: string, difficulty?: string) {
-  let url = 'https://example.com/api/assessments';
-  const params: string[] = [];
-  if (role) params.push('role=' + role);
-  if (difficulty) params.push('difficulty=' + difficulty);
-  if (params.length) url += '?' + params.join('&');
-  return { url };
+function idReq(body?: unknown) {
+  return new Request('http://localhost/api/assessments/a1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 }
 
-async function listHandler(request: any) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role');
-    const difficulty = searchParams.get('difficulty');
-    let filtered = [...assessments];
-    if (role && role !== 'all') filtered = filtered.filter(a => a.role === role);
-    if (difficulty && difficulty !== 'all') filtered = filtered.filter(a => a.difficulty === difficulty);
-    return { status: 200, body: { assessments: filtered } };
-  } catch {
-    return { status: 500, body: { error: 'Failed to fetch assessments' } };
-  }
+function params(id: string) {
+  return { params: Promise.resolve({ id }) };
 }
 
-async function getByIdHandler(request: any, id: string) {
-  try {
-    const assessment = assessments.find(a => a.id === id);
-    if (!assessment) return { status: 404, body: { error: 'Assessment not found' } };
-    return {
-      status: 200,
-      body: { id: assessment.id, title: assessment.title, role: assessment.role, difficulty: assessment.difficulty, description: assessment.description, datasetInfo: assessment.datasetInfo },
-    };
-  } catch {
-    return { status: 500, body: { error: 'Failed to fetch assessment' } };
-  }
-}
-
-async function submitHandler(request: any, id: string) {
-  try {
-    if (!currentUser) return { status: 401, body: { error: 'Unauthorized' } };
-    const assessment = assessments.find(a => a.id === id);
-    if (!assessment) return { status: 404, body: { error: 'Assessment not found' } };
-    const { answers } = await request.json();
-    agentRuns.push({ userId: currentUser.id, agentType: 'practical_test', input: JSON.stringify({ assessmentId: id, answers }), output: JSON.stringify({ submitted: true }) });
-    return { status: 200, body: { success: true, assessmentId: id } };
-  } catch {
-    return { status: 500, body: { error: 'Failed to submit assessment' } };
-  }
-}
+const fullAssessment = {
+  id: 'a1', title: 'PPC Test', role: 'PPC VA', difficulty: 'easy',
+  description: 'd1', datasetInfo: { rows: 100 }, answerKey: { secret: true }, rubric: { weight: 1 },
+};
 
 describe('GET /api/assessments (list)', () => {
-  beforeEach(() => reset());
-
-  it('returns all assessments when no filters', async () => {
-    assessments.push({ id: 'a1', title: 'PPC Test', role: 'PPC VA', difficulty: 'easy', description: 'd1', datasetInfo: {}, answerKey: {}, rubric: {} }, { id: 'a2', title: 'Account Test', role: 'Account VA', difficulty: 'hard', description: 'd2', datasetInfo: {}, answerKey: {}, rubric: {} });
-    const res = await listHandler(listRequest());
-    expect(res.status).toBe(200);
-    expect(res.body.assessments.length).toBe(2);
+  beforeEach(() => {
+    findMany.mockReset();
   });
 
-  it('returns empty array when no assessments', async () => {
-    const res = await listHandler(listRequest());
+  it('returns all assessments when no filters', async () => {
+    findMany.mockResolvedValue([fullAssessment, { ...fullAssessment, id: 'a2' }]);
+    const res = await list(listReq());
+    const body = await res.json();
     expect(res.status).toBe(200);
-    expect(res.body.assessments).toEqual([]);
+    expect(body.assessments.length).toBe(2);
+    expect(findMany).toHaveBeenCalledWith({ where: {}, orderBy: { createdAt: 'desc' } });
   });
 
   it('filters by role', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy' }, { id: 'a2', role: 'Account VA', difficulty: 'easy' }, { id: 'a3', role: 'PPC VA', difficulty: 'hard' });
-    const res = await listHandler(listRequest('PPC VA'));
-    expect(res.body.assessments.length).toBe(2);
-    expect(res.body.assessments.every((a: any) => a.role === 'PPC VA')).toBe(true);
+    findMany.mockResolvedValue([fullAssessment]);
+    await list(listReq('?role=PPC%20VA'));
+    expect(findMany).toHaveBeenCalledWith({ where: { role: 'PPC VA' }, orderBy: { createdAt: 'desc' } });
   });
 
   it('filters by difficulty', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy' }, { id: 'a2', role: 'PPC VA', difficulty: 'hard' });
-    const res = await listHandler(listRequest(undefined, 'hard'));
-    expect(res.body.assessments.length).toBe(1);
-    expect(res.body.assessments[0].difficulty).toBe('hard');
+    findMany.mockResolvedValue([]);
+    await list(listReq('?difficulty=hard'));
+    expect(findMany).toHaveBeenCalledWith({ where: { difficulty: 'hard' }, orderBy: { createdAt: 'desc' } });
   });
 
-  it('filters by both role and difficulty', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy' }, { id: 'a2', role: 'PPC VA', difficulty: 'hard' }, { id: 'a3', role: 'Account VA', difficulty: 'easy' });
-    const res = await listHandler(listRequest('PPC VA', 'easy'));
-    expect(res.body.assessments.length).toBe(1);
-    expect(res.body.assessments[0].id).toBe('a1');
+  it('combines role and difficulty filters', async () => {
+    findMany.mockResolvedValue([]);
+    await list(listReq('?role=PPC%20VA&difficulty=easy'));
+    expect(findMany).toHaveBeenCalledWith({ where: { role: 'PPC VA', difficulty: 'easy' }, orderBy: { createdAt: 'desc' } });
   });
 
   it('treats "all" as no filter', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy' });
-    const res = await listHandler(listRequest('all', 'all'));
-    expect(res.body.assessments.length).toBe(1);
+    findMany.mockResolvedValue([]);
+    await list(listReq('?role=all&difficulty=all'));
+    expect(findMany).toHaveBeenCalledWith({ where: {}, orderBy: { createdAt: 'desc' } });
   });
 
-  it('returns empty when filter matches nothing', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy' });
-    const res = await listHandler(listRequest('Agency VA'));
-    expect(res.body.assessments).toEqual([]);
+  it('does not strip answerKey/rubric in the list response', async () => {
+    findMany.mockResolvedValue([fullAssessment]);
+    const res = await list(listReq());
+    const body = await res.json();
+    expect(body.assessments[0].answerKey).toEqual({ secret: true });
   });
 
-  it('includes answerKey in list (no stripping)', async () => {
-    assessments.push({ id: 'a1', role: 'PPC VA', difficulty: 'easy', answerKey: { secret: true }, rubric: {} });
-    const res = await listHandler(listRequest());
-    expect(res.body.assessments[0].answerKey).toBeDefined();
-  });
-
-  it('returns 500 on URL error', async () => {
-    const res = await listHandler({ url: undefined });
+  it('returns 500 when the db throws', async () => {
+    findMany.mockRejectedValue(new Error('db down'));
+    const res = await list(listReq());
     expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Failed to fetch assessments');
   });
 });
 
 describe('GET /api/assessments/[id]', () => {
-  beforeEach(() => reset());
+  beforeEach(() => {
+    findUnique.mockReset();
+  });
 
   it('returns assessment by id', async () => {
-    assessments.push({ id: 'a1', title: 'Test', role: 'PPC VA', difficulty: 'easy', description: 'desc', datasetInfo: { rows: 100 } });
-    const res = await getByIdHandler({ url: 'x' }, 'a1');
+    findUnique.mockResolvedValue(fullAssessment);
+    const res = await getById(idReq(), params('a1'));
+    const body = await res.json();
     expect(res.status).toBe(200);
-    expect(res.body.id).toBe('a1');
-    expect(res.body.title).toBe('Test');
+    expect(body.id).toBe('a1');
+    expect(body.title).toBe('PPC Test');
   });
 
-  it('returns 404 for non-existent id', async () => {
-    const res = await getByIdHandler({ url: 'x' }, 'nonexistent');
+  it('returns 404 for a non-existent id', async () => {
+    findUnique.mockResolvedValue(null);
+    const res = await getById(idReq(), params('nonexistent'));
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Assessment not found');
+    expect((await res.json()).error).toBe('Assessment not found');
   });
 
-  it('strips answerKey and rubric', async () => {
-    assessments.push({ id: 'a1', title: 'Test', role: 'PPC VA', difficulty: 'easy', description: 'd', datasetInfo: {}, answerKey: { a: 1 }, rubric: { b: 2 } });
-    const res = await getByIdHandler({ url: 'x' }, 'a1');
-    expect(res.body).not.toHaveProperty('answerKey');
-    expect(res.body).not.toHaveProperty('rubric');
+  it('strips answerKey and rubric from the response', async () => {
+    findUnique.mockResolvedValue(fullAssessment);
+    const res = await getById(idReq(), params('a1'));
+    const body = await res.json();
+    expect(body).not.toHaveProperty('answerKey');
+    expect(body).not.toHaveProperty('rubric');
   });
 
   it('includes description and datasetInfo', async () => {
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy', description: 'My desc', datasetInfo: { columns: 5 } });
-    const res = await getByIdHandler({ url: 'x' }, 'a1');
-    expect(res.body.description).toBe('My desc');
-    expect(res.body.datasetInfo).toEqual({ columns: 5 });
+    findUnique.mockResolvedValue(fullAssessment);
+    const res = await getById(idReq(), params('a1'));
+    const body = await res.json();
+    expect(body.description).toBe('d1');
+    expect(body.datasetInfo).toEqual({ rows: 100 });
   });
 
-  it('returns datasetInfo as empty object when not set', async () => {
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy', description: 'd' });
-    const res = await getByIdHandler({ url: 'x' }, 'a1');
-    expect(res.body.datasetInfo).toBeUndefined();
+  it('returns 500 when the db throws', async () => {
+    findUnique.mockRejectedValue(new Error('db down'));
+    const res = await getById(idReq(), params('a1'));
+    expect(res.status).toBe(500);
   });
 });
 
 describe('POST /api/assessments/[id] (submit)', () => {
-  beforeEach(() => reset());
-
-  it('returns 401 when not authenticated', async () => {
-    currentUser = null;
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy' });
-    const res = await submitHandler({ json: async () => ({ answers: ['a'] }), headers: { get: () => null } }, 'a1');
-    expect(res.status).toBe(401);
+  beforeEach(() => {
+    findUnique.mockReset();
+    agentRunCreate.mockReset();
+    getUserFromRequest.mockReset();
   });
 
-  it('returns 404 for non-existent assessment', async () => {
-    currentUser = { id: 'u1' };
-    const res = await submitHandler({ json: async () => ({ answers: [] }), headers: { get: () => null } }, 'nonexistent');
+  it('returns 401 when not authenticated, without touching the db', async () => {
+    getUserFromRequest.mockResolvedValue(null);
+    const res = await submit(idReq({ answers: ['a'] }), params('a1'));
+    expect(res.status).toBe(401);
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 for a non-existent assessment', async () => {
+    getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    findUnique.mockResolvedValue(null);
+    const res = await submit(idReq({ answers: [] }), params('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 200 and logs agent run on success', async () => {
-    currentUser = { id: 'u1' };
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy' });
-    const res = await submitHandler({ json: async () => ({ answers: ['q1', 'q2'] }), headers: { get: () => null } }, 'a1');
+  it('returns 200 and logs an agent run on success', async () => {
+    getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    findUnique.mockResolvedValue(fullAssessment);
+    agentRunCreate.mockResolvedValue({});
+    const res = await submit(idReq({ answers: ['q1', 'q2'] }), params('a1'));
+    const body = await res.json();
     expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.assessmentId).toBe('a1');
-    expect(agentRuns.length).toBe(1);
-    expect(agentRuns[0].userId).toBe('u1');
-    expect(agentRuns[0].agentType).toBe('practical_test');
+    expect(body).toEqual({ success: true, assessmentId: 'a1' });
+    expect(agentRunCreate).toHaveBeenCalledWith({
+      data: {
+        userId: 'u1',
+        agentType: 'practical_test',
+        input: JSON.stringify({ assessmentId: 'a1', answers: ['q1', 'q2'] }),
+        output: JSON.stringify({ submitted: true }),
+      },
+    });
   });
 
-  it('stores assessmentId and answers in agent run', async () => {
-    currentUser = { id: 'u2' };
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy' });
-    await submitHandler({ json: async () => ({ answers: ['a', 'b', 'c'] }), headers: { get: () => null } }, 'a1');
-    const run = JSON.parse(agentRuns[0].input);
-    expect(run.assessmentId).toBe('a1');
-    expect(run.answers).toEqual(['a', 'b', 'c']);
+  it('returns 500 when the request body cannot be parsed', async () => {
+    getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    findUnique.mockResolvedValue(fullAssessment);
+    const badReq = { json: async () => { throw new Error('bad json'); } } as unknown as Request;
+    const res = await submit(badReq, params('a1'));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Failed to submit assessment');
   });
 
-  it('allows multiple submissions', async () => {
-    currentUser = { id: 'u1' };
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy' });
-    await submitHandler({ json: async () => ({ answers: ['a'] }), headers: { get: () => null } }, 'a1');
-    await submitHandler({ json: async () => ({ answers: ['b'] }), headers: { get: () => null } }, 'a1');
-    expect(agentRuns.length).toBe(2);
-  });
-
-  it('returns 500 on json parse error', async () => {
-    currentUser = { id: 'u1' };
-    assessments.push({ id: 'a1', title: 'T', role: 'PPC VA', difficulty: 'easy' });
-    const res = await submitHandler({ json: async () => { throw new Error('bad'); }, headers: { get: () => null } }, 'a1');
+  it('returns 500 when the agent run write fails', async () => {
+    getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    findUnique.mockResolvedValue(fullAssessment);
+    agentRunCreate.mockRejectedValue(new Error('db down'));
+    const res = await submit(idReq({ answers: ['a'] }), params('a1'));
     expect(res.status).toBe(500);
   });
 });

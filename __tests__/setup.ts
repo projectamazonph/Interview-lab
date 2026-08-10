@@ -42,6 +42,24 @@ if (typeof window !== 'undefined') {
     value: cryptoMock,
   });
 
+  // jsdom doesn't implement scrollIntoView; Radix UI (Select, etc.) calls it
+  // on selection, which otherwise throws and can crash a passive effect.
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+
+  // jsdom doesn't implement PointerEvent capture APIs that Radix UI relies
+  // on (Select/Tabs use pointer events for interaction).
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+
   // Mock fetch for jsdom tests
   const fetchMock = vi.fn();
   global.fetch = fetchMock;
