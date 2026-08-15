@@ -39,6 +39,7 @@ export function CoverLetterStudio() {
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -66,6 +67,7 @@ export function CoverLetterStudio() {
 
     setLoading(true);
     setResult(null);
+    setError(null);
     try {
       const res = await fetch('/api/ai/cover-letter', {
         method: 'POST',
@@ -79,6 +81,12 @@ export function CoverLetterStudio() {
       });
       const data = await res.json();
 
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate cover letter. Please try again.');
+        setLoading(false);
+        return;
+      }
+
       await fetch('/api/cover-letter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
@@ -91,8 +99,9 @@ export function CoverLetterStudio() {
       const histRes = await fetch('/api/cover-letter');
       const histData = await histRes.json();
       setCoverLetters(histData.coverLetters || []);
-    } catch (error) {
-      console.error('Cover letter generation error:', error);
+    } catch (err) {
+      console.error('Cover letter generation error:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

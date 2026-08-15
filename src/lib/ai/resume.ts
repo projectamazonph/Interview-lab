@@ -1,4 +1,5 @@
-import { validateShape, type AIHandlerConfig } from './handlers';
+import { validateShape, type AIHandlerConfig } f  rateLimit: { max: 15, windowMs: 60_000, message: 'Too many AI requests. Please slow down and try again.' },
+  rom './handlers';
 
 const RESUME_REVIEW_PROMPT = `You are an Amazon VA career preparation assistant. You help users prepare for Amazon marketplace virtual assistant roles.
 

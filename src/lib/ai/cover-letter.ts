@@ -1,4 +1,5 @@
-import { validateShape, type AIHandlerConfig } from './handlers';
+import { validateShape, type AIHandlerConfig }   rateLimit: { max: 15, windowMs: 60_000, message: 'Too many AI requests. Please slow down and try again.' },
+  from './handlers';
 
 const COVER_LETTER_PROMPT = `You are an Amazon VA career preparation assistant. You help users prepare for Amazon marketplace virtual assistant roles.
 
@@ -57,8 +58,14 @@ export const coverLetterConfig: AIHandlerConfig<CoverLetterBody, CoverLetterResu
   },
   buildUserPrompt: (body) =>
     `Target Role: ${body.targetRole || 'Amazon VA'}\nTone: ${body.tone || 'formal'}\nApplicant Name: ${body.userName || '[Your Name]'}\n\nJob Description:\n${body.jobDescription}`,
-  // Original route returned a graceful partial object (200) on parse failure.
-  onParseFailure: () => ({ ok: true, value: EMPTY_RESULT }),
-  // Graceful degradation when the AI provider is unavailable (missing key, outage).
-  onProviderError: () => ({ ok: true, value: EMPTY_RESULT }),
+  onParseFailure: () => ({
+    ok: false,
+    status: 502,
+    error: 'Failed to parse the cover letter. Please try again.',
+  }),
+  onProviderError: () => ({
+    ok: false,
+    status: 503,
+    error: 'Cover letter service is temporarily unavailable. Please try again shortly.',
+  }),
 };
