@@ -156,13 +156,35 @@ describe('coverLetterConfig', () => {
     expect(prompt).toContain('Jane');
   });
 
-  it('onParseFailure and onProviderError both degrade gracefully with the same placeholder letter', () => {
+  it('surfaces parse and provider failures instead of returning a placeholder letter', () => {
     const parseFailure = coverLetterConfig.onParseFailure({ jobDescription: 'x' });
     const providerError = coverLetterConfig.onProviderError!({ jobDescription: 'x' });
-    expect(parseFailure).toEqual(providerError);
-    expect(parseFailure.ok).toBe(true);
-    if (parseFailure.ok) {
-      expect(parseFailure.value.draftLetter).toMatch(/unable to generate/i);
+    expect(parseFailure).toEqual({
+      ok: false,
+      status: 502,
+      error: 'Failed to parse the cover letter. Please try again.',
+    });
+    expect(providerError).toEqual({
+      ok: false,
+      status: 503,
+      error: 'Cover letter service is temporarily unavailable. Please try again shortly.',
+    });
+  });
+});
+
+describe('AI rate limit configs', () => {
+  it('limits every AI feature to 15 requests per minute', () => {
+    for (const config of [
+      coachConfig,
+      resumeReviewConfig,
+      coverLetterConfig,
+      assessmentScoreConfig,
+    ]) {
+      expect(config.rateLimit).toEqual({
+        max: 15,
+        windowMs: 60_000,
+        message: 'Too many AI requests. Please slow down and try again.',
+      });
     }
   });
 });

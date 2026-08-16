@@ -49,7 +49,7 @@ NEXT_PUBLIC_APP_URL   # Public app URL
 - [x] XSS prevented via React's default escaping
 - [ ] CSRF: SameSite cookies are a partial measure; add CSRF token for state-changing POSTs
 - [x] Rate limiting on auth endpoints
-- [x] Rate limiting on AI endpoints (10 req/min per user)
+- [x] Rate limiting on AI endpoints (15 req/min per user)
 - [x] Account deletion endpoint (DELETE /api/user/me) — requires password confirmation
 - [x] Data export endpoint (GET /api/user/me/export) — GDPR data portability
 

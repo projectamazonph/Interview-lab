@@ -1,8 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import { db } from './db';
 
 interface RateLimitResult {
   allowed: boolean;
   remaining: number;
+}
+
+interface RateLimitRow {
+  count: number;
 }
 
 export async function checkRateLimit(
@@ -11,47 +16,41 @@ export async function checkRateLimit(
   max: number,
   windowMs: number
 ): Promise<RateLimitResult> {
+  if (!Number.isInteger(max) || max <= 0 || !Number.isFinite(windowMs) || windowMs <= 0) {
+    return { allowed: false, remaining: 0 };
+  }
+
   const compositeKey = `${prefix}:${key}`;
   const now = new Date();
+  const resetTime = new Date(now.getTime() + windowMs);
 
   try {
-    // Use a transaction for atomic read-check-update to prevent race conditions
-    const result = await db.$transaction(async (tx) => {
-      const existing = await tx.rateLimitEntry.findUnique({
-        where: { key: compositeKey },
-      });
+    // A conditional PostgreSQL upsert takes a row lock on the unique key. The
+    // statement returns no row once the active window has reached its limit,
+    // so concurrent callers cannot read the same count and overwrite each other.
+    const rows = await db.$queryRaw<RateLimitRow[]>`
+      INSERT INTO "RateLimitEntry" ("id", "key", "count", "resetTime", "createdAt")
+      VALUES (${randomUUID()}, ${compositeKey}, 1, ${resetTime}, ${now})
+      ON CONFLICT ("key") DO UPDATE
+      SET
+        "count" = CASE
+          WHEN "RateLimitEntry"."resetTime" <= ${now} THEN 1
+          ELSE "RateLimitEntry"."count" + 1
+        END,
+        "resetTime" = CASE
+          WHEN "RateLimitEntry"."resetTime" <= ${now} THEN ${resetTime}
+          ELSE "RateLimitEntry"."resetTime"
+        END
+      WHERE
+        "RateLimitEntry"."resetTime" <= ${now}
+        OR "RateLimitEntry"."count" < ${max}
+      RETURNING "count"
+    `;
 
-      if (!existing || now > existing.resetTime) {
-        // New window: create or reset
-        await tx.rateLimitEntry.upsert({
-          where: { key: compositeKey },
-          update: {
-            count: 1,
-            resetTime: new Date(now.getTime() + windowMs),
-          },
-          create: {
-            key: compositeKey,
-            count: 1,
-            resetTime: new Date(now.getTime() + windowMs),
-          },
-        });
-        return { allowed: true, remaining: max - 1 };
-      }
+    const row = rows[0];
+    if (!row) return { allowed: false, remaining: 0 };
 
-      if (existing.count >= max) {
-        return { allowed: false, remaining: 0 };
-      }
-
-      // Atomic increment within the transaction
-      await tx.rateLimitEntry.update({
-        where: { key: compositeKey },
-        data: { count: existing.count + 1 },
-      });
-
-      return { allowed: true, remaining: max - existing.count - 1 };
-    });
-
-    return result;
+    return { allowed: true, remaining: Math.max(max - row.count, 0) };
   } catch (error) {
     // Fail closed when database is unavailable — log and deny to be safe
     console.error('[rate-limit] Database error, denying request:', error);

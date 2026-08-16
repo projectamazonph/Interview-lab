@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
+import { clearSession } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { hashPassword } from '@/lib/password';
 
 /**
  * DELETE /api/user/me — permanently delete the authenticated user's account
@@ -41,18 +41,21 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    // Cascade deletes via Prisma relations:
-    // UserProfile, Resume, CoverLetter, InterviewSession (+ attempts),
-    // AgentRun, GuideProgress, Subscription, Payment, VerificationToken
-    await db.user.delete({ where: { id: user.id } });
+    // Verification tokens and rate-limit rows are not related to User in the
+    // schema, so remove them explicitly in the same transaction. All other
+    // user-owned records are deleted through their cascade relations.
+    await db.$transaction([
+      db.verificationToken.deleteMany({ where: { email: fullUser.email } }),
+      db.rateLimitEntry.deleteMany({ where: { key: { endsWith: `:${user.id}` } } }),
+      db.user.delete({ where: { id: user.id } }),
+    ]);
 
     const response = NextResponse.json(
       { message: 'Account and all associated data have been permanently deleted.' },
       { status: 200 },
     );
 
-    // Clear the session cookie
-    response.cookies.delete('session');
+    clearSession(response);
 
     return response;
   } catch (error) {

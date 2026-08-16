@@ -29,6 +29,7 @@ async function api(method: string, path: string, body?: unknown, headers?: Recor
     status: res.status,
     body: json as Record<string, unknown>,
     cookie: extractSessionCookie(res.headers.get('set-cookie')),
+    setCookie: res.headers.get('set-cookie'),
   };
 }
 
@@ -120,6 +121,57 @@ describe('User Path: New User Registration to First Interview', () => {
     const { status, body } = await api('GET', '/api/guides');
     expect(status).toBe(200);
     expect((body.guides as unknown[]).length).toBeGreaterThan(0);
+  });
+});
+
+describe('User Path: Account Export and Deletion', () => {
+  const email = `e2e_delete_${Date.now()}@test.com`;
+  const password = 'DeleteTest123!';
+  let userId: string;
+  let userCookie: string;
+
+  testIfServer('Step 1: Register an account with a verification token', async () => {
+    const { status, body, cookie } = await api('POST', '/api/auth/register', {
+      email,
+      name: 'E2E Delete User',
+      password,
+    });
+    expect(status).toBe(201);
+    userId = body.id as string;
+    userCookie = cookie as string;
+  });
+
+  testIfServer('Step 2: Export all account-owned data without secrets', async () => {
+    const { status, body } = await api('GET', '/api/user/me/export', undefined, {
+      Cookie: userCookie,
+    });
+    expect(status).toBe(200);
+    expect(body).toEqual(expect.objectContaining({
+      agentRuns: expect.any(Array),
+      payments: expect.any(Array),
+      rateLimitEntries: expect.any(Array),
+      subscription: null,
+      verificationTokens: expect.any(Array),
+    }));
+    expect(body.user).not.toHaveProperty('passwordHash');
+    expect((body.verificationTokens as Record<string, unknown>[])[0]).toEqual(
+      expect.objectContaining({ email }),
+    );
+    expect((body.verificationTokens as Record<string, unknown>[])[0]).not.toHaveProperty('token');
+  });
+
+  testIfServer('Step 3: Delete the account, clear its session, and prevent future login', async () => {
+    const { status, setCookie } = await api('DELETE', '/api/user/me', {
+      confirmPassword: password,
+    }, { Cookie: userCookie });
+    expect(status).toBe(200);
+    expect(setCookie).toContain('interviewlab_session=');
+    expect(setCookie).toMatch(/Max-Age=0/i);
+
+    const loginResult = await api('POST', '/api/auth/login', { email, password });
+    expect(loginResult.status).toBe(401);
+    expect(loginResult.body.error).toBe('Invalid email or password');
+    expect(userId).toBeTruthy();
   });
 });
 
@@ -228,15 +280,17 @@ describe('User Path: Cover Letter Generation', () => {
     ({ cookie: userCookie } = await login('demo@interviewlab.com', 'demo123'));
   });
 
-  testIfServer('Step 1: Generate cover letter with AI', async () => {
+  testIfServer('Step 1: Surface an unavailable cover-letter provider', async () => {
     const { status, body } = await api('POST', '/api/ai/cover-letter', {
       jobDescription: 'We are looking for an Amazon PPC VA to manage campaigns, perform keyword research, and create weekly reports. Must be familiar with Seller Central and advertising console.',
       tone: 'professional',
       targetRole: 'Amazon PPC VA',
       userName: 'Test User',
     }, { Cookie: userCookie });
-    expect(status).toBe(200);
-    expect(body).toHaveProperty('draftLetter');
+    expect(status).toBe(503);
+    expect(body).toEqual({
+      error: 'Cover letter service is temporarily unavailable. Please try again shortly.',
+    });
   });
 
   testIfServer('Step 2: Save cover letter', async () => {

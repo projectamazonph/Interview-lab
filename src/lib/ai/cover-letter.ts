@@ -1,5 +1,4 @@
-import { validateShape, type AIHandlerConfig }   rateLimit: { max: 15, windowMs: 60_000, message: 'Too many AI requests. Please slow down and try again.' },
-  from './handlers';
+import { validateShape, type AIHandlerConfig } from './handlers';
 
 const COVER_LETTER_PROMPT = `You are an Amazon VA career preparation assistant. You help users prepare for Amazon marketplace virtual assistant roles.
 
@@ -35,15 +34,12 @@ interface CoverLetterResult {
   claimsToVerify?: string[];
 }
 
-const EMPTY_RESULT: CoverLetterResult = {
-  draftLetter: 'Unable to generate cover letter. Please try again.',
-  shorterVersion: '',
-  subjectLine: '',
-  customizationTips: [],
-  claimsToVerify: [],
-};
-
 export const coverLetterConfig: AIHandlerConfig<CoverLetterBody, CoverLetterResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: COVER_LETTER_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['jobDescription']);

@@ -12,6 +12,11 @@ vi.mock('@/lib/ai/client', () => ({
   completeJson: (...args: unknown[]) => completeJson(...args),
 }));
 
+const checkRateLimit = vi.fn();
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimit(...args),
+}));
+
 import { createAIHandler, validateShape } from '@/lib/ai/handlers';
 
 interface SampleBody {
@@ -45,6 +50,7 @@ describe('createAIHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getUserFromRequest.mockResolvedValue({ id: 'u1' });
+    checkRateLimit.mockResolvedValue({ allowed: true, remaining: 14 });
   });
 
   it('returns 401 when no user', async () => {
@@ -93,6 +99,22 @@ describe('createAIHandler', () => {
     const handler = createAIHandler<SampleBody, SampleResult>(makeConfig());
     const res = await handler(badReq);
     expect(res.status).toBe(400);
+  });
+
+  it('returns 429 without calling the provider when the user exceeds the AI limit', async () => {
+    checkRateLimit.mockResolvedValue({ allowed: false, remaining: 0 });
+    const handler = createAIHandler<SampleBody, SampleResult>({
+      ...makeConfig(),
+      rateLimit: { max: 15, windowMs: 60_000, message: 'Slow down' },
+    });
+
+    const res = await handler(postReq({ text: 'hi' }));
+
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: 'Slow down' });
+    expect(res.headers.get('Retry-After')).toBe('60');
+    expect(checkRateLimit).toHaveBeenCalledWith('u1', 'ai', 15, 60_000);
+    expect(completeJson).not.toHaveBeenCalled();
   });
 });
 

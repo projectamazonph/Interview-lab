@@ -14,31 +14,66 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [profile, interviewSessions, resumes, coverLetters, guideProgress] =
-      await Promise.all([
-        db.userProfile.findUnique({ where: { userId: user.id } }),
-        db.interviewSession.findMany({
-          where: { userId: user.id },
-          include: { attempts: { include: { question: true } } },
-          orderBy: { startedAt: 'desc' },
-        }),
-        db.resume.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
-        db.coverLetter.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
-        db.guideProgress.findMany({
-          where: { userId: user.id },
-          include: { guide: { select: { title: true, slug: true } } },
-        }),
-      ]);
+    const [
+      account,
+      profile,
+      interviewSessions,
+      resumes,
+      coverLetters,
+      guideProgress,
+      agentRuns,
+      subscription,
+      payments,
+      verificationTokens,
+      rateLimitEntries,
+    ] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          subscriptionTier: true,
+          isAdmin: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      db.userProfile.findUnique({ where: { userId: user.id } }),
+      db.interviewSession.findMany({
+        where: { userId: user.id },
+        include: { attempts: { include: { question: true } } },
+        orderBy: { startedAt: 'desc' },
+      }),
+      db.resume.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
+      db.coverLetter.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
+      db.guideProgress.findMany({
+        where: { userId: user.id },
+        include: { guide: { select: { title: true, slug: true } } },
+      }),
+      db.agentRun.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
+      db.subscription.findUnique({ where: { userId: user.id } }),
+      db.payment.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
+      db.verificationToken.findMany({
+        where: { email: user.email },
+        select: { id: true, email: true, expiresAt: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.rateLimitEntry.findMany({
+        where: { key: { endsWith: `:${user.id}` } },
+        select: { id: true, key: true, count: true, resetTime: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    if (!account) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+    }
 
     const exportData = {
       exportedAt: new Date().toISOString(),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        subscriptionTier: user.subscriptionTier,
-        createdAt: user.createdAt,
-      },
+      user: account,
       profile: profile
         ? {
             ...profile,
@@ -50,6 +85,11 @@ export async function GET(request: Request) {
       resumes,
       coverLetters,
       guideProgress,
+      agentRuns,
+      subscription,
+      payments,
+      verificationTokens,
+      rateLimitEntries,
     };
 
     return NextResponse.json(exportData, {

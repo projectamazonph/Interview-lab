@@ -1,5 +1,4 @@
-import { validateShape, type AIHandlerConfig } from  rateLimit: { max: 15, windowMs: 60_000, message: 'Too many AI requests. Please slow down and try again.' },
-   './handlers';
+import { validateShape, type AIHandlerConfig } from './handlers';
 
 const ASSESSMENT_PROMPT = `You are an Amazon VA career preparation assistant. You help users prepare for Amazon marketplace virtual assistant roles.
 
@@ -36,6 +35,11 @@ interface AssessmentResult {
 }
 
 export const assessmentScoreConfig: AIHandlerConfig<AssessmentBody, AssessmentResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: ASSESSMENT_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['assessmentTitle', 'userAnswers']);

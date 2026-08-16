@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkRateLimit } from './rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { completeJson } from './client';
 

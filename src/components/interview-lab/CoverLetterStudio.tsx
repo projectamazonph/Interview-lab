@@ -151,6 +151,23 @@ export function CoverLetterStudio() {
         </FieldButton>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="border-red-200 bg-red-50">
+          <AlertDescription className="flex w-full flex-row items-center justify-between gap-3">
+            <span>{error}</span>
+            <FieldButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setError(null)}
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </FieldButton>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Cover Letter History */}
       {showHistory && coverLetters.length > 0 && (
         <FieldCard>
