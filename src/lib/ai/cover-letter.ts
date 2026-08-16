@@ -34,15 +34,12 @@ interface CoverLetterResult {
   claimsToVerify?: string[];
 }
 
-const EMPTY_RESULT: CoverLetterResult = {
-  draftLetter: 'Unable to generate cover letter. Please try again.',
-  shorterVersion: '',
-  subjectLine: '',
-  customizationTips: [],
-  claimsToVerify: [],
-};
-
 export const coverLetterConfig: AIHandlerConfig<CoverLetterBody, CoverLetterResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: COVER_LETTER_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['jobDescription']);
@@ -57,8 +54,14 @@ export const coverLetterConfig: AIHandlerConfig<CoverLetterBody, CoverLetterResu
   },
   buildUserPrompt: (body) =>
     `Target Role: ${body.targetRole || 'Amazon VA'}\nTone: ${body.tone || 'formal'}\nApplicant Name: ${body.userName || '[Your Name]'}\n\nJob Description:\n${body.jobDescription}`,
-  // Original route returned a graceful partial object (200) on parse failure.
-  onParseFailure: () => ({ ok: true, value: EMPTY_RESULT }),
-  // Graceful degradation when the AI provider is unavailable (missing key, outage).
-  onProviderError: () => ({ ok: true, value: EMPTY_RESULT }),
+  onParseFailure: () => ({
+    ok: false,
+    status: 502,
+    error: 'Failed to parse the cover letter. Please try again.',
+  }),
+  onProviderError: () => ({
+    ok: false,
+    status: 503,
+    error: 'Cover letter service is temporarily unavailable. Please try again shortly.',
+  }),
 };

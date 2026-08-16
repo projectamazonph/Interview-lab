@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { completeJson } from './client';
 
@@ -21,6 +22,15 @@ export function validateShape(
 }
 
 export interface AIHandlerConfig<TBody, TResult> {
+  /** Optional rate limit config. If omitted, no rate limiting is applied. */
+  rateLimit?: {
+    /** Max requests per window per user. Default 10. */
+    max?: number;
+    /** Window in ms. Default 60s. */
+    windowMs?: number;
+    /** Error message on limit exceeded. */
+    message?: string;
+  };
   /** System prompt for the model. */
   systemPrompt: string;
   /** Build the user message from the parsed request body. */
@@ -64,6 +74,33 @@ export function createAIHandler<TBody = Record<string, unknown>, TResult = unkno
     }
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit AI endpoints to prevent quota exhaustion
+    if (config.rateLimit !== undefined) {
+      const max = config.rateLimit.max ?? 10;
+      const windowMs = config.rateLimit.windowMs ?? 60_000;
+      const rl = await checkRateLimit(
+        user.id,
+        'ai',
+        max,
+        windowMs,
+      );
+      if (!rl.allowed) {
+        return NextResponse.json(
+          {
+            error: config.rateLimit.message ?? 'Too many AI requests. Please slow down.',
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(Math.ceil(windowMs / 1000)),
+              'X-RateLimit-Limit': String(max),
+              'X-RateLimit-Remaining': '0',
+            },
+          },
+        );
+      }
     }
 
     let rawBody: unknown;

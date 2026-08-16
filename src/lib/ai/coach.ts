@@ -94,6 +94,11 @@ function errorFeedback(): CoachResult {
 }
 
 export const coachConfig: AIHandlerConfig<CoachBody, CoachResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: INTERVIEW_COACH_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['question', 'userAnswer']);

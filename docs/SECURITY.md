@@ -41,14 +41,22 @@ NEXT_PUBLIC_APP_URL   # Public app URL
 
 ## Security Checklist
 
-- [ ] No `.env` files committed
-- [ ] No secrets in code or comments
-- [ ] No `console.log` of sensitive data
-- [ ] Input validation on all API endpoints
-- [ ] SQL injection prevented via Prisma
-- [ ] XSS prevented via React's default escaping
-- [ ] CSRF protected via SameSite cookies
-- [ ] Rate limiting on auth endpoints
+- [x] No `.env` files committed
+- [x] No secrets in code or comments
+- [x] No `console.log` of sensitive data
+- [x] Input validation on all API endpoints
+- [x] SQL injection prevented via Prisma
+- [x] XSS prevented via React's default escaping
+- [ ] CSRF: SameSite cookies are a partial measure; add CSRF token for state-changing POSTs
+- [x] Rate limiting on auth endpoints
+- [x] Rate limiting on AI endpoints (15 req/min per user)
+- [x] Account deletion endpoint (DELETE /api/user/me) — requires password confirmation
+- [x] Data export endpoint (GET /api/user/me/export) — GDPR data portability
+
+## GDPR / Data Privacy
+
+Users can request a full data export via `GET /api/user/me/export` and permanent
+account deletion via `DELETE /api/user/me` (requires password confirmation in request body).
 
 ## AI Content Guardrails
 

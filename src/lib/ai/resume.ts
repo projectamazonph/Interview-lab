@@ -38,6 +38,11 @@ interface ResumeReviewResult {
 }
 
 export const resumeReviewConfig: AIHandlerConfig<ResumeReviewBody, ResumeReviewResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: RESUME_REVIEW_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['resumeText']);

@@ -35,6 +35,11 @@ interface AssessmentResult {
 }
 
 export const assessmentScoreConfig: AIHandlerConfig<AssessmentBody, AssessmentResult> = {
+  rateLimit: {
+    max: 15,
+    windowMs: 60_000,
+    message: 'Too many AI requests. Please slow down and try again.',
+  },
   systemPrompt: ASSESSMENT_PROMPT,
   validate: (body) => {
     const shape = validateShape(body, ['assessmentTitle', 'userAnswers']);

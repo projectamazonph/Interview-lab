@@ -90,6 +90,32 @@ describe('CoverLetterStudio', () => {
     expect(body.generatedLetter).toContain('Dear Hiring Manager');
   });
 
+  it('shows an AI service error and lets the user dismiss it', async () => {
+    const fetchMock = vi.fn((url: string) => {
+      if (url === '/api/ai/cover-letter') {
+        return jsonResponse(
+          { error: 'Cover letter service is temporarily unavailable. Please try again shortly.' },
+          false,
+        );
+      }
+      if (url === '/api/cover-letter') return jsonResponse({ coverLetters: [] });
+      return jsonResponse({});
+    });
+    global.fetch = fetchMock;
+
+    render(<CoverLetterStudio />);
+    fireEvent.change(screen.getByPlaceholderText('Paste the job description here...'), {
+      target: { value: 'We need an Amazon PPC VA' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Letter' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Cover letter service is temporarily unavailable. Please try again shortly.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss error' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('does not call the AI endpoint when the job description is empty', () => {
     const fetchMock = vi.fn(() => jsonResponse({ coverLetters: [] }));
     global.fetch = fetchMock;
