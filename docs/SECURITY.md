@@ -18,6 +18,9 @@ Interview Lab handles user credentials, resume content, and interview data. Secu
 - Admin routes require `isAdmin: true` in user record
 - Subscription tier checks enforced in API, not just UI
 - Rate limiting on auth endpoints (10 attempts per minute)
+- Rate-limit identity comes only from Vercel's managed client-IP header or an
+  explicitly configured trusted reverse-proxy header. Client-supplied
+  `x-forwarded-for` and `x-real-ip` values are ignored.
 
 ## Data Protection
 
@@ -37,6 +40,7 @@ Required secrets (never commit to git):
 DATABASE_URL          # PostgreSQL connection string
 JWT_SECRET            # min 256-bit random string
 NEXT_PUBLIC_APP_URL   # Public app URL
+TRUSTED_CLIENT_IP_HEADER # Self-hosted trusted proxy only; never x-forwarded-for
 ```
 
 ## Security Checklist

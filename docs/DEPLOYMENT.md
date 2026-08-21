@@ -40,6 +40,13 @@ bun run dev
 | `JWT_SECRET` | JWT signing secret (min 256 bits) | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | Production URL | `https://interview-lab.vercel.app` |
 
+Vercel deployments use the platform-managed `x-vercel-forwarded-for` header
+for rate-limit identity. Self-hosted deployments behind a trusted reverse
+proxy must additionally set `TRUSTED_CLIENT_IP_HEADER` to a custom header that
+the proxy overwrites (for example, `x-interview-lab-connecting-ip`). Do not set
+it to `x-forwarded-for` or `x-real-ip`, and do not expose the application
+directly around that proxy.
+
 ### Deployment Steps
 
 1. Push to main branch triggers automatic deployment
