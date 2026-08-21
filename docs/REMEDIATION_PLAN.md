@@ -301,8 +301,8 @@ Implementation ledger:
 
 - [x] Trusted client-IP boundary and auth rate-limit identity.
 - [x] Current-database authorization and revocable session versions.
-- [x] Shared fail-closed origin policy and admin question mutation enforcement.
-- [ ] Extend mutation enforcement to guides, downloads, and remaining cookie-authenticated writes.
+- [x] Shared fail-closed origin policy across question, guide, and download admin mutations.
+- [ ] Extend mutation enforcement to remaining cookie-authenticated user writes.
 - [ ] Complete logging/redaction review and security regression gate.
 
 ### Milestone 2 — payment removal

@@ -20,7 +20,7 @@ Record user-visible and operationally meaningful changes. Use semantic versionin
 
 ### Fixed
 
-- Admin question mutations now reject missing, opaque, or cross-origin browser
+- Admin question, guide, and download mutations now reject missing, opaque, or cross-origin browser
   requests before database writes.
 - Persistent login and registration rate limits no longer trust spoofable forwarding headers.
 - Middleware rate limits use only the verified hosting proxy identity contract.
