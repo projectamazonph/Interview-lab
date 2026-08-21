@@ -98,6 +98,7 @@ bun run test:api           # API tests only
 bun run lint               # ESLint
 bun run db:push            # Schema push (dev)
 bun run db:migrate         # Create migration
+bun run db:deploy          # Apply committed migrations
 bun run db:reset           # Reset + seed
 ```
 

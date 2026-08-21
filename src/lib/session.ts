@@ -30,6 +30,7 @@ export interface SessionPayload {
   email: string;
   tier: string;       // subscriptionTier
   isAdmin: boolean;
+  sessionVersion: number;
 }
 
 /**
@@ -78,6 +79,7 @@ export async function verifySession(request: NextRequest): Promise<SessionPayloa
       email: payload.email as string,
       tier: payload.tier as string,
       isAdmin: payload.isAdmin as boolean,
+      sessionVersion: payload.sessionVersion as number,
     };
   } catch {
     return null;
@@ -95,6 +97,7 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
       email: payload.email as string,
       tier: payload.tier as string,
       isAdmin: payload.isAdmin as boolean,
+      sessionVersion: payload.sessionVersion as number,
     };
   } catch {
     return null;

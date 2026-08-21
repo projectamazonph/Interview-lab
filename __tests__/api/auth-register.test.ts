@@ -79,6 +79,7 @@ describe('POST /api/auth/register', () => {
       subscriptionTier: 'free',
       isAdmin: false,
       emailVerified: false,
+      sessionVersion: 1,
     }));
   });
 
@@ -237,7 +238,12 @@ describe('POST /api/auth/register', () => {
       const res = await register(req({ email: 'newuser@example.com', password: 'password123' }));
       const token = res.headers.get('set-cookie')!.match(/interviewlab_session=([^;]+)/)![1];
       const payload = await verifyToken(token);
-      expect(payload).toMatchObject({ email: 'newuser@example.com', tier: 'free', isAdmin: false });
+      expect(payload).toMatchObject({
+        email: 'newuser@example.com',
+        tier: 'free',
+        isAdmin: false,
+        sessionVersion: 1,
+      });
     });
 
     it('creates a profile row alongside the user', async () => {

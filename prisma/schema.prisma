@@ -15,6 +15,7 @@ model User {
   subscriptionTier String   @default("free")
   isAdmin          Boolean  @default(false)
   emailVerified    Boolean  @default(false)
+  sessionVersion   Int      @default(1)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

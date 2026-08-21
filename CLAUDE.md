@@ -27,12 +27,13 @@ bun test -t "creates user with valid email"          # run tests matching a name
 
 bun run db:push       # push prisma/schema.prisma to Postgres (dev)
 bun run db:migrate    # create + apply a migration
+bun run db:deploy     # apply committed migrations (CI/production)
 bun run db:reset      # reset db and reseed
 bun run db:seed       # tsx prisma/seed.ts
 bun run db:generate   # regenerate Prisma client
 ```
 
-Bun is the package manager (`bun.lock` is committed — don't add a `package-lock.json`). CI (`.github/workflows/ci.yml`) also uses Bun; it runs `tsc --noEmit`, `lint`, `db:push`, `db:seed`, `bun run test`, `bun run build`, then boots the built server and runs a live-server integration subset (`__tests__/api/auth.test.ts`, `resources.test.ts`, `questions-interview-ai.test.ts`, `user-paths.test.ts`) against it before a gitleaks secret scan. Match that sequence when validating a change end-to-end.
+Bun is the package manager (`bun.lock` is committed — don't add a `package-lock.json`). CI (`.github/workflows/ci.yml`) also uses Bun; it runs `tsc --noEmit`, `lint`, `db:deploy`, `db:seed`, `bun run test`, `bun run build`, then boots the built server and runs a live-server integration subset (`__tests__/api/auth.test.ts`, `resources.test.ts`, `questions-interview-ai.test.ts`, `user-paths.test.ts`) against it before a gitleaks secret scan. Match that sequence when validating a change end-to-end.
 
 Database is **PostgreSQL only** (`prisma/schema.prisma` `provider = "postgresql"`) — despite older docs mentioning SQLite for MVP/dev, do not reintroduce SQLite.
 

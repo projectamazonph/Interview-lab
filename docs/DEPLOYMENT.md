@@ -62,9 +62,28 @@ bun run build  # Runs: prisma generate && next build
 
 ### Database Migrations
 
+The repository now contains a Prisma baseline followed by incremental
+migrations. For a new database, apply all migrations normally. For an existing
+database that was previously maintained with `prisma db push`, take and verify
+a backup, confirm its schema matches the baseline, mark only the baseline as
+already applied, and then deploy the incremental migration:
+
+```bash
+bunx prisma migrate resolve --applied 00000000000000_baseline
+bunx prisma migrate deploy
+```
+
+Do not mark the `20260821192500_add_session_version` migration as applied before
+its SQL has actually run. Rollback requires restoring the verified pre-migration
+backup; dropping the column after sessions have been issued would invalidate the
+revocation contract.
+
 ```bash
 # Create migration
 bun run db:migrate
+
+# Apply committed migrations (CI/production)
+bun run db:deploy
 
 # Push schema (dev only)
 bun run db:push

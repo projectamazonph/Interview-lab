@@ -64,6 +64,7 @@ const baseUser = {
   subscriptionTier: 'free',
   isAdmin: false,
   emailVerified: false,
+  sessionVersion: 4,
   profile: null,
 };
 
@@ -150,14 +151,20 @@ describe('POST /api/auth/login', () => {
     expect(await res.json()).not.toHaveProperty('passwordHash');
   });
 
-  it('creates a session cookie whose payload matches the user (sub/email/tier/isAdmin)', async () => {
+  it('creates a session cookie whose payload includes the current session version', async () => {
     findUnique.mockResolvedValue({ ...baseUser, id: 'u3', email: 'admin@test.com', subscriptionTier: 'pro', isAdmin: true });
     verifyPassword.mockResolvedValue(true);
     const res = await login(req({ email: 'admin@test.com', password: 'correct-password' }));
     const setCookie = res.headers.get('set-cookie')!;
     const token = setCookie.match(/interviewlab_session=([^;]+)/)![1];
     const payload = await verifyToken(token);
-    expect(payload).toMatchObject({ sub: 'u3', email: 'admin@test.com', tier: 'pro', isAdmin: true });
+    expect(payload).toMatchObject({
+      sub: 'u3',
+      email: 'admin@test.com',
+      tier: 'pro',
+      isAdmin: true,
+      sessionVersion: 4,
+    });
   });
 
   it('sanitizes email: trims whitespace and lowercases before the db lookup', async () => {

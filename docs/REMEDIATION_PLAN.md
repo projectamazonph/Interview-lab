@@ -10,6 +10,7 @@
 | --- | --- | --- | --- | --- |
 | 2026-08-21 | Reproducible default test suite | 426 passed, 85 opt-in live-server tests skipped without `TEST_BASE_URL` | Complete | Run live-server phase with PostgreSQL |
 | 2026-08-21 | Trusted client-IP policy | Valid Red reproduced rotating `x-forwarded-for` bypass; 20 focused tests Green; new helper at 100% coverage | Complete | Current-database authorization |
+| 2026-08-21 | Session revocation | JWT/database version matching, centralized session restore, additive migration, and logout-all endpoint | Complete in code | Rehearse migration and live-server flow on PostgreSQL |
 | 2026-08-21 | Repository baseline | TypeScript pass; build pass; lint 0 errors/30 warnings; total coverage 38.81% statements, 39.71% branches, 38.48% functions, 40.11% lines | Partial | Warning cleanup and coverage closure by vertical slice |
 
 ## 1. Outcomes

@@ -21,6 +21,10 @@ Interview Lab handles user credentials, resume content, and interview data. Secu
 - Rate-limit identity comes only from Vercel's managed client-IP header or an
   explicitly configured trusted reverse-proxy header. Client-supplied
   `x-forwarded-for` and `x-real-ip` values are ignored.
+- Every session carries the user's current `sessionVersion`. Incrementing that
+  value revokes every older token even when its signature and expiry remain
+  valid. `POST /api/auth/logout-all` performs this revocation and clears the
+  current session cookie.
 
 ## Data Protection
 
@@ -55,6 +59,7 @@ TRUSTED_CLIENT_IP_HEADER # Self-hosted trusted proxy only; never x-forwarded-for
 - [x] Rate limiting on auth endpoints
 - [x] Rate limiting on AI endpoints (15 req/min per user)
 - [x] Account deletion endpoint (DELETE /api/user/me) — requires password confirmation
+- [x] All-session revocation endpoint (`POST /api/auth/logout-all`)
 - [x] Data export endpoint (GET /api/user/me/export) — GDPR data portability
 
 ## GDPR / Data Privacy

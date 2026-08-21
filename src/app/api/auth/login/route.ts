@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       email: user.email,
       tier: user.subscriptionTier,
       isAdmin: user.isAdmin,
+      sessionVersion: user.sessionVersion,
     }, response);
 
     return response;

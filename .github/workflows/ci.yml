@@ -55,8 +55,8 @@ jobs:
       - name: ESLint
         run: bun run lint
 
-      - name: Push database schema
-        run: bun run db:push
+      - name: Apply database migrations
+        run: bun run db:deploy
 
       - name: Seed database
         run: bun run db:seed
