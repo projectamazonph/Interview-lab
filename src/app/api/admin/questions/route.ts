@@ -1,7 +1,16 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
+import { isTrustedMutationOrigin } from '@/lib/request-origin';
 import { NextResponse } from 'next/server';
+
+function rejectUntrustedOrigin(request: Request): NextResponse | null {
+  if (isTrustedMutationOrigin(request)) return null;
+  return NextResponse.json(
+    { error: 'Forbidden — untrusted request origin' },
+    { status: 403 },
+  );
+}
 
 export async function GET(request: Request) {
   try {
@@ -41,6 +50,9 @@ export async function POST(request: Request) {
     if (!admin || !admin.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
+
+    const originRejection = rejectUntrustedOrigin(request);
+    if (originRejection) return originRejection;
 
     const data = await request.json();
 
@@ -108,6 +120,9 @@ export async function PUT(request: Request) {
     if (!admin || !admin.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
     }
+
+    const originRejection = rejectUntrustedOrigin(request);
+    if (originRejection) return originRejection;
 
     const data = await request.json();
     const { id, ...updateData } = data;

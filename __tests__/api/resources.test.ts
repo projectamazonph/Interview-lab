@@ -19,7 +19,7 @@ function extractSessionCookie(setCookieHeader: string | null): string | undefine
 async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
   const opts: RequestInit = {
     method,
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', Origin: new URL(BASE_URL).origin, ...headers },
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);

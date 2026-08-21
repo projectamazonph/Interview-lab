@@ -25,6 +25,9 @@ Interview Lab handles user credentials, resume content, and interview data. Secu
   value revokes every older token even when its signature and expiry remain
   valid. `POST /api/auth/logout-all` performs this revocation and clears the
   current session cookie.
+- State-changing admin question requests require an exact `Origin` match with
+  `NEXT_PUBLIC_APP_URL` and reject cross-site Fetch Metadata. Production fails
+  closed when the application URL is missing or invalid.
 
 ## Data Protection
 
@@ -55,7 +58,8 @@ TRUSTED_CLIENT_IP_HEADER # Self-hosted trusted proxy only; never x-forwarded-for
 - [x] Input validation on all API endpoints
 - [x] SQL injection prevented via Prisma
 - [x] XSS prevented via React's default escaping
-- [ ] CSRF: SameSite cookies are a partial measure; add CSRF token for state-changing POSTs
+- [ ] CSRF: admin question mutations have origin/Fetch Metadata enforcement;
+  extend the shared policy to every remaining cookie-authenticated mutation
 - [x] Rate limiting on auth endpoints
 - [x] Rate limiting on AI endpoints (15 req/min per user)
 - [x] Account deletion endpoint (DELETE /api/user/me) — requires password confirmation

@@ -297,6 +297,14 @@ Archive or rewrite speculative duplicate PRDs/build specs so they are clearly hi
 - Trusted IP handling, current-database authorization, session revocation, shared rate-limit design, admin mutation controls, logging/redaction.
 - Exit: security regression suite passes and privilege changes take effect immediately.
 
+Implementation ledger:
+
+- [x] Trusted client-IP boundary and auth rate-limit identity.
+- [x] Current-database authorization and revocable session versions.
+- [x] Shared fail-closed origin policy and admin question mutation enforcement.
+- [ ] Extend mutation enforcement to guides, downloads, and remaining cookie-authenticated writes.
+- [ ] Complete logging/redaction review and security regression gate.
+
 ### Milestone 2 — payment removal
 
 - Free-access characterization, compatibility release, backup/data decision, schema migration, code/UI/test/doc deletion.
