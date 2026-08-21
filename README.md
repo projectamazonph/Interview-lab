@@ -28,6 +28,26 @@ for aspiring Amazon Virtual Assistants.
 | **Download Center** | Templates, checklists, worksheets |
 | **Admin Panel** | Analytics dashboard and question management |
 
+## 📸 Product Tour
+
+### Interview Lab Home
+
+Start from a focused overview of the Academy-to-interview journey, supported roles, and preparation tools.
+
+![Interview Lab landing page](docs/screenshots/home.png)
+
+### Secure Sign In
+
+Learners access their private practice history, saved application materials, and progress through the account sign-in flow.
+
+![Interview Lab sign-in page](docs/screenshots/login.png)
+
+### About Interview Lab
+
+The public About page explains the platform's purpose and its focus on Filipino VAs preparing for Amazon roles.
+
+![About Interview Lab page](docs/screenshots/about.png)
+
 ## 💰 Pricing
 
 **Free, always.** Interview Lab is a free companion to [Project Amazon PH Academy](https://projectamazon.ph). All features are available to all users — no paid tiers.
