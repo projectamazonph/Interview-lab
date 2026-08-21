@@ -43,10 +43,10 @@ vi.mock('@/lib/rate-limit', () => ({
 
 import { POST as register } from '@/app/api/auth/register/route';
 
-function req(body: unknown) {
+function req(body: unknown, headers: Record<string, string> = {}) {
   return new Request('http://localhost/api/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -55,6 +55,7 @@ let nextId = 0;
 
 describe('POST /api/auth/register', () => {
   beforeEach(() => {
+    process.env.TRUSTED_CLIENT_IP_HEADER = 'x-interview-lab-test-client-ip';
     delete process.env.MAX_USERS;
     nextId = 0;
     findUnique.mockReset();
@@ -255,6 +256,24 @@ describe('POST /api/auth/register', () => {
     const res = await register(req({ email: 'x@x.com', password: 'password123' }));
     expect(res.status).toBe(429);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it('keys the limiter by the trusted proxy header and ignores spoofed forwarding headers', async () => {
+    await register(req(
+      { email: 'newuser@example.com', password: 'password123' },
+      {
+        'x-interview-lab-test-client-ip': '203.0.113.11',
+        'x-forwarded-for': '1.2.3.4',
+        'x-real-ip': '5.6.7.8',
+      },
+    ));
+
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      '203.0.113.11',
+      'auth-register',
+      expect.any(Number),
+      expect.any(Number),
+    );
   });
 
   it('returns 500 when the database throws unexpectedly', async () => {

@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 import { verifyPassword, isLegacyHash, hashPassword } from '@/lib/password';
 import { createSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getTrustedClientIp } from '@/lib/client-ip';
 
 export async function POST(request: Request) {
   try {
     // Persistent rate limiting for login (survives server restarts)
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || 'unknown';
+    const clientIp = getTrustedClientIp(request.headers);
     const loginRateLimitMax = Number(process.env.AUTH_LOGIN_RATE_LIMIT_MAX) || 10;
     const rl = await checkRateLimit(clientIp, 'auth-login', loginRateLimitMax, 15 * 60_000);
     if (!rl.allowed) {
