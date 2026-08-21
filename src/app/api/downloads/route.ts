@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth-helpers';
 import { sanitizeText } from '@/lib/sanitize';
+import { isTrustedMutationOrigin } from '@/lib/request-origin';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -32,6 +33,10 @@ export async function POST(request: Request) {
     const admin = await getUserFromRequest(request);
     if (!admin || !admin.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized — admin access required' }, { status: 401 });
+    }
+
+    if (!isTrustedMutationOrigin(request)) {
+      return NextResponse.json({ error: 'Forbidden — untrusted request origin' }, { status: 403 });
     }
 
     const data = await request.json();

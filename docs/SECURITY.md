@@ -18,6 +18,16 @@ Interview Lab handles user credentials, resume content, and interview data. Secu
 - Admin routes require `isAdmin: true` in user record
 - Subscription tier checks enforced in API, not just UI
 - Rate limiting on auth endpoints (10 attempts per minute)
+- Rate-limit identity comes only from Vercel's managed client-IP header or an
+  explicitly configured trusted reverse-proxy header. Client-supplied
+  `x-forwarded-for` and `x-real-ip` values are ignored.
+- Every session carries the user's current `sessionVersion`. Incrementing that
+  value revokes every older token even when its signature and expiry remain
+  valid. `POST /api/auth/logout-all` performs this revocation and clears the
+  current session cookie.
+- State-changing admin content requests require an exact `Origin` match with
+  `NEXT_PUBLIC_APP_URL` and reject cross-site Fetch Metadata. Production fails
+  closed when the application URL is missing or invalid.
 
 ## Data Protection
 
@@ -37,6 +47,7 @@ Required secrets (never commit to git):
 DATABASE_URL          # PostgreSQL connection string
 JWT_SECRET            # min 256-bit random string
 NEXT_PUBLIC_APP_URL   # Public app URL
+TRUSTED_CLIENT_IP_HEADER # Self-hosted trusted proxy only; never x-forwarded-for
 ```
 
 ## Security Checklist
@@ -47,10 +58,12 @@ NEXT_PUBLIC_APP_URL   # Public app URL
 - [x] Input validation on all API endpoints
 - [x] SQL injection prevented via Prisma
 - [x] XSS prevented via React's default escaping
-- [ ] CSRF: SameSite cookies are a partial measure; add CSRF token for state-changing POSTs
+- [ ] CSRF: admin content mutations have origin/Fetch Metadata enforcement;
+  extend the shared policy to every remaining cookie-authenticated mutation
 - [x] Rate limiting on auth endpoints
 - [x] Rate limiting on AI endpoints (15 req/min per user)
 - [x] Account deletion endpoint (DELETE /api/user/me) — requires password confirmation
+- [x] All-session revocation endpoint (`POST /api/auth/logout-all`)
 - [x] Data export endpoint (GET /api/user/me/export) — GDPR data portability
 
 ## GDPR / Data Privacy

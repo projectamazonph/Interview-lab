@@ -64,11 +64,13 @@ const baseUser = {
   subscriptionTier: 'free',
   isAdmin: false,
   emailVerified: false,
+  sessionVersion: 4,
   profile: null,
 };
 
 describe('POST /api/auth/login', () => {
   beforeEach(() => {
+    process.env.TRUSTED_CLIENT_IP_HEADER = 'x-interview-lab-test-client-ip';
     findUnique.mockReset();
     update.mockReset();
     verifyPassword.mockReset();
@@ -149,14 +151,20 @@ describe('POST /api/auth/login', () => {
     expect(await res.json()).not.toHaveProperty('passwordHash');
   });
 
-  it('creates a session cookie whose payload matches the user (sub/email/tier/isAdmin)', async () => {
+  it('creates a session cookie whose payload includes the current session version', async () => {
     findUnique.mockResolvedValue({ ...baseUser, id: 'u3', email: 'admin@test.com', subscriptionTier: 'pro', isAdmin: true });
     verifyPassword.mockResolvedValue(true);
     const res = await login(req({ email: 'admin@test.com', password: 'correct-password' }));
     const setCookie = res.headers.get('set-cookie')!;
     const token = setCookie.match(/interviewlab_session=([^;]+)/)![1];
     const payload = await verifyToken(token);
-    expect(payload).toMatchObject({ sub: 'u3', email: 'admin@test.com', tier: 'pro', isAdmin: true });
+    expect(payload).toMatchObject({
+      sub: 'u3',
+      email: 'admin@test.com',
+      tier: 'pro',
+      isAdmin: true,
+      sessionVersion: 4,
+    });
   });
 
   it('sanitizes email: trims whitespace and lowercases before the db lookup', async () => {
@@ -210,20 +218,19 @@ describe('POST /api/auth/login', () => {
     expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it('keys the rate limiter by x-forwarded-for (first IP) when present', async () => {
+  it('keys the rate limiter by the trusted proxy header and ignores x-forwarded-for', async () => {
     checkRateLimit.mockResolvedValue({ allowed: true, remaining: 9 });
     findUnique.mockResolvedValue(null);
-    await login(req({ email: 'x@x.com', password: 'p' }, { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }));
-    expect(checkRateLimit).toHaveBeenCalledWith('1.2.3.4', 'auth-login', expect.any(Number), expect.any(Number));
+    await login(req({ email: 'x@x.com', password: 'p' }, {
+      'x-interview-lab-test-client-ip': '203.0.113.10',
+      'x-forwarded-for': '1.2.3.4, 5.6.7.8',
+    }));
+    expect(checkRateLimit).toHaveBeenCalledWith('203.0.113.10', 'auth-login', expect.any(Number), expect.any(Number));
   });
 
-  it('falls back to x-real-ip, then "unknown", for rate-limit keying', async () => {
+  it('falls back to "unknown" rather than trusting x-real-ip', async () => {
     findUnique.mockResolvedValue(null);
     await login(req({ email: 'x@x.com', password: 'p' }, { 'x-real-ip': '10.0.0.1' }));
-    expect(checkRateLimit).toHaveBeenCalledWith('10.0.0.1', 'auth-login', expect.any(Number), expect.any(Number));
-
-    checkRateLimit.mockClear();
-    await login(req({ email: 'x@x.com', password: 'p' }));
     expect(checkRateLimit).toHaveBeenCalledWith('unknown', 'auth-login', expect.any(Number), expect.any(Number));
   });
 });

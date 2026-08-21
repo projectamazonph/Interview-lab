@@ -8,8 +8,8 @@
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
-// Skip integration tests in CI unless a live server is provided via TEST_BASE_URL
-const testIfServer = process.env.CI && !process.env.TEST_BASE_URL ? it.skip : it;
+// Live-server tests are opt-in so the default unit suite is deterministic.
+const testIfServer = process.env.TEST_BASE_URL ? it : it.skip;
 
 function extractSessionCookie(setCookieHeader: string | null): string | undefined {
   if (!setCookieHeader) return undefined;
@@ -19,7 +19,7 @@ function extractSessionCookie(setCookieHeader: string | null): string | undefine
 async function api(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
   const opts: RequestInit = {
     method,
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', Origin: new URL(BASE_URL).origin, ...headers },
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);

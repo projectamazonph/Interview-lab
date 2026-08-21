@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTrustedClientIp } from '@/lib/client-ip';
 
 // ─── In-memory rate limiter (Edge Runtime compatible) ─────────────────────────
 // Note: Edge Runtime does not support fs/path/process.cwd(), so we use in-memory
@@ -11,12 +12,6 @@ const GENERAL_WINDOW = 60_000; // 1 minute
 const GENERAL_MAX = Number(process.env.API_RATE_LIMIT_MAX) || 60; // requests per minute per IP for general API
 const AUTH_WINDOW = 15 * 60_000; // 15 minutes
 const AUTH_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 10; // auth attempts per 15 minutes per IP
-
-function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown';
-  return ip;
-}
 
 function isRateLimited(key: string, max: number, window: number): boolean {
   const now = Date.now();
@@ -58,7 +53,7 @@ export function middleware(request: NextRequest) {
 
   cleanupRateLimits();
 
-  const clientIp = getClientIp(request);
+  const clientIp = getTrustedClientIp(request.headers);
 
   // Stricter rate limit on auth endpoints (brute force protection)
   if (pathname === '/api/auth/login' || pathname === '/api/auth/register') {

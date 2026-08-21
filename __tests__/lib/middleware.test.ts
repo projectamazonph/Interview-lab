@@ -5,13 +5,22 @@
  * sits in front of every /api/* route. Previously untested (only the
  * separate DB-backed src/lib/rate-limit.ts had coverage).
  */
-import { describe, it, expect } from 'vitest';
+import { afterAll, describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
 import { middleware } from '@/middleware';
 
+const TRUSTED_TEST_HEADER = 'x-interview-lab-test-client-ip';
+const ORIGINAL_TRUSTED_CLIENT_IP_HEADER = process.env.TRUSTED_CLIENT_IP_HEADER;
+process.env.TRUSTED_CLIENT_IP_HEADER = TRUSTED_TEST_HEADER;
+
+afterAll(() => {
+  if (ORIGINAL_TRUSTED_CLIENT_IP_HEADER === undefined) delete process.env.TRUSTED_CLIENT_IP_HEADER;
+  else process.env.TRUSTED_CLIENT_IP_HEADER = ORIGINAL_TRUSTED_CLIENT_IP_HEADER;
+});
+
 function req(pathname: string, ip?: string) {
   const headers: Record<string, string> = {};
-  if (ip) headers['x-forwarded-for'] = ip;
+  if (ip) headers[TRUSTED_TEST_HEADER] = ip;
   return new NextRequest(`http://localhost${pathname}`, { headers });
 }
 
@@ -90,27 +99,59 @@ describe('middleware (Edge rate limiter)', () => {
     expect(res.status).toBe(200);
   });
 
-  it('uses x-real-ip when x-forwarded-for is absent', () => {
-    const ip = freshIp();
-    const request = new NextRequest('http://localhost/api/questions', { headers: { 'x-real-ip': ip } });
-    const res = middleware(request);
-    expect(res.status).toBe(200);
+  it('ignores x-real-ip when a trusted proxy header is configured', () => {
+    const trustedIp = freshIp();
+    let last;
+    for (let i = 0; i < GENERAL_MAX + 1; i++) {
+      last = middleware(new NextRequest('http://localhost/api/questions', {
+        headers: {
+          [TRUSTED_TEST_HEADER]: trustedIp,
+          'x-real-ip': `203.0.113.${i}`,
+        },
+      }));
+    }
+    expect(last!.status).toBe(429);
   });
 
-  it('uses the first address in a multi-hop x-forwarded-for header', () => {
-    const ip = freshIp();
-    const request = new NextRequest('http://localhost/api/questions', {
-      headers: { 'x-forwarded-for': `${ip}, 5.6.7.8` },
-    });
+  it('ignores x-forwarded-for when a trusted proxy header is configured', () => {
+    const trustedIp = freshIp();
     let last;
-    for (let i = 0; i < GENERAL_MAX + 1; i++) last = middleware(request);
+    for (let i = 0; i < GENERAL_MAX + 1; i++) {
+      last = middleware(new NextRequest('http://localhost/api/questions', {
+        headers: {
+          [TRUSTED_TEST_HEADER]: trustedIp,
+          'x-forwarded-for': `198.51.100.${i}, 5.6.7.8`,
+        },
+      }));
+    }
     expect(last!.status).toBe(429);
+  });
 
-    // A request that resolves to the same first-hop IP shares the counter.
-    const sameFirstHop = new NextRequest('http://localhost/api/questions', {
-      headers: { 'x-forwarded-for': `${ip}, 9.9.9.9` },
-    });
-    expect(middleware(sameFirstHop).status).toBe(429);
+  it('does not let a spoofed x-forwarded-for value bypass the Vercel client-IP limit', () => {
+    const originalVercel = process.env.VERCEL;
+    const originalTrustedHeader = process.env.TRUSTED_CLIENT_IP_HEADER;
+    process.env.VERCEL = '1';
+    delete process.env.TRUSTED_CLIENT_IP_HEADER;
+    const trustedIp = freshIp();
+    let last;
+
+    try {
+      for (let i = 0; i < GENERAL_MAX + 1; i++) {
+        last = middleware(new NextRequest('http://localhost/api/questions', {
+          headers: {
+            'x-vercel-forwarded-for': trustedIp,
+            'x-forwarded-for': `198.51.100.${i}`,
+          },
+        }));
+      }
+    } finally {
+      if (originalVercel === undefined) delete process.env.VERCEL;
+      else process.env.VERCEL = originalVercel;
+      if (originalTrustedHeader === undefined) delete process.env.TRUSTED_CLIENT_IP_HEADER;
+      else process.env.TRUSTED_CLIENT_IP_HEADER = originalTrustedHeader;
+    }
+
+    expect(last!.status).toBe(429);
   });
 
   it('falls back to a shared "unknown" bucket when no IP header is present', () => {

@@ -74,9 +74,13 @@ export async function getUserFromRequest(request: NextRequest | Request): Promis
               subscriptionTier: true,
               isAdmin: true,
               emailVerified: true,
+              sessionVersion: true,
             },
           });
-          if (user) return user;
+          if (user && user.sessionVersion === payload.sessionVersion) {
+            const { sessionVersion: _sessionVersion, ...authUser } = user;
+            return authUser;
+          }
         }
       }
     } catch {

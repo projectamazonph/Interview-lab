@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/password';
 import { createVerificationToken } from '@/lib/email-verification';
 import { createSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getTrustedClientIp } from '@/lib/client-ip';
 
 // Configurable max users (0 = unlimited). Set via AppSetting "max_users" in DB, or env MAX_USERS.
 const DEFAULT_MAX_USERS = 0;
@@ -40,8 +41,7 @@ function isBot(body: Record<string, unknown>): boolean {
 export async function POST(request: Request) {
   try {
     // Persistent rate limiting (survives server restarts)
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || 'unknown';
+    const clientIp = getTrustedClientIp(request.headers);
     const registerRateLimitMax = Number(process.env.AUTH_REGISTER_RATE_LIMIT_MAX) || 5;
     const rl = await checkRateLimit(clientIp, 'auth-register', registerRateLimitMax, 15 * 60_000);
     if (!rl.allowed) {
@@ -148,6 +148,7 @@ export async function POST(request: Request) {
       email: user.email,
       tier: user.subscriptionTier,
       isAdmin: user.isAdmin,
+      sessionVersion: user.sessionVersion,
     }, response);
 
     return response;
